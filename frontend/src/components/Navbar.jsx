@@ -63,25 +63,25 @@ export default function Navbar() {
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-8">
               <a
-                href="#features"
+                href="/#features"
                 className="text-slate-300 hover:text-cyan-400 transition-colors"
               >
                 Features
               </a>
               <a
-                href="#training"
+                href="/#training"
                 className="text-slate-300 hover:text-cyan-400 transition-colors"
               >
                 Training
               </a>
               <a
-                href="#pricing"
+                href="/#pricing"
                 className="text-slate-300 hover:text-cyan-400 transition-colors"
               >
                 Pricing
               </a>
               <a
-                href="#about"
+                href="/#about"
                 className="text-slate-300 hover:text-cyan-400 transition-colors"
               >
                 About

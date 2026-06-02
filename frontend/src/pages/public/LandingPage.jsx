@@ -80,6 +80,62 @@ export default function LandingPage() {
     { value: '24/7', label: 'Support' }
   ]
 
+  const plans = [
+    {
+      name: 'Small Enterprise',
+      price: '$299',
+      period: 'per month, billed annually',
+      description: 'Ideal for organizations up to 100 employees starting their security awareness journey.',
+      features: ['Up to 100 users', '20 campaign templates', 'Real-time analytics dashboard', 'Email & chat support'],
+      cta: 'Get Started',
+      href: '/register',
+      highlighted: false,
+    },
+    {
+      name: 'Medium Enterprise',
+      price: '$899',
+      period: 'per month, billed annually',
+      description: 'Designed for organizations between 100 and 1,000 employees with advanced training needs.',
+      features: ['Up to 1,000 users', 'Unlimited templates', 'Advanced analytics & reporting', 'Automated campaigns', 'Audit logs', 'Priority support', 'Custom branding', 'API access'],
+      cta: 'Get Started',
+      href: '/register',
+      highlighted: true,
+    },
+    {
+      name: 'Large Enterprise',
+      price: 'Custom',
+      period: 'contact us',
+      description: 'Fully tailored for large organizations with complex infrastructure and compliance requirements.',
+      features: ['Unlimited users', 'Custom templates & branding', 'Full audit logs', 'Multi-tenancy', 'On-premise deployment option', 'Dedicated account manager', 'SLA guarantee', 'Compliance reporting (SOC2, ISO 27001)'],
+      cta: 'Contact Sales',
+      href: '/register',
+      highlighted: false,
+    }
+  ]
+
+  const values = [
+    {
+      icon: Shield,
+      title: 'Security First',
+      description: 'Every feature is built with security at its core. We protect your data with bank-level encryption and compliance-ready infrastructure.'
+    },
+    {
+      icon: Users,
+      title: 'People-Centered',
+      description: 'We believe the human element is your greatest defense. Our platform empowers every employee to become a security asset.'
+    },
+    {
+      icon: TrendingUp,
+      title: 'Continuous Improvement',
+      description: 'Cyber threats evolve daily. Our platform evolves with them, constantly delivering new templates and threat intelligence.'
+    },
+    {
+      icon: Globe,
+      title: 'Global Reach',
+      description: 'Trusted by organizations across the globe, PhishNet supports multi-language campaigns and international compliance standards.'
+    }
+  ]
+
   return (
     <div className="min-h-screen bg-slate-900 pt-16">
       {/* Hero Section */}
@@ -234,6 +290,105 @@ export default function LandingPage() {
                   <p className="text-gray-400 leading-relaxed">
                     {step.description}
                   </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section id="pricing" className="py-24 bg-slate-900">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
+              Enterprise Plans,
+              <span className="block text-cyan-400">Built to Scale</span>
+            </h2>
+            <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+              All plans are tailored to your organization's size and needs. Contact our sales team for a custom quote.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 items-stretch">
+            {plans.map((plan, index) => (
+              <div
+                key={index}
+                className={`group relative flex flex-col rounded-xl p-8 border transition-all hover:shadow-lg ${
+                  plan.highlighted
+                    ? 'bg-cyan-500/10 border-cyan-500 ring-2 ring-cyan-500 hover:shadow-cyan-500/20'
+                    : 'bg-slate-800/50 border-slate-700 hover:border-cyan-500/50 hover:shadow-cyan-500/10'
+                }`}
+              >
+                {plan.highlighted && (
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                    <span className="bg-cyan-500 text-white text-xs font-semibold px-4 py-1 rounded-full">
+                      Most Popular
+                    </span>
+                  </div>
+                )}
+                <div className="mb-6">
+                  <h3 className="text-xl font-semibold text-white mb-2">{plan.name}</h3>
+                  <div className="flex items-end gap-1 mb-1">
+                    <span className="text-4xl font-bold text-white">{plan.price}</span>
+                  </div>
+                  <p className="text-sm text-gray-400">{plan.period}</p>
+                  <p className="text-gray-400 mt-4 leading-relaxed">{plan.description}</p>
+                </div>
+                <ul className="space-y-3 flex-1 mb-8">
+                  {plan.features.map((feature, i) => (
+                    <li key={i} className="flex items-center gap-3 text-gray-300">
+                      <CheckCircle className="h-5 w-5 text-cyan-400 flex-shrink-0" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Link
+                  to={plan.href}
+                  className={`inline-flex items-center justify-center gap-2 w-full px-6 py-3 rounded-lg font-semibold transition-all ${
+                    plan.highlighted
+                      ? 'bg-cyan-500 hover:bg-cyan-600 text-white shadow-lg shadow-cyan-500/30 hover:scale-105'
+                      : 'bg-white/10 hover:bg-white/20 text-white border border-white/20'
+                  }`}
+                >
+                  {plan.cta}
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* About Section */}
+      <section id="about" className="py-24 bg-slate-800/50">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
+              Built by Security Experts,
+              <span className="block text-cyan-400">For Security Teams</span>
+            </h2>
+            <p className="text-xl text-gray-400 max-w-3xl mx-auto">
+              PhishNet was founded with a single mission: make enterprise-grade phishing
+              simulation accessible to every organization, regardless of size or budget.
+              We combine deep security expertise with intuitive design to deliver training
+              that actually changes behavior.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {values.map((value, index) => (
+              <div
+                key={index}
+                className="group relative bg-slate-800 rounded-xl p-8 border border-slate-700 hover:border-cyan-500/50 transition-all hover:shadow-lg hover:shadow-cyan-500/10"
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-blue-500/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div className="relative">
+                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-cyan-500/10 text-cyan-400 mb-4 group-hover:scale-110 transition-transform">
+                    <value.icon className="h-6 w-6" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-white mb-3">{value.title}</h3>
+                  <p className="text-gray-400 leading-relaxed">{value.description}</p>
                 </div>
               </div>
             ))}
