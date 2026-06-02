@@ -1,0 +1,37 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: phishnet-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-phishnet}
+      POSTGRES_USER: ${POSTGRES_USER:-phishnet}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-phishnet}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - phishnet-network
+
+  gophish:
+    image: gophish/gophish
+    container_name: phishnet-gophish
+    restart: unless-stopped
+    ports:
+      - "${GOPHISH_ADMIN_PORT:-3333}:3333"
+      - "${GOPHISH_PHISHING_PORT:-8080}:80"
+    volumes:
+      - gophish_data:/opt/gophish
+    networks:
+      - phishnet-network
+
+networks:
+  phishnet-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+  gophish_data:
+    driver: local
