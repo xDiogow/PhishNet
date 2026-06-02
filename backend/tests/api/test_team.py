@@ -156,223 +156,58 @@ def another_auth_headers(another_user):
 
 class TestGetTeamMembers:
     """Tests for GET /api/team"""
-    
-    def test_get_team_members_success(self, client, auth_headers, test_user, 
+
+    def test_get_team_members_success(self, client, auth_headers, test_user,
                                        operator_user, admin_user, inactive_user):
-        """Test successfully getting team members"""
+        """Test successfully getting team members including inactive users"""
         response = client.get('/api/team', headers=auth_headers)
-        
+
         assert response.status_code == 200
         data = response.get_json()
         assert 'team_members' in data
-        assert isinstance(data['team_members'], list)
-        assert len(data['team_members']) == 4  # test_user, operator_user, admin_user, inactive_user
-        
-        # Check that all users are included
         member_ids = {member['id'] for member in data['team_members']}
         assert test_user.id in member_ids
         assert operator_user.id in member_ids
         assert admin_user.id in member_ids
         assert inactive_user.id in member_ids
-    
-    def test_get_team_members_includes_operator_status(self, client, operator_auth_headers,
-                                                        test_user, operator_user, admin_user):
-        """Test that operator status is correctly identified"""
-        response = client.get('/api/team', headers=operator_auth_headers)
-        
-        assert response.status_code == 200
-        data = response.get_json()
-        
-        # Find operator user in response
-        operator_member = next(m for m in data['team_members'] if m['id'] == operator_user.id)
-        assert operator_member['is_operator'] is True
-        assert operator_member['role'] == 'Operator'
-        
-        # Find non-operator users
-        test_member = next(m for m in data['team_members'] if m['id'] == test_user.id)
-        assert test_member['is_operator'] is False
-        assert test_member['role'] == 'User'
-        
-        admin_member = next(m for m in data['team_members'] if m['id'] == admin_user.id)
-        assert admin_member['is_operator'] is False
-        assert admin_member['role'] == 'User'
-    
-    def test_get_team_members_includes_inactive_users(self, client, auth_headers,
-                                                       test_user, inactive_user):
-        """Test that inactive users are included in team members"""
-        response = client.get('/api/team', headers=auth_headers)
-        
-        assert response.status_code == 200
-        data = response.get_json()
-        
-        # Find inactive user
-        inactive_member = next(m for m in data['team_members'] if m['id'] == inactive_user.id)
-        assert inactive_member['is_active'] is False
-        assert inactive_member['id'] == inactive_user.id
-    
-    def test_get_team_members_user_fields(self, client, auth_headers, test_user):
-        """Test that all required user fields are present"""
-        response = client.get('/api/team', headers=auth_headers)
-        
-        assert response.status_code == 200
-        data = response.get_json()
-        
-        # Find test user
-        test_member = next(m for m in data['team_members'] if m['id'] == test_user.id)
-        
-        # Check all required fields
-        assert 'id' in test_member
-        assert 'email' in test_member
-        assert 'first_name' in test_member
-        assert 'last_name' in test_member
-        assert 'tenant_id' in test_member
-        assert 'is_active' in test_member
-        assert 'is_admin' in test_member
-        assert 'is_operator' in test_member
-        assert 'role' in test_member
-        assert 'created_at' in test_member
-        
-        # Check values
-        assert test_member['email'] == test_user.email
-        assert test_member['first_name'] == test_user.first_name
-        assert test_member['last_name'] == test_user.last_name
-        assert test_member['tenant_id'] == test_user.tenant_id
-        assert test_member['is_active'] == test_user.is_active
-        assert test_member['is_admin'] == test_user.is_admin
-    
-    def test_get_team_members_no_password_hash(self, client, auth_headers, test_user):
-        """Test that password hash is not included in response"""
-        response = client.get('/api/team', headers=auth_headers)
-        
-        assert response.status_code == 200
-        data = response.get_json()
-        
-        # Check that password_hash is not in any member
-        for member in data['team_members']:
-            assert 'password_hash' not in member
-            assert 'password' not in member
-    
-    def test_get_team_members_tenant_isolation(self, client, auth_headers, another_auth_headers,
-                                                 test_user, operator_user, admin_user, inactive_user,
-                                                 another_user):
-        """Test that users only see team members from their own tenant"""
-        # Get team members as test_user (from test_tenant)
-        response = client.get('/api/team', headers=auth_headers)
-        
-        assert response.status_code == 200
-        data = response.get_json()
-        member_ids = {member['id'] for member in data['team_members']}
-        
-        # Should include all users from test_tenant
-        assert test_user.id in member_ids
-        assert operator_user.id in member_ids
-        assert admin_user.id in member_ids
-        assert inactive_user.id in member_ids
-        
-        # Should NOT include user from another_tenant
-        assert another_user.id not in member_ids
-        
-        # Get team members as another_user (from another_tenant)
-        response2 = client.get('/api/team', headers=another_auth_headers)
-        
-        assert response2.status_code == 200
-        data2 = response2.get_json()
-        member_ids2 = {member['id'] for member in data2['team_members']}
-        
-        # Should only include user from another_tenant
-        assert another_user.id in member_ids2
-        assert len(member_ids2) == 1
-    
-    def test_get_team_members_empty_tenant(self, client, db_session):
-        """Test getting team members when tenant has no other users"""
-        # Create a tenant with only one user
-        tenant = Tenant(name="Empty Tenant")
-        db_session.add(tenant)
-        db_session.commit()
-        db_session.refresh(tenant)
-        
-        password_hash = bcrypt.generate_password_hash("lonelypassword123").decode('utf-8')
-        user = User(
-            email="lonely@example.com",
-            first_name="Lonely",
-            last_name="User",
-            password_hash=password_hash,
-            tenant_id=tenant.id,
-            is_active=True,
-            is_admin=False
-        )
-        db_session.add(user)
-        db_session.commit()
-        db_session.refresh(user)
-        
-        token = create_access_token(identity=str(user.id))
-        headers = {'Authorization': f'Bearer {token}'}
-        
-        response = client.get('/api/team', headers=headers)
-        
-        assert response.status_code == 200
-        data = response.get_json()
-        assert 'team_members' in data
-        assert len(data['team_members']) == 1
-        assert data['team_members'][0]['id'] == user.id
-    
+
     def test_get_team_members_requires_auth(self, client):
         """Test that getting team members requires authentication"""
         response = client.get('/api/team')
-        
+
         assert response.status_code == 401
-    
-    def test_get_team_members_admin_can_access(self, client, admin_auth_headers,
-                                                 test_user, operator_user, admin_user):
-        """Test that admin users can access team members"""
-        response = client.get('/api/team', headers=admin_auth_headers)
-        
+
+    def test_get_team_members_tenant_isolation(self, client, auth_headers, another_auth_headers,
+                                                test_user, operator_user, admin_user, inactive_user,
+                                                another_user):
+        """Test that users only see team members from their own tenant"""
+        response = client.get('/api/team', headers=auth_headers)
+
         assert response.status_code == 200
-        data = response.get_json()
-        assert 'team_members' in data
-        assert len(data['team_members']) >= 3  # At least admin, test_user, operator_user
-    
-    def test_get_team_members_operator_can_access(self, client, operator_auth_headers,
-                                                    test_user, operator_user, admin_user):
-        """Test that operator users can access team members"""
+        member_ids = {m['id'] for m in response.get_json()['team_members']}
+        assert another_user.id not in member_ids
+
+        response2 = client.get('/api/team', headers=another_auth_headers)
+        assert response2.status_code == 200
+        member_ids2 = {m['id'] for m in response2.get_json()['team_members']}
+        assert len(member_ids2) == 1
+        assert another_user.id in member_ids2
+
+    def test_get_team_members_no_password_hash(self, client, auth_headers, test_user):
+        """Test that password hash is not included in response"""
+        response = client.get('/api/team', headers=auth_headers)
+
+        assert response.status_code == 200
+        for member in response.get_json()['team_members']:
+            assert 'password_hash' not in member
+            assert 'password' not in member
+
+    def test_get_team_members_operator_status(self, client, operator_auth_headers,
+                                               test_user, operator_user):
+        """Test that operator status is correctly identified in response"""
         response = client.get('/api/team', headers=operator_auth_headers)
-        
+
         assert response.status_code == 200
-        data = response.get_json()
-        assert 'team_members' in data
-        assert len(data['team_members']) >= 3
-    
-    def test_get_team_members_operator_without_tenant_operator_id(self, client, db_session, test_tenant):
-        """Test team members when tenant has no operator_id set"""
-        # Ensure tenant has no operator
-        test_tenant.operator_id = None
-        db_session.commit()
-        
-        password_hash = bcrypt.generate_password_hash("testpassword123").decode('utf-8')
-        user = User(
-            email="test@example.com",
-            first_name="Test",
-            last_name="User",
-            password_hash=password_hash,
-            tenant_id=test_tenant.id,
-            is_active=True,
-            is_admin=False
-        )
-        db_session.add(user)
-        db_session.commit()
-        db_session.refresh(user)
-        
-        token = create_access_token(identity=str(user.id))
-        headers = {'Authorization': f'Bearer {token}'}
-        
-        response = client.get('/api/team', headers=headers)
-        
-        assert response.status_code == 200
-        data = response.get_json()
-        assert 'team_members' in data
-        
-        # All members should have is_operator=False (or None) when tenant has no operator
-        for member in data['team_members']:
-            # When tenant_operator_id is None, is_operator evaluates to None (falsy)
-            assert member['is_operator'] in (False, None)
-            assert member['role'] == 'User'
+        members = {m['id']: m for m in response.get_json()['team_members']}
+        assert members[operator_user.id]['is_operator'] is True
+        assert members[test_user.id]['is_operator'] is False

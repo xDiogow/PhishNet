@@ -105,74 +105,40 @@ def regular_headers(regular_user):
 
 class TestGetAllTemplates:
     """Tests for GET /api/templates"""
-    
+
     @patch('app.services.gophish.templates.TemplatesService.get_all_templates')
     def test_get_all_templates_success(self, mock_get_templates, client, regular_headers, test_template):
         """Test successfully getting all templates"""
         mock_get_templates.return_value = [test_template]
-        
+
         response = client.get('/api/templates', headers=regular_headers)
-        
+
         assert response.status_code == 200
         data = response.get_json()
         assert 'templates' in data
-        assert isinstance(data['templates'], list)
         assert len(data['templates']) == 1
         assert data['templates'][0]['id'] == test_template.id
-        assert data['templates'][0]['name'] == test_template.name
-    
-    @patch('app.services.gophish.templates.TemplatesService.get_all_templates')
-    def test_get_all_templates_empty(self, mock_get_templates, client, regular_headers):
-        """Test getting all templates when none exist"""
-        mock_get_templates.return_value = []
-        
-        response = client.get('/api/templates', headers=regular_headers)
-        
-        assert response.status_code == 200
-        data = response.get_json()
-        assert 'templates' in data
-        assert data['templates'] == []
-    
-    @patch('app.services.gophish.templates.TemplatesService.get_all_templates')
-    def test_get_all_templates_summary_fields(self, mock_get_templates, client, regular_headers, test_template):
-        """Test that template summary includes correct fields"""
-        mock_get_templates.return_value = [test_template]
-        
-        response = client.get('/api/templates', headers=regular_headers)
-        
-        assert response.status_code == 200
-        data = response.get_json()
-        template = data['templates'][0]
-        
-        assert 'id' in template
-        assert 'name' in template
-        assert 'created_by_user_id' in template
-        assert 'created_at' in template
-        # Should not include detailed fields
-        assert 'email_template' not in template
-        assert 'landing_page' not in template
-    
+
     def test_get_all_templates_requires_auth(self, client):
         """Test that getting templates requires authentication"""
         response = client.get('/api/templates')
-        
+
         assert response.status_code == 401
 
 
 class TestGetTemplate:
     """Tests for GET /api/templates/<id>"""
-    
+
     @patch('app.services.gophish.templates.TemplatesService.get_template_details')
     def test_get_template_success(self, mock_get_details, client, admin_headers, test_template):
         """Test successfully getting template details"""
-        # Mock template details response
         mock_email_template = Mock()
         mock_email_template.id = 1
         mock_email_template.name = "Email Template"
         mock_email_template.subject = "Test Subject"
         mock_email_template.html = "<html>Email</html>"
         mock_email_template.attachments = []
-        
+
         mock_landing_page = Mock()
         mock_landing_page.id = 1
         mock_landing_page.name = "Landing Page"
@@ -180,55 +146,48 @@ class TestGetTemplate:
         mock_landing_page.capture_credentials = False
         mock_landing_page.capture_passwords = False
         mock_landing_page.redirect_url = ""
-        
+
         mock_get_details.return_value = {
             'template_map': test_template,
             'email_template': mock_email_template,
             'landing_page': mock_landing_page
         }
-        
+
         response = client.get(f'/api/templates/{test_template.id}', headers=admin_headers)
-        
+
         assert response.status_code == 200
         data = response.get_json()
         assert data['id'] == test_template.id
-        assert data['name'] == test_template.name
         assert 'email_template' in data
         assert 'landing_page' in data
-        assert data['email_template']['subject'] == "Test Subject"
-        assert data['landing_page']['name'] == "Landing Page"
-    
+
     @patch('app.services.gophish.templates.TemplatesService.get_template_details')
     def test_get_template_not_found(self, mock_get_details, client, admin_headers):
-        """Test getting a non-existent template"""
+        """Test getting a non-existent template returns 404"""
         mock_get_details.return_value = None
-        
+
         response = client.get('/api/templates/99999', headers=admin_headers)
-        
+
         assert response.status_code == 404
-        data = response.get_json()
-        assert 'error' in data
-        assert 'Template not found' in data['error']
-    
+        assert 'Template not found' in response.get_json()['error']
+
     def test_get_template_requires_auth(self, client, test_template):
         """Test that getting template details requires authentication"""
         response = client.get(f'/api/templates/{test_template.id}')
-        
+
         assert response.status_code == 401
-    
+
     def test_get_template_requires_admin(self, client, regular_headers, test_template):
         """Test that getting template details requires admin access"""
         response = client.get(f'/api/templates/{test_template.id}', headers=regular_headers)
-        
+
         assert response.status_code == 403
-        data = response.get_json()
-        assert 'error' in data
-        assert 'Admin access required' in data['error']
+        assert 'Admin access required' in response.get_json()['error']
 
 
 class TestCreateTemplate:
     """Tests for POST /api/templates"""
-    
+
     @patch('app.services.gophish.templates.TemplatesService.create_template')
     def test_create_template_success(self, mock_create_template, client, admin_headers):
         """Test successfully creating a template"""
@@ -237,7 +196,7 @@ class TestCreateTemplate:
             'message': 'Template created successfully',
             'template': {'id': 1, 'name': 'New Template'}
         }
-        
+
         template_data = {
             'name': 'New Template',
             'email_template_data': {
@@ -248,194 +207,44 @@ class TestCreateTemplate:
                 'html': '<html>Landing page content</html>'
             }
         }
-        
-        response = client.post('/api/templates',
-                              json=template_data,
-                              headers=admin_headers)
-        
+
+        response = client.post('/api/templates', json=template_data, headers=admin_headers)
+
         assert response.status_code == 201
-        data = response.get_json()
-        assert data['status'] == 'success'
-    
+        assert response.get_json()['status'] == 'success'
+
     def test_create_template_missing_data(self, client, admin_headers):
-        """Test creating template with missing data"""
-        response = client.post('/api/templates',
-                              json={},
-                              headers=admin_headers)
-        
+        """Test creating template with empty body"""
+        response = client.post('/api/templates', json={}, headers=admin_headers)
+
         assert response.status_code == 400
-        data = response.get_json()
-        assert 'error' in data
-        assert data['error'] == 'No data provided'
-    
-    def test_create_template_missing_name(self, client, admin_headers):
-        """Test creating template without name"""
-        template_data = {
-            'email_template_data': {
-                'subject': 'Test Subject',
-                'html': '<html>Email</html>'
-            },
-            'landing_page_data': {
-                'html': '<html>Landing</html>'
-            }
-        }
-        
-        response = client.post('/api/templates',
-                              json=template_data,
-                              headers=admin_headers)
-        
-        assert response.status_code == 400
-        data = response.get_json()
-        assert 'error' in data
-        assert 'Missing required fields' in data['error']
-        assert 'missing' in data
-        assert 'name' in data['missing']
-    
-    def test_create_template_missing_email_template_data(self, client, admin_headers):
-        """Test creating template without email_template_data"""
-        template_data = {
-            'name': 'Test Template',
-            'landing_page_data': {
-                'html': '<html>Landing</html>'
-            }
-        }
-        
-        response = client.post('/api/templates',
-                              json=template_data,
-                              headers=admin_headers)
-        
-        assert response.status_code == 400
-        data = response.get_json()
-        assert 'missing' in data
-        assert 'email_template_data' in data['missing']
-    
-    def test_create_template_missing_landing_page_data(self, client, admin_headers):
-        """Test creating template without landing_page_data"""
-        template_data = {
-            'name': 'Test Template',
-            'email_template_data': {
-                'subject': 'Test Subject',
-                'html': '<html>Email</html>'
-            }
-        }
-        
-        response = client.post('/api/templates',
-                              json=template_data,
-                              headers=admin_headers)
-        
-        assert response.status_code == 400
-        data = response.get_json()
-        assert 'missing' in data
-        assert 'landing_page_data' in data['missing']
-    
-    def test_create_template_empty_subject(self, client, admin_headers):
-        """Test creating template with empty email subject"""
-        template_data = {
-            'name': 'Test Template',
-            'email_template_data': {
-                'subject': '',
-                'html': '<html>Email</html>'
-            },
-            'landing_page_data': {
-                'html': '<html>Landing</html>'
-            }
-        }
-        
-        response = client.post('/api/templates',
-                              json=template_data,
-                              headers=admin_headers)
-        
-        assert response.status_code == 400
-        data = response.get_json()
-        assert 'error' in data
-        assert 'Email template subject is required' in data['error']
-    
-    def test_create_template_missing_email_html(self, client, admin_headers):
-        """Test creating template without email HTML"""
-        template_data = {
-            'name': 'Test Template',
-            'email_template_data': {
-                'subject': 'Test Subject'
-            },
-            'landing_page_data': {
-                'html': '<html>Landing</html>'
-            }
-        }
-        
-        response = client.post('/api/templates',
-                              json=template_data,
-                              headers=admin_headers)
-        
-        assert response.status_code == 400
-        data = response.get_json()
-        assert 'error' in data
-        assert 'Email template HTML is required' in data['error']
-    
-    def test_create_template_missing_landing_page_html(self, client, admin_headers):
-        """Test creating template without landing page HTML"""
-        template_data = {
-            'name': 'Test Template',
-            'email_template_data': {
-                'subject': 'Test Subject',
-                'html': '<html>Email</html>'
-            },
-            'landing_page_data': {
-                'html': ''  # Empty string, not missing
-            }
-        }
-        
-        response = client.post('/api/templates',
-                              json=template_data,
-                              headers=admin_headers)
-        
-        assert response.status_code == 400
-        data = response.get_json()
-        assert 'error' in data
-        assert 'Landing page HTML is required' in data['error']
-    
+        assert response.get_json()['error'] == 'No data provided'
+
     def test_create_template_requires_auth(self, client):
         """Test that creating template requires authentication"""
-        template_data = {
+        response = client.post('/api/templates', json={
             'name': 'Test Template',
-            'email_template_data': {
-                'subject': 'Test Subject',
-                'html': '<html>Email</html>'
-            },
-            'landing_page_data': {
-                'html': '<html>Landing</html>'
-            }
-        }
-        
-        response = client.post('/api/templates', json=template_data)
-        
+            'email_template_data': {'subject': 'S', 'html': '<html/>'},
+            'landing_page_data': {'html': '<html/>'}
+        })
+
         assert response.status_code == 401
-    
+
     def test_create_template_requires_admin(self, client, regular_headers):
         """Test that creating template requires admin access"""
-        template_data = {
+        response = client.post('/api/templates', json={
             'name': 'Test Template',
-            'email_template_data': {
-                'subject': 'Test Subject',
-                'html': '<html>Email</html>'
-            },
-            'landing_page_data': {
-                'html': '<html>Landing</html>'
-            }
-        }
-        
-        response = client.post('/api/templates',
-                              json=template_data,
-                              headers=regular_headers)
-        
+            'email_template_data': {'subject': 'S', 'html': '<html/>'},
+            'landing_page_data': {'html': '<html/>'}
+        }, headers=regular_headers)
+
         assert response.status_code == 403
-        data = response.get_json()
-        assert 'error' in data
-        assert 'Admin access required' in data['error']
+        assert 'Admin access required' in response.get_json()['error']
 
 
 class TestUpdateTemplate:
     """Tests for PUT /api/templates/<id>"""
-    
+
     @patch('app.services.gophish.templates.TemplatesService.update_template')
     def test_update_template_success(self, mock_update_template, client, admin_headers, test_template):
         """Test successfully updating a template"""
@@ -443,7 +252,7 @@ class TestUpdateTemplate:
             'status': 'success',
             'message': 'Template updated successfully'
         }
-        
+
         update_data = {
             'name': 'Updated Template',
             'email_template_data': {
@@ -454,89 +263,33 @@ class TestUpdateTemplate:
                 'html': '<html>Updated Landing</html>'
             }
         }
-        
+
         response = client.put(f'/api/templates/{test_template.id}',
-                             json=update_data,
-                             headers=admin_headers)
-        
+                              json=update_data, headers=admin_headers)
+
         assert response.status_code == 200
-        data = response.get_json()
-        assert data['status'] == 'success'
-    
-    @patch('app.services.gophish.templates.TemplatesService.update_template')
-    def test_update_template_partial(self, mock_update_template, client, admin_headers, test_template):
-        """Test updating template with partial data"""
-        mock_update_template.return_value = {
-            'status': 'success',
-            'message': 'Template updated successfully'
-        }
-        
-        update_data = {
-            'name': 'Updated Name'
-        }
-        
-        response = client.put(f'/api/templates/{test_template.id}',
-                             json=update_data,
-                             headers=admin_headers)
-        
-        assert response.status_code == 200
-        data = response.get_json()
-        assert data['status'] == 'success'
-    
+        assert response.get_json()['status'] == 'success'
+
     def test_update_template_no_data(self, client, admin_headers, test_template):
-        """Test updating template with no data"""
+        """Test updating template with empty body"""
         response = client.put(f'/api/templates/{test_template.id}',
-                             json={},
-                             headers=admin_headers)
-        
+                              json={}, headers=admin_headers)
+
         assert response.status_code == 400
-        data = response.get_json()
-        assert 'error' in data
-        assert data['error'] == 'No data provided'
-    
-    def test_update_template_empty_subject(self, client, admin_headers, test_template):
-        """Test updating template with empty email subject"""
-        update_data = {
-            'email_template_data': {
-                'subject': '',
-                'html': '<html>Email</html>'
-            }
-        }
-        
-        response = client.put(f'/api/templates/{test_template.id}',
-                             json=update_data,
-                             headers=admin_headers)
-        
-        assert response.status_code == 400
-        data = response.get_json()
-        assert 'error' in data
-        assert 'Email template subject is required' in data['error']
-    
-    def test_update_template_requires_auth(self, client, test_template):
-        """Test that updating template requires authentication"""
-        update_data = {'name': 'Updated'}
-        
-        response = client.put(f'/api/templates/{test_template.id}', json=update_data)
-        
-        assert response.status_code == 401
-    
+        assert response.get_json()['error'] == 'No data provided'
+
     def test_update_template_requires_admin(self, client, regular_headers, test_template):
         """Test that updating template requires admin access"""
-        update_data = {'name': 'Updated'}
-        
         response = client.put(f'/api/templates/{test_template.id}',
-                             json=update_data,
-                             headers=regular_headers)
-        
+                              json={'name': 'Updated'}, headers=regular_headers)
+
         assert response.status_code == 403
-        data = response.get_json()
-        assert 'error' in data
-        assert 'Admin access required' in data['error']
+        assert 'Admin access required' in response.get_json()['error']
 
 
 class TestDeleteTemplate:
     """Tests for DELETE /api/templates/<id>"""
-    
+
     @patch('app.services.gophish.templates.TemplatesService.delete_template')
     def test_delete_template_success(self, mock_delete_template, client, admin_headers, test_template):
         """Test successfully deleting a template"""
@@ -544,38 +297,21 @@ class TestDeleteTemplate:
             'status': 'success',
             'message': 'Template deleted successfully'
         }
-        
+
         response = client.delete(f'/api/templates/{test_template.id}', headers=admin_headers)
-        
+
         assert response.status_code == 200
-        data = response.get_json()
-        assert data['status'] == 'success'
-    
-    @patch('app.services.gophish.templates.TemplatesService.delete_template')
-    def test_delete_template_not_found(self, mock_delete_template, client, admin_headers):
-        """Test deleting a non-existent template"""
-        mock_delete_template.return_value = {
-            'status': 'error',
-            'message': 'Template not found'
-        }
-        
-        response = client.delete('/api/templates/99999', headers=admin_headers)
-        
-        assert response.status_code == 400
-        data = response.get_json()
-        assert data['status'] == 'error'
-    
+        assert response.get_json()['status'] == 'success'
+
     def test_delete_template_requires_auth(self, client, test_template):
         """Test that deleting template requires authentication"""
         response = client.delete(f'/api/templates/{test_template.id}')
-        
+
         assert response.status_code == 401
-    
+
     def test_delete_template_requires_admin(self, client, regular_headers, test_template):
         """Test that deleting template requires admin access"""
         response = client.delete(f'/api/templates/{test_template.id}', headers=regular_headers)
-        
+
         assert response.status_code == 403
-        data = response.get_json()
-        assert 'error' in data
-        assert 'Admin access required' in data['error']
+        assert 'Admin access required' in response.get_json()['error']

@@ -58,7 +58,7 @@ def get_all_templates():
 
 
 @bp.route('/<int:template_id>', methods=['GET'])
-@jwt_required()
+@admin_required
 def get_template(template_id):
     try:
         service = TemplatesService()
