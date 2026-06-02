@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useParams, Link } from 'react-router-dom'
 import {
   ArrowLeft,
   Calendar,
@@ -20,7 +20,6 @@ import { formatDate } from '../../utils/dateUtils'
 
 export default function ViewCampaign() {
   const { id } = useParams()
-  const navigate = useNavigate()
   const [campaign, setCampaign] = useState(null)
   const [summary, setSummary] = useState(null)
   const [results, setResults] = useState([])

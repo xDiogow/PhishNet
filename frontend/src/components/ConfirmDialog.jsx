@@ -10,10 +10,11 @@ export default function ConfirmDialog({
   confirmText = 'Confirm',
   cancelText = 'Cancel',
   confirmButtonStyle = 'bg-red-500 hover:bg-red-400',
-  icon: Icon = AlertTriangle,
+  icon = AlertTriangle,
   iconBgColor = 'bg-red-500/10',
   iconColor = 'text-red-400'
 }) {
+  const Icon = icon
   return (
     <Dialog open={open} onClose={onClose} className="relative z-50">
       <DialogBackdrop

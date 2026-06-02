@@ -61,7 +61,7 @@ export default function CreateCampaign() {
 
     try {
       setSubmitting(true)
-      const response = await createCampaign({
+      await createCampaign({
         name: formData.name,
         template_id: formData.template_id,
       })
