@@ -3,19 +3,18 @@ from flask import Flask, jsonify
 from .config import Config
 from .extensions import db, migrate, jwt, bcrypt, cors
 from .api import register_blueprints
-from .services.gophish import GophishService
+from .commands import register_commands
 
 
 def create_app(config_object=None):
     app = Flask(__name__)
     app.config.from_object(config_object or Config)
-    
-    # Configure logging
+
     logging.basicConfig(
         level=getattr(logging, app.config.get('LOG_LEVEL', 'INFO')),
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )
-    
+
     db.init_app(app)
     migrate.init_app(app, db)
     jwt.init_app(app)
@@ -28,16 +27,12 @@ def create_app(config_object=None):
         }
     })
 
-    # Import models for Flask-Migrate to detect them
     with app.app_context():
-        from app.models import Base, User, Target, Tenant, Instance, Template, Campaign, TenantInvitation
+        from app.models import Base, User, Target, Tenant, Template, Campaign, TenantInvitation
         app.logger.info('Models loaded for migrations')
 
     register_blueprints(app)
-
-    # Initialize and attach Gophish service
-    gophish_service = GophishService()
-    app.gophish_service = gophish_service
+    register_commands(app)
 
     # Register error handlers
     @app.errorhandler(Exception)

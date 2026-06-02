@@ -117,7 +117,7 @@ export default function Team() {
   }
 
   const handleDeleteTarget = async (targetId) => {
-    if (!window.confirm('Are you sure you want to remove this target? They will also be removed from GoPhish.')) {
+    if (!window.confirm('Are you sure you want to remove this target? This action cannot be undone.')) {
       return
     }
     try {

@@ -88,8 +88,7 @@ def existing_user(db_session, test_tenant):
 class TestRegister:
     """Tests for POST /api/auth/register"""
 
-    @patch('app.api.auth.register.GroupsService')
-    def test_register_success(self, mock_groups_service, client, db_session, test_tenant, valid_invitation):
+    def test_register_success(self, client, db_session, test_tenant, valid_invitation):
         """Test successfully registering a user"""
         # Pre-create a user so count() != 0 — the registered user should not become admin
         existing = User(

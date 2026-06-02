@@ -162,41 +162,4 @@ export const trackingAPI = {
   },
 };
 
-/**
- * GoPhish API Service
- */
-export const gophishAPI = {
-  /**
-   * Get GoPhish server status
-   */
-  getStatus: async () => {
-    const response = await apiClient.get('/api/gophish/status');
-    return response.data;
-  },
-
-  /**
-   * Get campaigns from GoPhish
-   */
-  getCampaigns: async () => {
-    const response = await apiClient.get('/api/gophish/campaigns');
-    return response.data;
-  },
-
-  /**
-   * Get groups from GoPhish
-   */
-  getGroups: async () => {
-    const response = await apiClient.get('/api/gophish/groups');
-    return response.data;
-  },
-
-  /**
-   * Get templates from GoPhish
-   */
-  getTemplates: async () => {
-    const response = await apiClient.get('/api/gophish/templates');
-    return response.data;
-  },
-};
-
 export default apiClient;

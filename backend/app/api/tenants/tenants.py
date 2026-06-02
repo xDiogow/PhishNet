@@ -13,7 +13,6 @@ def tenant_to_dict(tenant):
     return {
         'id': tenant.id,
         'name': tenant.name,
-        'gophish_group_id': tenant.gophish_group_id,
         'created_at': tenant.created_at.isoformat() if tenant.created_at else None
     }
 

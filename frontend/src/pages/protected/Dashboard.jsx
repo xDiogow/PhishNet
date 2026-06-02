@@ -4,7 +4,6 @@ import {
   TrendingUp,
   Mail,
   FileText,
-  Server,
   Building2,
   Users,
   Activity,
@@ -15,7 +14,6 @@ import {
 import { useUser } from '../../contexts/UserContext'
 import { getCampaigns } from '../../services/campaignsService'
 import { getTemplates } from '../../services/templatesService'
-import { getInstances } from '../../services/instancesService'
 import { getTenants } from '../../services/tenantsService'
 import { formatDate } from '../../utils/dateUtils'
 
@@ -25,7 +23,6 @@ export default function Dashboard() {
   const [stats, setStats] = useState({
     campaigns: 0,
     templates: 0,
-    instances: 0,
     tenants: 0,
   })
   const [recentCampaigns, setRecentCampaigns] = useState([])
@@ -58,16 +55,8 @@ export default function Dashboard() {
         console.log('Templates not available:', err)
       }
 
-      // Fetch instances (admin only)
+      // Fetch tenants (admin only)
       if (isAdmin()) {
-        try {
-          const instancesData = await getInstances()
-          setStats(prev => ({ ...prev, instances: instancesData.length }))
-        } catch (err) {
-          console.log('Instances not available:', err)
-        }
-
-        // Fetch tenants (admin only)
         try {
           const tenantsData = await getTenants()
           setStats(prev => ({ ...prev, tenants: tenantsData.length }))
@@ -173,28 +162,6 @@ export default function Dashboard() {
             <ArrowRight className="ml-1 h-4 w-4" />
           </div>
         </Link>
-
-        {/* Instances Card (Admin Only) */}
-        {isAdmin() && (
-          <Link
-            to="/instances"
-            className="group relative overflow-hidden rounded-lg bg-white p-6 shadow hover:shadow-lg transition-shadow border border-gray-200"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Active Instances</p>
-                <p className="mt-2 text-3xl font-bold text-gray-900">{stats.instances}</p>
-              </div>
-              <div className="rounded-full bg-green-100 p-3">
-                <Server className="h-6 w-6 text-green-600" />
-              </div>
-            </div>
-            <div className="mt-4 flex items-center text-sm text-green-600 group-hover:text-green-700">
-              <span>Manage instances</span>
-              <ArrowRight className="ml-1 h-4 w-4" />
-            </div>
-          </Link>
-        )}
 
         {/* Tenants Card (Admin Only) */}
         {isAdmin() && (
@@ -361,24 +328,6 @@ export default function Dashboard() {
 
             {isAdmin() && (
               <>
-                <Link
-                  to="/instances"
-                  className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors group"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="rounded-lg bg-green-100 p-2">
-                      <Server className="h-5 w-5 text-green-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">Gophish Instances</p>
-                      <p className="text-xs text-gray-500">
-                        {stats.instances} active instances
-                      </p>
-                    </div>
-                  </div>
-                  <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-gray-600" />
-                </Link>
-
                 <Link
                   to="/tenants"
                   className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors group"

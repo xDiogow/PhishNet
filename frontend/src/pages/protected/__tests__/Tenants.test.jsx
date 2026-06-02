@@ -18,13 +18,11 @@ const mockTenants = [
   {
     id: 1,
     name: 'Acme Corporation',
-    gophish_group_id: 10,
     created_at: '2024-01-15T10:00:00Z'
   },
   {
     id: 2,
     name: 'TechCorp Inc',
-    gophish_group_id: 20,
     created_at: '2024-01-20T14:30:00Z'
   }
 ]
@@ -74,12 +72,12 @@ describe('Tenants Page', () => {
     })
   })
 
-  it('should display tenant details correctly', async () => {
+  it('should display tenant names correctly', async () => {
     renderWithRouter(<Tenants />)
 
     await waitFor(() => {
-      expect(screen.getByText('10')).toBeInTheDocument()
-      expect(screen.getByText('20')).toBeInTheDocument()
+      expect(screen.getByText('Acme Corporation')).toBeInTheDocument()
+      expect(screen.getByText('TechCorp Inc')).toBeInTheDocument()
     })
   })
 

@@ -12,7 +12,6 @@ const navigation = [
   { name: 'Campaigns', path: '/campaigns', adminOnly: false },
   { name: 'Templates', path: '/templates', adminOnly: false },
   { name: 'Audit Logs', path: '/audit-logs', adminOnly: false },
-  { name: 'Instances', path: '/instances', adminOnly: true },
   { name: 'Tenants', path: '/tenants', adminOnly: true },
 ];
 
@@ -45,7 +44,6 @@ export default function Navbar() {
                           location.pathname.startsWith('/campaigns') ||
                           location.pathname.startsWith('/templates') ||
                           location.pathname.startsWith('/audit-logs') ||
-                          location.pathname.startsWith('/instances') ||
                           location.pathname.startsWith('/tenants');
 
   // If not in protected route, show landing page navbar

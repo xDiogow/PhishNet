@@ -4,11 +4,6 @@ Flask-SQLAlchemy>=3.0.0
 flask_migrate
 flask_bcrypt
 flask-cors
-gophish
-requests
-python-dateutil
-six
-urllib3
 python-dotenv
 gunicorn
 psycopg2-binary

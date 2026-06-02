@@ -19,6 +19,19 @@ class Config:
     # CORS Configuration
     CORS_ORIGINS = os.getenv('CORS_ORIGINS', 'http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173,http://localhost:4173,http://127.0.0.1:4173').split(',')
 
+    # SMTP / Email
+    MAIL_SERVER = os.getenv('MAIL_SERVER', 'smtp.mailtrap.io')
+    MAIL_PORT = int(os.getenv('MAIL_PORT', 587))
+    MAIL_USE_TLS = os.getenv('MAIL_USE_TLS', 'True') == 'True'
+    MAIL_USE_SSL = os.getenv('MAIL_USE_SSL', 'False') == 'True'  # port 465 implicit SSL
+    MAIL_USERNAME = os.getenv('MAIL_USERNAME', '')
+    MAIL_PASSWORD = os.getenv('MAIL_PASSWORD', '')
+    MAIL_FROM = os.getenv('MAIL_FROM', 'phishnet@company.com')
+    MAIL_TIMEOUT = int(os.getenv('MAIL_TIMEOUT', 30))  # seconds per SMTP connection
+
+    # Base URL used to build tracking links embedded in phishing emails
+    APP_BASE_URL = os.getenv('APP_BASE_URL', 'http://localhost:5000')
+
 class DevelopmentConfig(Config):
     DEBUG = True
 

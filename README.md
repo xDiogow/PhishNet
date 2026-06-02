@@ -2,7 +2,7 @@
 
 **B2B Phishing Simulation & Security Awareness Platform**
 
-PhishNet is a full-stack application for conducting phishing simulations and security awareness training. Built for defensive security purposes, it enables organizations to test and improve employee awareness of phishing attacks.
+PhishNet is a full-stack application for conducting phishing simulations and security awareness training. Built for defensive security purposes, it enables organisations to test and improve employee awareness of phishing attacks.
 
 ---
 
@@ -13,8 +13,7 @@ PhishNet is a full-stack application for conducting phishing simulations and sec
 - **Python 3.12+**
 - **Node.js 22.12+** (for Vite 7.3)
 - **Git**
-- **GoPhish v0.12.1** - [Download here](https://github.com/gophish/gophish/releases)
-- **MailTrap Account** (free) - [Sign up here](https://mailtrap.io/)
+- **An SMTP provider** — [Mailtrap](https://mailtrap.io/) (free) works well for testing
 
 ---
 
@@ -31,7 +30,7 @@ cd PhishNet
 ```bash
 cp .env.example .env
 
-# Configure the .env
+# Configure the .env (SMTP credentials, secrets, etc.)
 docker compose up -d
 ```
 
@@ -53,15 +52,21 @@ LOG_LEVEL=INFO
 DATABASE_URL=postgresql://phishnet:changeme_secure_password_here@db:5432/phishnet
 
 # CORS Configuration
-# Comma-separated list of allowed origins
 CORS_ORIGINS=http://localhost,http://localhost:80
 
 # Frontend Configuration
 FRONTEND_PORT=80
 
-# Gophish Ports (configured in dashboard)
-GOPHISH_ADMIN_PORT=3333
-GOPHISH_PHISHING_PORT=8080
+# SMTP — configure to match your mail provider (e.g. Mailtrap, SendGrid, SES)
+MAIL_SERVER=smtp.mailtrap.io
+MAIL_PORT=587
+MAIL_USE_TLS=True
+MAIL_USERNAME=your-smtp-username
+MAIL_PASSWORD=your-smtp-password
+MAIL_FROM=phishnet@company.com
+
+# Public base URL used to build tracking links embedded in phishing emails
+APP_BASE_URL=http://localhost
 ```
 
 ## 🧪 Testing
@@ -70,86 +75,91 @@ GOPHISH_PHISHING_PORT=8080
 
 ```bash
 cd backend
-pytest                    # Run all tests
-pytest -v                # Verbose output
-pytest tests/test_api.py # Run specific test file
+pytest            # Run all tests
+pytest -v         # Verbose output
 ```
 
-**Test Coverage:** 81/81 tests passing (100%)
+**Test Coverage:** 101 tests passing
 
 ### Frontend Tests
 
 ```bash
 cd frontend
-npm test                 # Run tests
-npm run test:ui         # Run tests with UI
-npm run test:coverage   # Coverage report
+npm test               # Run tests
+npm run test:ui        # Run tests with UI
+npm run test:coverage  # Coverage report
 ```
 
-**Test Coverage:** 19/19 tests passing (100%)
+**Test Coverage:** 45 tests passing
 
 ---
 
 ## 📊 Features
 
 ✅ **Backend**
-- Flask REST API with 9 dashboard endpoints
-- GoPhish integration (campaigns, templates, groups)
-- Tenants integration (invitation system and permissions)
-- 210/210 tests passing
+- Flask REST API with JWT authentication and multi-tenancy
+- Native phishing engine — sends emails via SMTP, no external dependencies
+- UUID-based tracking tokens per target per campaign
+- Open tracking (1×1 GIF pixel), click tracking, credential submission tracking
+- Tenant invitation system with operator/user roles
+- Audit log for all admin and campaign actions
 
 ✅ **Frontend**
-- React dashboard with real-time data
-- System health monitoring
-- Campaign management with metrics
-- Email sending interface
-- Template & group management
-- Submission tracking
-- 57/57 tests passing
+- React dashboard with real-time campaign statistics
+- Campaign creation and lifecycle management (launch, view results, stop)
+- Template editor supporting HTML email + landing page
+- Team and target management
+- Tenant administration (admin only)
+- Audit log viewer with CSV export
 
 ---
 
 ## 📖 API Endpoints
 
 ### Auth
-- `POST /api/auth/login` - Login a user and receive a JWT token
-- `POST /api/auth/register` - Register a new user using an invitation code
+- `POST /api/auth/login` — Login a user and receive a JWT token
+- `POST /api/auth/register` — Register a new user using an invitation code
 
 ### Campaigns
-- `GET /api/campaigns` - List all campaigns for your tenant
-- `POST /api/campaigns` - Create a new phishing campaign
-- `GET /api/campaigns/<id>` - Get detailed information about a specific campaign
-- `GET /api/campaigns/<id>/summary` - Get real-time results and summary metrics for a campaign
-- `POST /api/campaigns/<id>/complete` - Manually complete/stop a running campaign
-- `DELETE /api/campaigns/<id>` - Delete a campaign
+- `GET /api/campaigns` — List all campaigns for your tenant
+- `POST /api/campaigns` — Create and immediately launch a phishing campaign
+- `GET /api/campaigns/<id>` — Get campaign details
+- `GET /api/campaigns/<id>/summary` — Live stats + per-target result list
+- `POST /api/campaigns/<id>/complete` — Stop a running campaign
+- `DELETE /api/campaigns/<id>` — Delete a campaign
 
 ### Tenants (Admin Only)
-- `GET /api/tenants` - List all tenants in the system
-- `POST /api/tenants` - Create a new tenant and generate an initial invitation
-- `GET /api/tenants/<id>` - Get tenant details
-- `PUT /api/tenants/<id>` - Update tenant information
-- `DELETE /api/tenants/<id>` - Remove a tenant from the system
+- `GET /api/tenants` — List all tenants
+- `POST /api/tenants` — Create a tenant and generate its first invitation
+- `GET /api/tenants/<id>` — Get tenant details
+- `PUT /api/tenants/<id>` — Update tenant
+- `DELETE /api/tenants/<id>` — Delete a tenant (must have no users)
 
 ### Tenant Invitations
-- `POST /api/tenant-invitations` - Generate a new invitation code (Operator Only)
-- `POST /api/tenant-invitations/validate` - Check if an invitation code is valid
-- `GET /api/tenant-invitations/<codeShort>` - Get details for a specific invitation code
-- `GET /api/tenant-invitations/tenant/<id>` - List all invitations issued for a specific tenant (Operator Only)
+- `POST /api/tenant-invitations` — Generate a new invitation code (Operator only)
+- `POST /api/tenant-invitations/validate` — Check if an invitation code is valid
+- `GET /api/tenant-invitations/<codeShort>` — Get invitation details
+- `GET /api/tenant-invitations/tenant/<id>` — List all invitations for a tenant (Operator only)
 
-### Instances (Admin Only)
-- `GET /api/instances` - List all connected Gophish instances
-- `POST /api/instances` - Connect a new Gophish instance
-- `GET /api/instances/<id>` - Get instance configuration
-- `PUT /api/instances/<id>` - Update instance settings
-- `PATCH /api/instances/<id>/toggle` - Enable or disable a Gophish instance
-- `DELETE /api/instances/<id>` - Disconnect a Gophish instance
-
-### Templates
-- `GET /api/templates` - List all available phishing templates
-- `POST /api/templates` - Create a new email and landing page template (Admin Only)
-- `GET /api/templates/<id>` - Get full template content (Admin Only)
-- `PUT /api/templates/<id>` - Update an existing template (Admin Only)
-- `DELETE /api/templates/<id>` - Remove a template (Admin Only)
+### Templates (Admin Only for write operations)
+- `GET /api/templates` — List all templates
+- `POST /api/templates` — Create a template (Admin only)
+- `GET /api/templates/<id>` — Get full template content (Admin only)
+- `PUT /api/templates/<id>` — Update a template (Admin only)
+- `DELETE /api/templates/<id>` — Delete a template (Admin only)
 
 ### Team
-- `GET /api/team` - List all users belonging to your tenant and their roles (Operator/User)
+- `GET /api/team` — List all users in your tenant
+- `GET /api/team/targets` — List phishing targets for your tenant
+- `POST /api/team/targets` — Add a phishing target
+- `DELETE /api/team/targets/<id>` — Remove a phishing target
+
+### Tracking (public — no authentication)
+- `GET /track/o/<token>` — Open tracking pixel (1×1 GIF)
+- `GET /track/c/<token>` — Click tracking redirect → landing page
+- `GET /phish/<token>` — Serve phishing landing page
+- `POST /phish/<token>` — Record credential submission → redirect to /caught
+
+### Audit Logs
+- `GET /api/audit-logs` — List audit log entries for your tenant
+- `GET /api/audit-logs/export` — Export audit log as CSV

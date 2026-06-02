@@ -1,73 +1,71 @@
-"""Template API routes"""
+"""Template API routes.
+
+Templates are stored entirely in the database. Each template bundles an
+email (subject + HTML) and a landing page (HTML + optional redirect URL).
+Admin-only endpoints require the @admin_required decorator.
+
+Routes:
+  GET    /api/templates        list all templates (any authenticated user)
+  GET    /api/templates/<id>   get template detail (admin only)
+  POST   /api/templates        create a template (admin only)
+  PUT    /api/templates/<id>   update a template (admin only)
+  DELETE /api/templates/<id>   delete a template (admin only)
+
+HTML placeholders available to template authors:
+  {{TRACKING_PIXEL}} — replaced with a 1×1 tracking pixel img tag when sending
+  {{CLICK_URL}}      — replaced with the click-tracking redirect URL
+  {{FORM_ACTION}}    — injected into the landing page form action attribute
+"""
 from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from app.services.gophish import TemplatesService
-from app.repository.user_repository import UserRepository
+from app.models.template import Template
+from app.repository.template_repository import TemplateRepository
 from app.utils.auth_helper import admin_required
 
 bp = Blueprint('templates', __name__, url_prefix='/api/templates')
 
 
-def template_summary_to_dict(template_map) -> dict:
-    """Convert template to summary dictionary"""
+def template_to_dict(template: Template) -> dict:
+    """Serialise a Template model to the API response shape."""
     return {
-        'id': template_map.id,
-        'name': template_map.name,
-        'created_by_user_id': template_map.created_by_user_id,
-        'created_at': template_map.created_at.isoformat() if template_map.created_at else None,
+        'id': template.id,
+        'name': template.name,
+        'created_by_user_id': template.created_by_user_id,
+        'created_at': template.created_at.isoformat() if template.created_at else None,
+        'email_template': {
+            'subject': template.subject,
+            'html': template.email_html,
+        },
+        'landing_page': {
+            'html': template.landing_page_html,
+            'redirect_url': template.redirect_url or '',
+        },
     }
-
-
-def template_detail_to_dict(template_details: dict) -> dict:
-    """Convert template to detail dictionary"""
-    template_map = template_details['template_map']
-    email_template = template_details['email_template']
-    landing_page = template_details['landing_page']
-    
-    result = template_summary_to_dict(template_map)
-    result['email_template'] = {
-        'id': email_template.id,
-        'name': email_template.name,
-        'subject': getattr(email_template, 'subject', ''),
-        'html': email_template.html,
-        'attachments': [{'name': att.name, 'type': att.type} for att in getattr(email_template, 'attachments', [])]
-    }
-    result['landing_page'] = {
-        'id': landing_page.id,
-        'name': landing_page.name,
-        'html': landing_page.html,
-        'redirect_url': getattr(landing_page, 'redirect_url', ''),
-    }
-    
-    return result
 
 
 @bp.route('', methods=['GET'])
 @jwt_required()
 def get_all_templates():
+    """Return all templates. Available to any authenticated user."""
     try:
-        service = TemplatesService()
-        templates = service.get_all_templates()
-        
-        return jsonify({
-            'templates': [template_summary_to_dict(template) for template in templates]
-        }), 200
+        repo = TemplateRepository()
+        templates = repo.get_all()
+        return jsonify({'templates': [template_to_dict(t) for t in templates]}), 200
     except Exception as e:
-        current_app.logger.exception('Error getting all templates')
+        current_app.logger.exception('Error getting templates')
         return jsonify({'error': 'Failed to get templates', 'message': str(e)}), 500
 
 
 @bp.route('/<int:template_id>', methods=['GET'])
 @admin_required
 def get_template(template_id):
+    """Return full detail for one template, including HTML bodies."""
     try:
-        service = TemplatesService()
-        template_details = service.get_template_details(template_id)
-        
-        if not template_details:
+        repo = TemplateRepository()
+        template = repo.get_by_id(template_id)
+        if not template:
             return jsonify({'error': 'Template not found'}), 404
-        
-        return jsonify(template_detail_to_dict(template_details)), 200
+        return jsonify(template_to_dict(template)), 200
     except Exception as e:
         current_app.logger.exception('Error getting template')
         return jsonify({'error': 'Failed to get template', 'message': str(e)}), 500
@@ -76,58 +74,54 @@ def get_template(template_id):
 @bp.route('', methods=['POST'])
 @admin_required
 def create_template():
+    """Create a new template.
+
+    Expected body::
+
+        {
+            "name": "string",
+            "email_template_data": {"subject": "...", "html": "..."},
+            "landing_page_data":   {"html": "...", "redirect_url": "..."}
+        }
+    """
     try:
         data = request.get_json()
-        
         if not data:
             return jsonify({'error': 'No data provided'}), 400
-        
+
         user_id = get_jwt_identity()
-        user_repo = UserRepository()
-        user = user_repo.get_by_id(user_id)
-        
-        required_fields = ['name', 'email_template_data', 'landing_page_data']
-        missing_fields = [field for field in required_fields if not data.get(field)]
-        if missing_fields:
-            return jsonify({
-                'error': 'Missing required fields',
-                'required': required_fields,
-                'missing': missing_fields
-            }), 400
-        
-        email_template_data = data.get('email_template_data', {})
-        subject = email_template_data.get('subject', '').strip() if email_template_data.get('subject') else ''
+
+        email_data = data.get('email_template_data', {})
+        landing_data = data.get('landing_page_data', {})
+
+        missing = [f for f in ['name', 'email_template_data', 'landing_page_data'] if not data.get(f)]
+        if missing:
+            return jsonify({'error': 'Missing required fields', 'missing': missing}), 400
+
+        subject = (email_data.get('subject') or '').strip()
         if not subject:
-            return jsonify({
-                'error': 'Email template subject is required and cannot be empty'
-            }), 400
-        if not email_template_data.get('html'):
-            return jsonify({
-                'error': 'Email template HTML is required'
-            }), 400
-        
-        landing_page_data = data.get('landing_page_data', {})
-        if not landing_page_data.get('html'):
-            return jsonify({
-                'error': 'Landing page HTML is required'
-            }), 400
-        
-        service = TemplatesService()
-        result = service.create_template(
-            name=data.get('name'),
-            email_template_data=email_template_data,
-            landing_page_data=landing_page_data,
-            created_by_user_id=user.id
+            return jsonify({'error': 'Email template subject is required'}), 400
+        if not email_data.get('html'):
+            return jsonify({'error': 'Email template HTML is required'}), 400
+        if not landing_data.get('html'):
+            return jsonify({'error': 'Landing page HTML is required'}), 400
+
+        repo = TemplateRepository()
+        template = Template(
+            name=data['name'],
+            subject=subject,
+            email_html=email_data['html'],
+            landing_page_html=landing_data['html'],
+            redirect_url=landing_data.get('redirect_url') or None,
+            created_by_user_id=int(user_id),
         )
-        
-        if result.get('status') == 'success':
-            return jsonify(result), 201
-        else:
-            return jsonify(result), 400
-            
-    except TypeError as e:
-        current_app.logger.error(f'Type error creating template: {e}')
-        return jsonify({'error': 'Invalid template data', 'message': str(e)}), 400
+        repo.create(template)
+
+        return jsonify({
+            'status': 'success',
+            'message': 'Template created successfully',
+            'template': template_to_dict(template),
+        }), 201
     except Exception as e:
         current_app.logger.exception('Error creating template')
         return jsonify({'error': 'Failed to create template', 'message': str(e)}), 500
@@ -136,36 +130,43 @@ def create_template():
 @bp.route('/<int:template_id>', methods=['PUT'])
 @admin_required
 def update_template(template_id):
+    """Partially update a template. All fields are optional — only provided fields are changed."""
     try:
         data = request.get_json()
-        
         if not data:
             return jsonify({'error': 'No data provided'}), 400
-        
-        email_template_data = data.get('email_template_data')
-        if email_template_data:
-            # Subject is required when updating email_template_data
-            subject = email_template_data.get('subject', '').strip() if email_template_data.get('subject') else ''
+
+        repo = TemplateRepository()
+        template = repo.get_by_id(template_id)
+        if not template:
+            return jsonify({'error': 'Template not found'}), 404
+
+        email_data = data.get('email_template_data')
+        landing_data = data.get('landing_page_data')
+
+        if data.get('name'):
+            template.name = data['name']
+        if email_data:
+            subject = (email_data.get('subject') or '').strip()
             if not subject:
-                return jsonify({
-                    'error': 'Email template subject is required and cannot be empty'
-                }), 400
-        
-        service = TemplatesService()
-        result = service.update_template(
-            template_id=template_id,
-            name=data.get('name'),
-            email_template_data=email_template_data,
-            landing_page_data=data.get('landing_page_data')
-        )
-        
-        if result.get('status') == 'success':
-            return jsonify(result), 200
-        else:
-            return jsonify(result), 400
-            
-    except ValueError as e:
-        return jsonify({'error': 'Invalid template ID', 'message': str(e)}), 400
+                return jsonify({'error': 'Email template subject cannot be empty'}), 400
+            template.subject = subject
+            if email_data.get('html'):
+                template.email_html = email_data['html']
+        if landing_data:
+            if landing_data.get('html'):
+                template.landing_page_html = landing_data['html']
+            if 'redirect_url' in landing_data:
+                template.redirect_url = landing_data['redirect_url'] or None
+
+        from app.extensions import db
+        db.session.commit()
+
+        return jsonify({
+            'status': 'success',
+            'message': 'Template updated successfully',
+            'template': template_to_dict(template),
+        }), 200
     except Exception as e:
         current_app.logger.exception('Error updating template')
         return jsonify({'error': 'Failed to update template', 'message': str(e)}), 500
@@ -174,17 +175,14 @@ def update_template(template_id):
 @bp.route('/<int:template_id>', methods=['DELETE'])
 @admin_required
 def delete_template(template_id):
+    """Permanently delete a template. Campaigns that already used it are unaffected."""
     try:
-        service = TemplatesService()
-        result = service.delete_template(template_id)
-        
-        if result.get('status') == 'success':
-            return jsonify(result), 200
-        else:
-            return jsonify(result), 400
-            
-    except ValueError as e:
-        return jsonify({'error': 'Invalid template ID', 'message': str(e)}), 400
+        repo = TemplateRepository()
+        template = repo.get_by_id(template_id)
+        if not template:
+            return jsonify({'error': 'Template not found'}), 404
+        repo.delete(template_id)
+        return jsonify({'status': 'success', 'message': 'Template deleted successfully'}), 200
     except Exception as e:
         current_app.logger.exception('Error deleting template')
         return jsonify({'error': 'Failed to delete template', 'message': str(e)}), 500

@@ -6,7 +6,6 @@ from app.repository.user_repository import UserRepository
 from app.repository.tenant_repository import TenantRepository
 from app.models.user import User
 from app.services.tenant_invitation_service import validate_invitation, use_invitation
-from app.services.gophish.groups import GroupsService
 from . import bp
 
 
