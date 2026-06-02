@@ -5,6 +5,7 @@ flask_migrate
 flask_bcrypt
 flask-cors
 gophish
+requests
 python-dotenv
 gunicorn
 psycopg2-binary
