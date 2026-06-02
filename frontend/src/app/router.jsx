@@ -7,6 +7,7 @@ import RequireAuth from "../auth/RequireAuth"
 import LandingPage from "../pages/public/LandingPage"
 import Login from "../pages/public/Login"
 import Register from "../pages/public/Register"
+import CaughtPage from "../pages/public/CaughtPage"
 import Dashboard from "../pages/protected/Dashboard"
 import Campaigns from "../pages/protected/Campaigns"
 import CreateCampaign from "../pages/protected/CreateCampaign"
@@ -24,6 +25,7 @@ export const router = createBrowserRouter([
       { path: "/", element: <LandingPage /> },
       { path: "/login", element: <Login /> },
       { path: "/register", element: <Register /> },
+      { path: "/caught", element: <CaughtPage /> },
     ],
   },
   {

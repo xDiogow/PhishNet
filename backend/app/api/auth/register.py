@@ -57,7 +57,9 @@ def register():
             return jsonify({'error': 'User with this email already exists'}), 409
         
         password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
-        
+
+        is_first_user = user_repo.count() == 0
+
         user = User(
             email=email,
             first_name=first_name,
@@ -65,7 +67,7 @@ def register():
             password_hash=password_hash,
             tenant_id=tenant_id,
             is_active=True,
-            is_admin=False
+            is_admin=is_first_user,
         )
         
         try:
