@@ -1,7 +1,7 @@
 import logging
 from flask import Flask, jsonify
 from .config import Config
-from .extensions import db, migrate, jwt, bcrypt, cors
+from .extensions import db, migrate, jwt, bcrypt, cors, limiter
 from .api import register_blueprints
 from .commands import register_commands
 
@@ -19,6 +19,7 @@ def create_app(config_object=None):
     migrate.init_app(app, db)
     jwt.init_app(app)
     bcrypt.init_app(app)
+    limiter.init_app(app)
     cors.init_app(app, resources={
         r"/api/*": {
             "origins": app.config['CORS_ORIGINS'],

@@ -1,4 +1,11 @@
 services:
+  redis:
+    image: redis:7-alpine
+    container_name: phishnet-redis
+    restart: unless-stopped
+    networks:
+      - phishnet-network
+
   db:
     image: postgres:15-alpine
     container_name: phishnet-db
@@ -24,6 +31,7 @@ services:
       FLASK_DEBUG: ${FLASK_DEBUG:-false}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       DATABASE_URL: postgresql://${POSTGRES_USER:-phishnet}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-phishnet}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost,http://localhost:80}
       # SMTP — configure to match your mail provider (e.g. Mailtrap, SendGrid, SES)
       MAIL_SERVER: ${MAIL_SERVER:-smtp.mailtrap.io}
@@ -38,6 +46,7 @@ services:
       - ./backend/migrations:/app/migrations
     depends_on:
       - db
+      - redis
     networks:
       - phishnet-network
     command: >

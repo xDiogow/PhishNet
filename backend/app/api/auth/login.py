@@ -1,11 +1,12 @@
 from flask import request, jsonify, current_app
 from flask_jwt_extended import create_access_token
-from app.extensions import bcrypt
+from app.extensions import bcrypt, limiter
 from app.repository.user_repository import UserRepository
 from . import bp
 
 
 @bp.route('/login', methods=['POST'])
+@limiter.limit('5 per minute')
 def login():
     """Login a user."""
     try:

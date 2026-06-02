@@ -10,6 +10,8 @@ class Config:
     SECRET_KEY = os.getenv('SECRET_KEY')
     JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY')
     DEBUG = os.getenv('FLASK_DEBUG', 'False') == 'True'
+    REDIS_URL = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
+    RATELIMIT_STORAGE_URI = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
 
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', f'sqlite:///{BASE_DIR / "app.db"}')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
@@ -47,3 +49,4 @@ class TestingConfig(Config):
     SECRET_KEY = 'test-secret-key'
     JWT_SECRET_KEY = 'test-jwt-secret-key'
     LOG_LEVEL = 'DEBUG'
+    REDIS_URL = 'redis://localhost:6379/1'  # separate DB index for tests
