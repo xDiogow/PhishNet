@@ -7,7 +7,7 @@ the tracking blueprint; this service provides read and lifecycle operations.
 """
 import logging
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 from flask import current_app
 from sqlalchemy import func
@@ -40,7 +40,7 @@ class CampaignService:
         if not targets:
             raise ValueError("No targets found for this tenant. Add targets before creating a campaign.")
 
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         campaign = Campaign(
             name=name,
             tenant_id=tenant_id,
@@ -158,7 +158,7 @@ class CampaignService:
         if not campaign:
             raise ValueError(f"Campaign {campaign_id} not found")
         campaign.status = CampaignStatus.STOPPED
-        campaign.stopped_at = datetime.utcnow()
+        campaign.stopped_at = datetime.now(timezone.utc)
         db.session.commit()
         return campaign
 

@@ -7,7 +7,7 @@ Routes:
   POST /phish/<token>     record credential submission → redirect to /caught
 """
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 
 from flask import Blueprint, redirect, make_response, current_app
 
@@ -48,7 +48,7 @@ def open_pixel(token):
     """Return a 1×1 GIF and record the first open event."""
     result = _get_result(token)
     if result and result.opened_at is None:
-        result.opened_at = datetime.utcnow()
+        result.opened_at = datetime.now(timezone.utc)
         result.status = 'Opened'
         db.session.commit()
         _increment_stat(result.campaign_id, 'opened_count')
@@ -67,7 +67,7 @@ def click_redirect(token):
     """Record the first click event and redirect to the landing page."""
     result = _get_result(token)
     if result and result.clicked_at is None:
-        result.clicked_at = datetime.utcnow()
+        result.clicked_at = datetime.now(timezone.utc)
         result.status = 'Clicked'
         db.session.commit()
         _increment_stat(result.campaign_id, 'clicked_count')
@@ -135,7 +135,7 @@ def landing_page_submit(token):
     """Record a credential submission and redirect to the caught page."""
     result = _get_result(token)
     if result and result.submitted_at is None:
-        result.submitted_at = datetime.utcnow()
+        result.submitted_at = datetime.now(timezone.utc)
         result.status = 'Submitted Data'
         db.session.commit()
         _increment_stat(result.campaign_id, 'submitted_count')

@@ -3,7 +3,7 @@ Tests for Register API endpoint
 """
 import pytest
 from unittest.mock import patch
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from app.extensions import db, bcrypt
 from app.models import User, Tenant, TenantInvitation
@@ -41,7 +41,7 @@ def expired_invitation(db_session, test_tenant):
         invitation_code="expired-invitation-code",
         tenant_id=test_tenant.id,
         is_used=False,
-        expires_at=datetime.utcnow() - timedelta(days=1)
+        expires_at=datetime.now(timezone.utc) - timedelta(days=1)
     )
     db_session.add(invitation)
     db_session.commit()
@@ -56,7 +56,7 @@ def used_invitation(db_session, test_tenant):
         invitation_code="used-invitation-code",
         tenant_id=test_tenant.id,
         is_used=True,
-        used_at=datetime.utcnow(),
+        used_at=datetime.now(timezone.utc),
         used_by_user_id=1,
         expires_at=None
     )

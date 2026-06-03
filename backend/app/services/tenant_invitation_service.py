@@ -1,5 +1,5 @@
 import secrets
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from app.repository.tenant_invitation_repository import TenantInvitationRepository
 from app.models.tenant_invitation import TenantInvitation
 
@@ -15,7 +15,7 @@ def create_invitation(tenant_id: int, expires_days: int = None):
     
     expires_at = None
     if expires_days is not None:
-        expires_at = datetime.utcnow() + timedelta(days=expires_days)
+        expires_at = datetime.now(timezone.utc) + timedelta(days=expires_days)
     
     invitation = TenantInvitation(
         invitation_code=invitation_code,

@@ -1,7 +1,7 @@
 """Tests for tracking endpoints (open pixel, click redirect, landing page, submission)"""
 import pytest
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.extensions import db, bcrypt
 from app.models import User, Tenant, Template, Campaign, CampaignStatus
@@ -67,7 +67,7 @@ def test_campaign(db_session, test_tenant, test_user, test_template):
         created_by_user_id=test_user.id,
         template_id=test_template.id,
         status=CampaignStatus.RUNNING,
-        launched_at=datetime.utcnow()
+        launched_at=datetime.now(timezone.utc)
     )
     db_session.add(campaign)
     db_session.commit()
@@ -99,7 +99,7 @@ def test_result(db_session, test_campaign):
         position="Engineer",
         tracking_token=token,
         status="Sent",
-        sent_at=datetime.utcnow()
+        sent_at=datetime.now(timezone.utc)
     )
     db_session.add(result)
     db_session.commit()

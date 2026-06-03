@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import Integer, BigInteger, String, Boolean, DateTime, ForeignKey, UniqueConstraint, Index
 
@@ -21,7 +21,7 @@ class TenantInvitation(Base):
     
     expires_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     
     __table_args__ = (
         UniqueConstraint("invitation_code", name="uq_tenant_invitation_code"),
@@ -37,7 +37,9 @@ class TenantInvitation(Base):
         """Check if the invitation has expired."""
         if self.expires_at is None:
             return False
-        return datetime.utcnow() > self.expires_at
+        now = datetime.now(timezone.utc)
+        expires = self.expires_at if self.expires_at.tzinfo else self.expires_at.replace(tzinfo=timezone.utc)
+        return now > expires
 
     def is_valid(self) -> bool:
         """Check if the invitation is valid (not used and not expired)."""

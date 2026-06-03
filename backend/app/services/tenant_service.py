@@ -6,7 +6,7 @@ tenants API route because it needs to enforce the no-users constraint.
 """
 import secrets
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from app.repository.tenant_repository import TenantRepository
 from app.repository.tenant_invitation_repository import TenantInvitationRepository
 from app.models.tenant import Tenant
@@ -41,7 +41,7 @@ def create_tenant(name: str, invitation_expires_days: int = None):
     
     expires_at = None
     if invitation_expires_days is not None:
-        expires_at = datetime.utcnow() + timedelta(days=invitation_expires_days)
+        expires_at = datetime.now(timezone.utc) + timedelta(days=invitation_expires_days)
     
     invitation = TenantInvitation(
         invitation_code=invitation_code,

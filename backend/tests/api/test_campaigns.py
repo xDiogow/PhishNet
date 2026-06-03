@@ -2,7 +2,7 @@
 import pytest
 from unittest.mock import patch
 from flask_jwt_extended import create_access_token
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.extensions import db, bcrypt
 from app.models import User, Tenant, Template, Campaign, CampaignStatus
@@ -58,7 +58,7 @@ def test_campaign(db_session, test_tenant, test_user, test_template):
         created_by_user_id=test_user.id,
         status=CampaignStatus.RUNNING,
         template_id=test_template.id,
-        launched_at=datetime.utcnow()
+        launched_at=datetime.now(timezone.utc)
     )
     db_session.add(campaign)
     db_session.commit()
@@ -187,14 +187,13 @@ class TestCreateCampaign:
                                      test_user, db_session):
         with patch('app.services.campaign_service.CampaignService.create_campaign') as mock:
             from app.models import Campaign, CampaignStatus
-            from datetime import datetime
             campaign = Campaign(
                 name="New Campaign",
                 tenant_id=test_tenant.id,
                 created_by_user_id=test_user.id,
                 template_id=test_template.id,
                 status=CampaignStatus.RUNNING,
-                launched_at=datetime.utcnow()
+                launched_at=datetime.now(timezone.utc)
             )
             db_session.add(campaign)
             db_session.flush()

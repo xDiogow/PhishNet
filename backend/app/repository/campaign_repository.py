@@ -19,7 +19,7 @@ class CampaignRepository(BaseRepository[Campaign]):
             raise ValueError(f"Campaign {campaign_id} not found")
         update_data = {"status": status}
         if status == CampaignStatus.RUNNING:
-            update_data["launched_at"] = datetime.datetime.utcnow()
+            update_data["launched_at"] = datetime.datetime.now(datetime.timezone.utc)
         elif status == CampaignStatus.STOPPED:
-            update_data["stopped_at"] = datetime.datetime.utcnow()
+            update_data["stopped_at"] = datetime.datetime.now(datetime.timezone.utc)
         return self.update_by_id(campaign_id, **update_data)

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from app.repository.base_repository import BaseRepository
 from app.models.tenant_invitation import TenantInvitation
 
@@ -30,6 +30,6 @@ class TenantInvitationRepository(BaseRepository[TenantInvitation]):
         return self.update_by_id(
             invitation_id,
             is_used=True,
-            used_at=datetime.utcnow(),
+            used_at=datetime.now(timezone.utc),
             used_by_user_id=user_id
         )
