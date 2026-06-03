@@ -148,7 +148,7 @@ export default function LandingPage() {
           <div className="text-center">
             {/* Badge */}
             <div className="inline-flex items-center gap-2 rounded-full bg-cyan-500/10 px-4 py-2 text-sm text-cyan-400 ring-1 ring-inset ring-cyan-500/20 mb-8">
-              <Shield className="h-4 w-4" />
+              <Shield aria-hidden="true" className="h-4 w-4" />
               <span>Enterprise-Grade Security Awareness Training</span>
             </div>
 
@@ -173,13 +173,13 @@ export default function LandingPage() {
                 className="group inline-flex items-center gap-2 bg-cyan-500 hover:bg-cyan-600 text-white px-8 py-4 rounded-lg font-semibold text-lg transition-all hover:scale-105 shadow-lg shadow-cyan-500/30"
               >
                 Get Started Free
-                <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight aria-hidden="true" className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </Link>
               <Link
                 to="/login"
                 className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-8 py-4 rounded-lg font-semibold text-lg transition-all border border-white/20"
               >
-                <PlayCircle className="h-5 w-5" />
+                <PlayCircle aria-hidden="true" className="h-5 w-5" />
                 Watch Demo
               </Link>
             </div>
@@ -187,15 +187,15 @@ export default function LandingPage() {
             {/* Trust Indicators */}
             <div className="mt-16 flex flex-wrap justify-center items-center gap-8 text-gray-400 text-sm">
               <div className="flex items-center gap-2">
-                <CheckCircle className="h-5 w-5 text-green-400" />
+                <CheckCircle aria-hidden="true" className="h-5 w-5 text-green-400" />
                 <span>No credit card required</span>
               </div>
               <div className="flex items-center gap-2">
-                <CheckCircle className="h-5 w-5 text-green-400" />
+                <CheckCircle aria-hidden="true" className="h-5 w-5 text-green-400" />
                 <span>14-day free trial</span>
               </div>
               <div className="flex items-center gap-2">
-                <CheckCircle className="h-5 w-5 text-green-400" />
+                <CheckCircle aria-hidden="true" className="h-5 w-5 text-green-400" />
                 <span>Cancel anytime</span>
               </div>
             </div>
@@ -244,7 +244,7 @@ export default function LandingPage() {
                 <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-blue-500/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <div className="relative">
                   <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-cyan-500/10 text-cyan-400 mb-4 group-hover:scale-110 transition-transform">
-                    <feature.icon className="h-6 w-6" />
+                    <feature.icon aria-hidden="true" className="h-6 w-6" />
                   </div>
                   <h3 className="text-xl font-semibold text-white mb-3">
                     {feature.title}
@@ -338,7 +338,7 @@ export default function LandingPage() {
                 <ul className="space-y-3 flex-1 mb-8">
                   {plan.features.map((feature, i) => (
                     <li key={i} className="flex items-center gap-3 text-gray-300">
-                      <CheckCircle className="h-5 w-5 text-cyan-400 flex-shrink-0" />
+                      <CheckCircle aria-hidden="true" className="h-5 w-5 text-cyan-400 flex-shrink-0" />
                       <span>{feature}</span>
                     </li>
                   ))}
@@ -352,7 +352,7 @@ export default function LandingPage() {
                   }`}
                 >
                   {plan.cta}
-                  <ArrowRight className="h-4 w-4" />
+                  <ArrowRight aria-hidden="true" className="h-4 w-4" />
                 </Link>
               </div>
             ))}
@@ -385,7 +385,7 @@ export default function LandingPage() {
                 <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-blue-500/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <div className="relative">
                   <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-cyan-500/10 text-cyan-400 mb-4 group-hover:scale-110 transition-transform">
-                    <value.icon className="h-6 w-6" />
+                    <value.icon aria-hidden="true" className="h-6 w-6" />
                   </div>
                   <h3 className="text-xl font-semibold text-white mb-3">{value.title}</h3>
                   <p className="text-gray-400 leading-relaxed">{value.description}</p>
@@ -403,7 +403,7 @@ export default function LandingPage() {
             <div className="flex flex-col md:flex-row items-center gap-8">
               <div className="flex-shrink-0">
                 <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-red-500/10 text-red-400">
-                  <AlertTriangle className="h-10 w-10" />
+                  <AlertTriangle aria-hidden="true" className="h-10 w-10" />
                 </div>
               </div>
               <div className="flex-1 text-center md:text-left">
@@ -419,7 +419,7 @@ export default function LandingPage() {
                   className="inline-flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-lg font-semibold transition-all"
                 >
                   Protect Your Organization
-                  <ArrowRight className="h-5 w-5" />
+                  <ArrowRight aria-hidden="true" className="h-5 w-5" />
                 </Link>
               </div>
             </div>
@@ -443,7 +443,7 @@ export default function LandingPage() {
               className="inline-flex items-center justify-center gap-2 bg-cyan-500 hover:bg-cyan-600 text-white px-8 py-4 rounded-lg font-semibold text-lg transition-all hover:scale-105 shadow-lg shadow-cyan-500/30"
             >
               Start Free Trial
-              <ArrowRight className="h-5 w-5" />
+              <ArrowRight aria-hidden="true" className="h-5 w-5" />
             </Link>
             <Link
               to="/login"
@@ -460,7 +460,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="flex items-center gap-2 text-white">
-              <Shield className="h-6 w-6 text-cyan-400" />
+              <Shield aria-hidden="true" className="h-6 w-6 text-cyan-400" />
               <span className="text-xl font-bold">PhishNet</span>
             </div>
             <div className="text-gray-500 text-sm">

@@ -110,9 +110,9 @@ export default function Dashboard() {
       </div>
 
       {error && (
-        <div className="rounded-md bg-red-50 p-4 border border-red-200">
+        <div role="alert" className="rounded-md bg-red-50 p-4 border border-red-200">
           <div className="flex">
-            <AlertCircle className="h-5 w-5 text-red-400" />
+            <AlertCircle aria-hidden="true" className="h-5 w-5 text-red-400" />
             <div className="ml-3">
               <h3 className="text-sm font-medium text-red-800">Error</h3>
               <div className="mt-2 text-sm text-red-700">{error}</div>
@@ -134,12 +134,12 @@ export default function Dashboard() {
               <p className="mt-2 text-3xl font-bold text-gray-900">{stats.campaigns}</p>
             </div>
             <div className="rounded-full bg-blue-100 p-3">
-              <Mail className="h-6 w-6 text-blue-600" />
+              <Mail aria-hidden="true" className="h-6 w-6 text-blue-600" />
             </div>
           </div>
           <div className="mt-4 flex items-center text-sm text-blue-600 group-hover:text-blue-700">
             <span>View all campaigns</span>
-            <ArrowRight className="ml-1 h-4 w-4" />
+            <ArrowRight aria-hidden="true" className="ml-1 h-4 w-4" />
           </div>
         </Link>
 
@@ -154,12 +154,12 @@ export default function Dashboard() {
               <p className="mt-2 text-3xl font-bold text-gray-900">{stats.templates}</p>
             </div>
             <div className="rounded-full bg-purple-100 p-3">
-              <FileText className="h-6 w-6 text-purple-600" />
+              <FileText aria-hidden="true" className="h-6 w-6 text-purple-600" />
             </div>
           </div>
           <div className="mt-4 flex items-center text-sm text-purple-600 group-hover:text-purple-700">
             <span>Browse templates</span>
-            <ArrowRight className="ml-1 h-4 w-4" />
+            <ArrowRight aria-hidden="true" className="ml-1 h-4 w-4" />
           </div>
         </Link>
 
@@ -175,12 +175,12 @@ export default function Dashboard() {
                 <p className="mt-2 text-3xl font-bold text-gray-900">{stats.tenants}</p>
               </div>
               <div className="rounded-full bg-orange-100 p-3">
-                <Building2 className="h-6 w-6 text-orange-600" />
+                <Building2 aria-hidden="true" className="h-6 w-6 text-orange-600" />
               </div>
             </div>
             <div className="mt-4 flex items-center text-sm text-orange-600 group-hover:text-orange-700">
               <span>View tenants</span>
-              <ArrowRight className="ml-1 h-4 w-4" />
+              <ArrowRight aria-hidden="true" className="ml-1 h-4 w-4" />
             </div>
           </Link>
         )}
@@ -197,12 +197,12 @@ export default function Dashboard() {
                 <p className="mt-2 text-3xl font-bold text-gray-900">—</p>
               </div>
               <div className="rounded-full bg-indigo-100 p-3">
-                <Users className="h-6 w-6 text-indigo-600" />
+                <Users aria-hidden="true" className="h-6 w-6 text-indigo-600" />
               </div>
             </div>
             <div className="mt-4 flex items-center text-sm text-indigo-600 group-hover:text-indigo-700">
               <span>View team</span>
-              <ArrowRight className="ml-1 h-4 w-4" />
+              <ArrowRight aria-hidden="true" className="ml-1 h-4 w-4" />
             </div>
           </Link>
         )}
@@ -221,7 +221,7 @@ export default function Dashboard() {
             to="/campaigns"
             className="flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-blue-600 hover:bg-blue-50 transition-colors"
           >
-            <Plus className="h-4 w-4" />
+            <Plus aria-hidden="true" className="h-4 w-4" />
             Create Campaign
           </Link>
         </div>
@@ -233,7 +233,7 @@ export default function Dashboard() {
         <div className="rounded-lg bg-white p-6 shadow border border-gray-200">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-              <Activity className="h-5 w-5 text-gray-400" />
+              <Activity aria-hidden="true" className="h-5 w-5 text-gray-400" />
               Recent Campaigns
             </h2>
             <Link
@@ -246,14 +246,14 @@ export default function Dashboard() {
 
           {recentCampaigns.length === 0 ? (
             <div className="text-center py-8">
-              <Mail className="mx-auto h-12 w-12 text-gray-300" />
+              <Mail aria-hidden="true" className="mx-auto h-12 w-12 text-gray-300" />
               <p className="mt-2 text-sm text-gray-500">No campaigns yet</p>
               <Link
                 to="/campaigns"
                 className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700"
               >
                 Create your first campaign
-                <ArrowRight className="h-4 w-4" />
+                <ArrowRight aria-hidden="true" className="h-4 w-4" />
               </Link>
             </div>
           ) : (
@@ -287,7 +287,7 @@ export default function Dashboard() {
         {/* Quick Links */}
         <div className="rounded-lg bg-white p-6 shadow border border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-gray-400" />
+            <TrendingUp aria-hidden="true" className="h-5 w-5 text-gray-400" />
             Quick Links
           </h2>
 
@@ -298,7 +298,7 @@ export default function Dashboard() {
             >
               <div className="flex items-center gap-3">
                 <div className="rounded-lg bg-purple-100 p-2">
-                  <FileText className="h-5 w-5 text-purple-600" />
+                  <FileText aria-hidden="true" className="h-5 w-5 text-purple-600" />
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-900">Browse Templates</p>
@@ -307,7 +307,7 @@ export default function Dashboard() {
                   </p>
                 </div>
               </div>
-              <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-gray-600" />
+              <ArrowRight aria-hidden="true" className="h-5 w-5 text-gray-400 group-hover:text-gray-600" />
             </Link>
 
             <Link
@@ -316,14 +316,14 @@ export default function Dashboard() {
             >
               <div className="flex items-center gap-3">
                 <div className="rounded-lg bg-indigo-100 p-2">
-                  <Users className="h-5 w-5 text-indigo-600" />
+                  <Users aria-hidden="true" className="h-5 w-5 text-indigo-600" />
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-900">Team Management</p>
                   <p className="text-xs text-gray-500">Manage your team members</p>
                 </div>
               </div>
-              <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-gray-600" />
+              <ArrowRight aria-hidden="true" className="h-5 w-5 text-gray-400 group-hover:text-gray-600" />
             </Link>
 
             {isAdmin() && (
@@ -334,7 +334,7 @@ export default function Dashboard() {
                 >
                   <div className="flex items-center gap-3">
                     <div className="rounded-lg bg-orange-100 p-2">
-                      <Building2 className="h-5 w-5 text-orange-600" />
+                      <Building2 aria-hidden="true" className="h-5 w-5 text-orange-600" />
                     </div>
                     <div>
                       <p className="text-sm font-medium text-gray-900">Tenant Organizations</p>
@@ -343,7 +343,7 @@ export default function Dashboard() {
                       </p>
                     </div>
                   </div>
-                  <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-gray-600" />
+                  <ArrowRight aria-hidden="true" className="h-5 w-5 text-gray-400 group-hover:text-gray-600" />
                 </Link>
               </>
             )}
@@ -355,7 +355,7 @@ export default function Dashboard() {
       <div className="rounded-lg bg-blue-50 p-6 border border-blue-200">
         <div className="flex items-start gap-3">
           <div className="rounded-full bg-blue-100 p-2">
-            <Activity className="h-5 w-5 text-blue-600" />
+            <Activity aria-hidden="true" className="h-5 w-5 text-blue-600" />
           </div>
           <div className="flex-1">
             <h3 className="text-sm font-semibold text-blue-900">

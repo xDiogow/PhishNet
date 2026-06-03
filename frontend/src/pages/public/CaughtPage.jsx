@@ -40,11 +40,11 @@ export default function CaughtPage() {
         <div className="absolute inset-0 bg-gradient-to-br from-red-900/20 via-slate-900 to-orange-900/20"></div>
         <div className="relative max-w-3xl mx-auto px-6 py-24 text-center">
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-red-500/10 ring-1 ring-red-500/30 mb-8">
-            <AlertTriangle className="h-10 w-10 text-red-400" />
+            <AlertTriangle aria-hidden="true" className="h-10 w-10 text-red-400" />
           </div>
 
           <div className="inline-flex items-center gap-2 rounded-full bg-red-500/10 px-4 py-2 text-sm text-red-400 ring-1 ring-inset ring-red-500/20 mb-6">
-            <ShieldAlert className="h-4 w-4" />
+            <ShieldAlert aria-hidden="true" className="h-4 w-4" />
             <span>Phishing Simulation — Your credentials were captured</span>
           </div>
 
@@ -99,7 +99,7 @@ export default function CaughtPage() {
             {redFlags.map((flag, index) => (
               <div key={index} className="bg-slate-800/50 border border-slate-700 rounded-xl p-6">
                 <div className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-orange-500/10 text-orange-400 mb-4">
-                  <flag.icon className="h-5 w-5" />
+                  <flag.icon aria-hidden="true" className="h-5 w-5" />
                 </div>
                 <h3 className="text-lg font-semibold text-white mb-2">{flag.title}</h3>
                 <p className="text-gray-400 text-sm leading-relaxed">{flag.description}</p>
@@ -120,7 +120,7 @@ export default function CaughtPage() {
           <div className="space-y-4">
             {nextSteps.map((step, index) => (
               <div key={index} className="flex items-start gap-4 bg-slate-800 border border-slate-700 rounded-xl p-5">
-                <CheckCircle className="h-5 w-5 text-green-400 flex-shrink-0 mt-0.5" />
+                <CheckCircle aria-hidden="true" className="h-5 w-5 text-green-400 flex-shrink-0 mt-0.5" />
                 <p className="text-gray-300 leading-relaxed">{step}</p>
               </div>
             ))}
@@ -132,7 +132,7 @@ export default function CaughtPage() {
       <section className="py-20 bg-slate-900">
         <div className="max-w-3xl mx-auto px-6">
           <div className="bg-gradient-to-r from-cyan-900/20 to-blue-900/20 border border-cyan-500/20 rounded-2xl p-10 text-center">
-            <KeyRound className="h-10 w-10 text-cyan-400 mx-auto mb-4" />
+            <KeyRound aria-hidden="true" className="h-10 w-10 text-cyan-400 mx-auto mb-4" />
             <h3 className="text-2xl font-bold text-white mb-3">The golden rule</h3>
             <p className="text-gray-300 text-lg leading-relaxed">
               Never enter your credentials on a page you reached by clicking an email link.
@@ -146,7 +146,7 @@ export default function CaughtPage() {
       <footer className="bg-slate-950 py-10 border-t border-slate-800">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
           <Link to="/" className="flex items-center gap-2 text-white">
-            <Shield className="h-5 w-5 text-cyan-400" />
+            <Shield aria-hidden="true" className="h-5 w-5 text-cyan-400" />
             <span className="font-bold text-lg">PhishNet</span>
           </Link>
           <p className="text-gray-500 text-sm">This was a security awareness simulation. No real data was stored.</p>

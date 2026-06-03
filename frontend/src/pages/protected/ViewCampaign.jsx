@@ -82,14 +82,14 @@ export default function ViewCampaign() {
     switch (status?.toLowerCase()) {
       case 'running':
       case 'in progress':
-        return <Activity className="h-4 w-4" />
+        return <Activity aria-hidden="true" className="h-4 w-4" />
       case 'completed':
-        return <CheckCircle2 className="h-4 w-4" />
+        return <CheckCircle2 aria-hidden="true" className="h-4 w-4" />
       case 'stopped':
       case 'archived':
-        return <AlertTriangle className="h-4 w-4" />
+        return <AlertTriangle aria-hidden="true" className="h-4 w-4" />
       default:
-        return <FileText className="h-4 w-4" />
+        return <FileText aria-hidden="true" className="h-4 w-4" />
     }
   }
 
@@ -108,10 +108,10 @@ export default function ViewCampaign() {
           to="/campaigns"
           className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft aria-hidden="true" className="h-4 w-4" />
           Back to Campaigns
         </Link>
-        <div className="rounded-lg bg-red-50 p-6 border border-red-200">
+        <div role="alert" className="rounded-lg bg-red-50 p-6 border border-red-200">
           <h2 className="text-xl font-semibold text-red-800 mb-2">Error</h2>
           <p className="text-red-700">{error || 'Campaign not found'}</p>
         </div>
@@ -127,7 +127,7 @@ export default function ViewCampaign() {
           to="/campaigns"
           className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 mb-4"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft aria-hidden="true" className="h-4 w-4" />
           Back to Campaigns
         </Link>
         <div className="flex items-start justify-between">
@@ -241,7 +241,7 @@ export default function ViewCampaign() {
         {/* Overview Card */}
         <div className="rounded-lg bg-white p-6 shadow border border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <FileText className="h-5 w-5 text-gray-400" />
+            <FileText aria-hidden="true" className="h-5 w-5 text-gray-400" />
             Campaign Overview
           </h2>
           <dl className="space-y-4">
@@ -280,7 +280,7 @@ export default function ViewCampaign() {
         {/* Timeline Card */}
         <div className="rounded-lg bg-white p-6 shadow border border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <Calendar className="h-5 w-5 text-gray-400" />
+            <Calendar aria-hidden="true" className="h-5 w-5 text-gray-400" />
             Timeline
           </h2>
           <dl className="space-y-4">
@@ -319,14 +319,14 @@ export default function ViewCampaign() {
       {!loadingSummary && summary && (
         <div className="rounded-lg bg-white p-6 shadow border border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-gray-400" />
+            <TrendingUp aria-hidden="true" className="h-5 w-5 text-gray-400" />
             Detailed Statistics
           </h2>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {typeof summary.sent !== 'undefined' && (
               <div className="border-l-4 border-blue-500 pl-4">
                 <div className="flex items-center gap-2 mb-1">
-                  <Send className="h-4 w-4 text-blue-500" />
+                  <Send aria-hidden="true" className="h-4 w-4 text-blue-500" />
                   <dt className="text-sm font-medium text-gray-600">Emails Sent</dt>
                 </div>
                 <dd className="text-2xl font-bold text-gray-900">{summary.sent}</dd>
@@ -340,7 +340,7 @@ export default function ViewCampaign() {
             {typeof summary.email_reported !== 'undefined' && (
               <div className="border-l-4 border-orange-500 pl-4">
                 <div className="flex items-center gap-2 mb-1">
-                  <AlertTriangle className="h-4 w-4 text-orange-500" />
+                  <AlertTriangle aria-hidden="true" className="h-4 w-4 text-orange-500" />
                   <dt className="text-sm font-medium text-gray-600">Emails Reported</dt>
                 </div>
                 <dd className="text-2xl font-bold text-gray-900">{summary.email_reported}</dd>
@@ -354,7 +354,7 @@ export default function ViewCampaign() {
             {typeof summary.error !== 'undefined' && (
               <div className="border-l-4 border-red-500 pl-4">
                 <div className="flex items-center gap-2 mb-1">
-                  <AlertTriangle className="h-4 w-4 text-red-500" />
+                  <AlertTriangle aria-hidden="true" className="h-4 w-4 text-red-500" />
                   <dt className="text-sm font-medium text-gray-600">Errors</dt>
                 </div>
                 <dd className="text-2xl font-bold text-gray-900">{summary.error}</dd>
@@ -367,7 +367,7 @@ export default function ViewCampaign() {
       {!loadingSummary && !summary && (
         <div className="rounded-lg bg-gray-50 p-6 border border-gray-200">
           <div className="text-center text-gray-500">
-            <Activity className="mx-auto h-12 w-12 text-gray-300 mb-2" />
+            <Activity aria-hidden="true" className="mx-auto h-12 w-12 text-gray-300 mb-2" />
             <p>No campaign statistics available yet</p>
             <p className="text-sm mt-1">Statistics will appear once the campaign starts collecting data</p>
           </div>
@@ -378,7 +378,7 @@ export default function ViewCampaign() {
       {!loadingSummary && results.length > 0 && (
         <div className="rounded-lg bg-white p-6 shadow border border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <Users className="h-5 w-5 text-gray-400" />
+            <Users aria-hidden="true" className="h-5 w-5 text-gray-400" />
             Campaign Results ({results.length})
           </h2>
           <div className="overflow-x-auto">
