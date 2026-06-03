@@ -210,7 +210,7 @@ export default function Dashboard() {
 
       {/* Quick Actions */}
       <div className="rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 p-6 shadow-lg">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="text-white">
             <h3 className="text-lg font-semibold">Ready to create a new campaign?</h3>
             <p className="mt-1 text-blue-100">
@@ -219,7 +219,7 @@ export default function Dashboard() {
           </div>
           <Link
             to="/campaigns"
-            className="flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-blue-600 hover:bg-blue-50 transition-colors"
+            className="flex items-center justify-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-blue-600 hover:bg-blue-50 transition-colors sm:flex-shrink-0"
           >
             <Plus aria-hidden="true" className="h-4 w-4" />
             Create Campaign

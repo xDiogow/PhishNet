@@ -89,8 +89,8 @@ export default function AuditLogs() {
 
       {/* Filters and Search */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-        <div className="flex flex-1 items-center gap-4">
-          <div className="relative flex-1 max-w-md">
+        <div className="flex flex-col sm:flex-row flex-1 items-stretch sm:items-center gap-3">
+          <div className="relative flex-1 sm:max-w-md">
             <Search aria-hidden="true" className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <label htmlFor="audit-search" className="sr-only">Search audit logs</label>
             <input
@@ -119,7 +119,7 @@ export default function AuditLogs() {
           <button
             onClick={handleExport}
             disabled={exporting || logs.length === 0}
-            className="flex items-center gap-2 bg-white border border-gray-300 rounded-md px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center justify-center gap-2 bg-white border border-gray-300 rounded-md px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Download aria-hidden="true" className={`w-4 h-4 ${exporting ? 'animate-bounce' : ''}`} />
             {exporting ? 'Exporting...' : 'Export CSV'}

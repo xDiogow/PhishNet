@@ -223,12 +223,12 @@ export default function Team() {
 
       {/* Section: Team Members */}
       <section className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+        <div className="p-4 sm:p-6 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
             <Users className="w-5 h-5 text-blue-500" />
             Team Members
           </h2>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
             <div className="relative">
               <Search aria-hidden="true" className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <label htmlFor="member-search" className="sr-only">Search team members</label>
@@ -238,14 +238,14 @@ export default function Team() {
                 placeholder="Search members..."
                 value={memberSearch}
                 onChange={(e) => setMemberSearch(e.target.value)}
-                className="pl-9 pr-4 py-1.5 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500"
+                className="w-full pl-9 pr-4 py-1.5 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500"
               />
             </div>
             {isOperator && (
               <button
                 onClick={handleInviteMember}
                 disabled={inviteLoading}
-                className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
+                className="flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
               >
                 <UserPlus aria-hidden="true" className="w-4 h-4" />
                 Invite Member
@@ -303,12 +303,12 @@ export default function Team() {
 
       {/* Section: Phishing Targets */}
       <section className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+        <div className="p-4 sm:p-6 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
             <TargetIcon className="w-5 h-5 text-purple-500" />
             Phishing Targets
           </h2>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
             <div className="relative">
               <Search aria-hidden="true" className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <label htmlFor="target-search" className="sr-only">Search phishing targets</label>
@@ -318,12 +318,12 @@ export default function Team() {
                 placeholder="Search targets..."
                 value={targetSearch}
                 onChange={(e) => setTargetSearch(e.target.value)}
-                className="pl-9 pr-4 py-1.5 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-purple-500"
+                className="w-full pl-9 pr-4 py-1.5 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-purple-500"
               />
             </div>
             <button
               onClick={() => setIsTargetModalOpen(true)}
-              className="flex items-center gap-2 bg-purple-500 hover:bg-purple-600 text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
+              className="flex items-center justify-center gap-2 bg-purple-500 hover:bg-purple-600 text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
             >
               <Plus aria-hidden="true" className="w-4 h-4" />
               Add Target
