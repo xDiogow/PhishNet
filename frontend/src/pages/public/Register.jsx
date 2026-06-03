@@ -55,15 +55,15 @@ export default function Register() {
   return (
     <div className="flex min-h-screen flex-col justify-center px-6 py-24 lg:px-8 bg-gray-100">
       <div className="sm:mx-auto sm:w-full sm:max-w-sm">
-        <h2 className="text-center text-2xl/9 font-bold tracking-tight text-gray-900">
+        <h1 className="text-center text-2xl/9 font-bold tracking-tight text-gray-900">
           Create your account
-        </h2>
+        </h1>
       </div>
 
       <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
         <div className="bg-white rounded-lg shadow p-8">
           {error && (
-            <div className="mb-4 rounded-md bg-red-50 border border-red-200 p-4">
+            <div role="alert" className="mb-4 rounded-md bg-red-50 border border-red-200 p-4">
               <p className="text-sm text-red-800">{error}</p>
             </div>
           )}

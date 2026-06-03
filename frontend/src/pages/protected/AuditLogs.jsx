@@ -91,8 +91,10 @@ export default function AuditLogs() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div className="flex flex-1 items-center gap-4">
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <Search aria-hidden="true" className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <label htmlFor="audit-search" className="sr-only">Search audit logs</label>
             <input
+              id="audit-search"
               type="text"
               placeholder="Search in logs..."
               value={searchQuery}
@@ -100,7 +102,9 @@ export default function AuditLogs() {
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
+          <label htmlFor="audit-action-filter" className="sr-only">Filter by action</label>
           <select
+            id="audit-action-filter"
             value={actionFilter}
             onChange={(e) => {
               setActionFilter(e.target.value)
@@ -117,7 +121,7 @@ export default function AuditLogs() {
             disabled={exporting || logs.length === 0}
             className="flex items-center gap-2 bg-white border border-gray-300 rounded-md px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Download className={`w-4 h-4 ${exporting ? 'animate-bounce' : ''}`} />
+            <Download aria-hidden="true" className={`w-4 h-4 ${exporting ? 'animate-bounce' : ''}`} />
             {exporting ? 'Exporting...' : 'Export CSV'}
           </button>
         </div>
@@ -161,7 +165,7 @@ export default function AuditLogs() {
                   <tr key={log.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4 text-gray-400" />
+                        <Calendar aria-hidden="true" className="w-4 h-4 text-gray-400" />
                         {new Date(log.created_at).toLocaleString()}
                       </div>
                     </td>
@@ -184,14 +188,14 @@ export default function AuditLogs() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {log.resource_type ? (
                         <div className="flex items-center gap-1">
-                          <ShieldAlert className="w-4 h-4 text-gray-400" />
+                          <ShieldAlert aria-hidden="true" className="w-4 h-4 text-gray-400" />
                           <span>{log.resource_type} #{log.resource_id}</span>
                         </div>
                       ) : '-'}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500 max-w-xs">
                       <div className="flex items-center gap-1">
-                        <Info className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                        <Info aria-hidden="true" className="w-4 h-4 text-gray-400 flex-shrink-0" />
                         <span>{log.details}</span>
                       </div>
                     </td>
@@ -241,6 +245,8 @@ export default function AuditLogs() {
                     <button
                       key={i + 1}
                       onClick={() => setPage(i + 1)}
+                      aria-current={page === i + 1 ? 'page' : undefined}
+                      aria-label={`Page ${i + 1}`}
                       className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
                         page === i + 1
                           ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'

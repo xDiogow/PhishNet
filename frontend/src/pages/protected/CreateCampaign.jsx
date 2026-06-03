@@ -98,9 +98,9 @@ export default function CreateCampaign() {
         {/* Form */}
         <div className="bg-white rounded-lg shadow p-6">
           {error && (
-            <div className="mb-6 rounded-md bg-red-50 border border-red-200 p-4">
+            <div role="alert" className="mb-6 rounded-md bg-red-50 border border-red-200 p-4">
               <div className="flex items-start gap-3">
-                <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+                <AlertCircle aria-hidden="true" className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
                 <p className="text-sm text-red-800">{error}</p>
               </div>
             </div>

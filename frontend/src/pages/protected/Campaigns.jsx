@@ -164,8 +164,10 @@ export default function Campaigns() {
       {/* Search and New Campaign Button */}
       <div className="flex items-center justify-between mb-6">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <Search aria-hidden="true" className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <label htmlFor="campaign-search" className="sr-only">Search campaigns</label>
           <input
+            id="campaign-search"
             type="text"
             placeholder="Search campaigns..."
             value={searchQuery}
@@ -276,7 +278,7 @@ export default function Campaigns() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-1 text-sm text-gray-900">
-                          <Calendar className="w-4 h-4 text-gray-400" />
+                          <Calendar aria-hidden="true" className="w-4 h-4 text-gray-400" />
                           {formatDateShort(campaign.launched_at || campaign.created_at)}
                         </div>
                       </td>
@@ -284,24 +286,24 @@ export default function Campaigns() {
                         <div className="flex items-center justify-end gap-2">
                           <Link
                             to={`/campaigns/${campaign.id}`}
+                            aria-label={`View details for ${campaign.name}`}
                             className="text-blue-600 hover:text-blue-900"
-                            title="View details"
                           >
-                            <Eye className="w-5 h-5" />
+                            <Eye aria-hidden="true" className="w-5 h-5" />
                           </Link>
                           {campaign.status === 'running' ? (
                             <button
+                              aria-label={`Pause campaign ${campaign.name}`}
                               className="text-yellow-600 hover:text-yellow-900"
-                              title="Pause campaign"
                             >
-                              <Pause className="w-5 h-5" />
+                              <Pause aria-hidden="true" className="w-5 h-5" />
                             </button>
                           ) : (
                             <button
+                              aria-label={`Resume campaign ${campaign.name}`}
                               className="text-green-600 hover:text-green-900"
-                              title="Resume campaign"
                             >
-                              <Play className="w-5 h-5" />
+                              <Play aria-hidden="true" className="w-5 h-5" />
                             </button>
                           )}
                         </div>

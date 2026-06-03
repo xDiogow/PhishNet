@@ -5,7 +5,9 @@ export default function PublicLayout() {
     return (
         <div className="min-h-screen">
             <Navbar />
-            <Outlet />
+            <main>
+                <Outlet />
+            </main>
         </div>
     )
 }

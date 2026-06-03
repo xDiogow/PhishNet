@@ -123,9 +123,8 @@ describe('Templates Page', () => {
       renderWithRouter(<Templates />)
 
       await waitFor(() => {
-        // Should have edit and delete buttons for each template
-        const editButtons = screen.getAllByTitle('Edit')
-        const deleteButtons = screen.getAllByTitle('Delete')
+        const editButtons = screen.getAllByRole('button', { name: /edit template/i })
+        const deleteButtons = screen.getAllByRole('button', { name: /delete template/i })
         expect(editButtons).toHaveLength(2)
         expect(deleteButtons).toHaveLength(2)
       })

@@ -205,7 +205,7 @@ export default function Templates() {
       </div>
 
       {error && (
-        <div className="mb-4 rounded-md bg-red-50 p-4 border border-red-200">
+        <div role="alert" className="mb-4 rounded-md bg-red-50 p-4 border border-red-200">
           <div className="flex">
             <div className="ml-3">
               <h3 className="text-sm font-medium text-red-800">Error</h3>
@@ -217,7 +217,7 @@ export default function Templates() {
 
       {templates.length === 0 ? (
         <div className="text-center py-12">
-          <FileText className="mx-auto h-12 w-12 text-gray-400" />
+          <FileText aria-hidden="true" className="mx-auto h-12 w-12 text-gray-400" />
           <h3 className="mt-2 text-sm font-semibold text-gray-900">No templates</h3>
           <p className="mt-1 text-sm text-gray-500">
             {isAdmin() ? 'Get started by creating a new template.' : 'No templates available yet.'}
@@ -265,17 +265,17 @@ export default function Templates() {
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleOpenEditModal(template)}
+                      aria-label={`Edit template ${template.name}`}
                       className="p-2 text-gray-600 hover:text-blue-600 hover:bg-gray-100 rounded-md transition-colors"
-                      title="Edit"
                     >
-                      <Pencil className="h-5 w-5" />
+                      <Pencil aria-hidden="true" className="h-5 w-5" />
                     </button>
                     <button
                       onClick={() => handleDeleteClick(template)}
+                      aria-label={`Delete template ${template.name}`}
                       className="p-2 text-gray-600 hover:text-red-600 hover:bg-gray-100 rounded-md transition-colors"
-                      title="Delete"
                     >
-                      <Trash2 className="h-5 w-5" />
+                      <Trash2 aria-hidden="true" className="h-5 w-5" />
                     </button>
                   </div>
                 )}

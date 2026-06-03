@@ -230,8 +230,10 @@ export default function Team() {
           </h2>
           <div className="flex items-center gap-4">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Search aria-hidden="true" className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <label htmlFor="member-search" className="sr-only">Search team members</label>
               <input
+                id="member-search"
                 type="text"
                 placeholder="Search members..."
                 value={memberSearch}
@@ -245,7 +247,7 @@ export default function Team() {
                 disabled={inviteLoading}
                 className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
               >
-                <UserPlus className="w-4 h-4" />
+                <UserPlus aria-hidden="true" className="w-4 h-4" />
                 Invite Member
               </button>
             )}
@@ -308,8 +310,10 @@ export default function Team() {
           </h2>
           <div className="flex items-center gap-4">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Search aria-hidden="true" className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <label htmlFor="target-search" className="sr-only">Search phishing targets</label>
               <input
+                id="target-search"
                 type="text"
                 placeholder="Search targets..."
                 value={targetSearch}
@@ -321,7 +325,7 @@ export default function Team() {
               onClick={() => setIsTargetModalOpen(true)}
               className="flex items-center gap-2 bg-purple-500 hover:bg-purple-600 text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
             >
-              <Plus className="w-4 h-4" />
+              <Plus aria-hidden="true" className="w-4 h-4" />
               Add Target
             </button>
           </div>
@@ -351,10 +355,10 @@ export default function Team() {
                       <button
                         onClick={() => handleDeleteTarget(target.id)}
                         disabled={targetActionLoading}
+                        aria-label={`Remove target ${target.first_name} ${target.last_name}`}
                         className="text-red-500 hover:text-red-700 transition-colors disabled:opacity-50"
-                        title="Delete Target"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 aria-hidden="true" className="w-4 h-4" />
                       </button>
                     </td>
                   </tr>
@@ -368,23 +372,34 @@ export default function Team() {
       {/* Target Modal */}
       {isTargetModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-            <h2 className="text-xl font-bold mb-4">Add Phishing Target</h2>
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="add-target-title"
+            className="bg-white rounded-lg shadow-xl max-w-md w-full p-6"
+          >
+            <h2 id="add-target-title" className="text-xl font-bold mb-4">Add Phishing Target</h2>
             <form onSubmit={handleAddTarget} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">First Name</label>
+                  <label htmlFor="target-first-name" className="block text-sm font-medium text-gray-700">First Name</label>
                   <input
-                    type="text" required
+                    id="target-first-name"
+                    type="text"
+                    required
+                    aria-required="true"
                     value={targetFormData.first_name}
                     onChange={(e) => setTargetFormData({...targetFormData, first_name: e.target.value})}
                     className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Last Name</label>
+                  <label htmlFor="target-last-name" className="block text-sm font-medium text-gray-700">Last Name</label>
                   <input
-                    type="text" required
+                    id="target-last-name"
+                    type="text"
+                    required
+                    aria-required="true"
                     value={targetFormData.last_name}
                     onChange={(e) => setTargetFormData({...targetFormData, last_name: e.target.value})}
                     className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
@@ -392,17 +407,21 @@ export default function Team() {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Email Address</label>
+                <label htmlFor="target-email" className="block text-sm font-medium text-gray-700">Email Address</label>
                 <input
-                  type="email" required
+                  id="target-email"
+                  type="email"
+                  required
+                  aria-required="true"
                   value={targetFormData.email}
                   onChange={(e) => setTargetFormData({...targetFormData, email: e.target.value})}
                   className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Position / Title (Optional)</label>
+                <label htmlFor="target-position" className="block text-sm font-medium text-gray-700">Position / Title (Optional)</label>
                 <input
+                  id="target-position"
                   type="text"
                   value={targetFormData.position}
                   onChange={(e) => setTargetFormData({...targetFormData, position: e.target.value})}
@@ -433,22 +452,43 @@ export default function Team() {
       {/* Invitation Modal */}
       {isInviteModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="invitation-modal-title"
+            className="bg-white rounded-lg shadow-xl max-w-md w-full p-6"
+          >
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">Invitation Code</h2>
-              <button onClick={handleCloseModal} className="text-gray-400 hover:text-gray-600">&times;</button>
+              <h2 id="invitation-modal-title" className="text-xl font-bold">Invitation Code</h2>
+              <button
+                onClick={handleCloseModal}
+                aria-label="Close invitation modal"
+                className="text-gray-400 hover:text-gray-600"
+              >
+                &times;
+              </button>
             </div>
             {inviteError ? (
-              <div className="p-3 bg-red-50 text-red-700 rounded border border-red-200 text-sm">{inviteError}</div>
+              <div role="alert" className="p-3 bg-red-50 text-red-700 rounded border border-red-200 text-sm">{inviteError}</div>
             ) : (
               <div className="space-y-4">
                 <p className="text-sm text-gray-600">Share this code with your new operator.</p>
                 <div className="flex items-center gap-2">
-                  <div className="flex-1 bg-gray-50 border rounded px-4 py-3 font-mono text-lg font-bold">
+                  <div
+                    className="flex-1 bg-gray-50 border rounded px-4 py-3 font-mono text-lg font-bold"
+                    aria-label={`Invitation code: ${invitationCode}`}
+                  >
                     {invitationCode}
                   </div>
-                  <button onClick={handleCopyCode} className="p-3 bg-blue-500 text-white rounded hover:bg-blue-600">
-                    {copiedCode ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+                  <button
+                    onClick={handleCopyCode}
+                    aria-label={copiedCode ? 'Code copied' : 'Copy invitation code'}
+                    className="p-3 bg-blue-500 text-white rounded hover:bg-blue-600"
+                  >
+                    {copiedCode
+                      ? <Check aria-hidden="true" className="w-5 h-5" />
+                      : <Copy aria-hidden="true" className="w-5 h-5" />
+                    }
                   </button>
                 </div>
               </div>

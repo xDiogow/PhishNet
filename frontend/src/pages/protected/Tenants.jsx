@@ -231,7 +231,7 @@ export default function Tenants() {
       </div>
 
       {error && (
-        <div className="mb-4 rounded-md bg-red-50 p-4 border border-red-200">
+        <div role="alert" className="mb-4 rounded-md bg-red-50 p-4 border border-red-200">
           <div className="flex">
             <div className="ml-3">
               <h3 className="text-sm font-medium text-red-800">Error</h3>
@@ -243,7 +243,7 @@ export default function Tenants() {
 
       {tenants.length === 0 ? (
         <div className="text-center py-12">
-          <Building2 className="mx-auto h-12 w-12 text-gray-400" />
+          <Building2 aria-hidden="true" className="mx-auto h-12 w-12 text-gray-400" />
           <h3 className="mt-2 text-sm font-semibold text-gray-900">No tenants</h3>
           <p className="mt-1 text-sm text-gray-500">
             Get started by creating your first tenant.
@@ -285,24 +285,24 @@ export default function Tenants() {
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => handleOpenInvitationsModal(tenant)}
+                          aria-label={`Manage invitations for ${tenant.name}`}
                           className="p-2 text-gray-600 hover:text-purple-600 hover:bg-gray-100 rounded-md transition-colors"
-                          title="Manage Invitations"
                         >
-                          <Key className="h-5 w-5" />
+                          <Key aria-hidden="true" className="h-5 w-5" />
                         </button>
                         <button
                           onClick={() => handleOpenEditModal(tenant)}
+                          aria-label={`Edit tenant ${tenant.name}`}
                           className="p-2 text-gray-600 hover:text-blue-600 hover:bg-gray-100 rounded-md transition-colors"
-                          title="Edit"
                         >
-                          <Pencil className="h-5 w-5" />
+                          <Pencil aria-hidden="true" className="h-5 w-5" />
                         </button>
                         <button
                           onClick={() => handleDeleteClick(tenant)}
+                          aria-label={`Delete tenant ${tenant.name}`}
                           className="p-2 text-gray-600 hover:text-red-600 hover:bg-gray-100 rounded-md transition-colors"
-                          title="Delete"
                         >
-                          <Trash2 className="h-5 w-5" />
+                          <Trash2 aria-hidden="true" className="h-5 w-5" />
                         </button>
                       </div>
                     </td>
@@ -340,9 +340,9 @@ export default function Tenants() {
         size="md"
       >
         {successMessage && (
-          <div className="mb-4 rounded-md bg-green-50 p-4 border border-green-200">
+          <div role="status" aria-live="polite" className="mb-4 rounded-md bg-green-50 p-4 border border-green-200">
             <div className="flex">
-              <CheckCircle2 className="h-5 w-5 text-green-400" />
+              <CheckCircle2 aria-hidden="true" className="h-5 w-5 text-green-400" />
               <div className="ml-3">
                 <p className="text-sm font-medium text-green-800">{successMessage}</p>
               </div>
@@ -420,7 +420,7 @@ export default function Tenants() {
           </div>
         ) : invitations.length === 0 ? (
           <div className="text-center py-8">
-            <Key className="mx-auto h-12 w-12 text-gray-400" />
+            <Key aria-hidden="true" className="mx-auto h-12 w-12 text-gray-400" />
             <h3 className="mt-2 text-sm font-semibold text-gray-900">No invitations</h3>
             <p className="mt-1 text-sm text-gray-500">
               Create an invitation to allow users to join this tenant.

@@ -116,9 +116,9 @@ describe('Tenants Page', () => {
     renderWithRouter(<Tenants />)
 
     await waitFor(() => {
-      const invitationButtons = screen.getAllByTitle('Manage Invitations')
-      const editButtons = screen.getAllByTitle('Edit')
-      const deleteButtons = screen.getAllByTitle('Delete')
+      const invitationButtons = screen.getAllByRole('button', { name: /manage invitations for/i })
+      const editButtons = screen.getAllByRole('button', { name: /edit tenant/i })
+      const deleteButtons = screen.getAllByRole('button', { name: /delete tenant/i })
       expect(invitationButtons).toHaveLength(2)
       expect(editButtons).toHaveLength(2)
       expect(deleteButtons).toHaveLength(2)
@@ -130,7 +130,7 @@ describe('Tenants Page', () => {
       renderWithRouter(<Tenants />)
 
       await waitFor(() => {
-        const invitationButtons = screen.getAllByTitle('Manage Invitations')
+        const invitationButtons = screen.getAllByRole('button', { name: /manage invitations for/i })
         fireEvent.click(invitationButtons[0])
       })
 
@@ -144,7 +144,7 @@ describe('Tenants Page', () => {
       renderWithRouter(<Tenants />)
 
       await waitFor(() => {
-        const invitationButtons = screen.getAllByTitle('Manage Invitations')
+        const invitationButtons = screen.getAllByRole('button', { name: /manage invitations for/i })
         fireEvent.click(invitationButtons[0])
       })
 
@@ -160,7 +160,7 @@ describe('Tenants Page', () => {
       renderWithRouter(<Tenants />)
 
       await waitFor(() => {
-        const invitationButtons = screen.getAllByTitle('Manage Invitations')
+        const invitationButtons = screen.getAllByRole('button', { name: /manage invitations for/i })
         fireEvent.click(invitationButtons[0])
       })
 
