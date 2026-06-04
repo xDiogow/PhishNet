@@ -114,7 +114,7 @@ export default function Dashboard() {
           <div className="flex">
             <AlertCircle aria-hidden="true" className="h-5 w-5 text-red-400" />
             <div className="ml-3">
-              <h3 className="text-sm font-medium text-red-800">Error</h3>
+              <h2 className="text-sm font-medium text-red-800">Error</h2>
               <div className="mt-2 text-sm text-red-700">{error}</div>
             </div>
           </div>
@@ -212,7 +212,7 @@ export default function Dashboard() {
       <div className="rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 p-6 shadow-lg">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="text-white">
-            <h3 className="text-lg font-semibold">Ready to create a new campaign?</h3>
+            <h2 className="text-lg font-semibold">Ready to create a new campaign?</h2>
             <p className="mt-1 text-blue-100">
               Launch a phishing simulation to test your team's awareness
             </p>
