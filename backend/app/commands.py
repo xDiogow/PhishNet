@@ -1,5 +1,6 @@
-"""Flask CLI commands for database seeding."""
+"""Flask CLI commands for database seeding and data retention."""
 import click
+from datetime import datetime, timezone, timedelta
 from flask import current_app
 from flask.cli import with_appcontext
 
@@ -541,3 +542,55 @@ def register_commands(app):
             db.session.commit()
 
         click.echo(f'Done — {inserted} template(s) inserted.')
+
+    @app.cli.command('purge-old-results')
+    @click.option('--days', default=365, show_default=True,
+                  help='Anonymize campaign results sent more than N days ago.')
+    @click.option('--dry-run', is_flag=True, default=False,
+                  help='Report how many rows would be affected without modifying data.')
+    @with_appcontext
+    def purge_old_results(days, dry_run):
+        """Anonymize PII in campaign results older than N days (GDPR Art. 5.1.e retention)."""
+        from app.repository.campaign_result_repository import CampaignResultRepository
+        from app.models.campaign_result import CampaignResult
+
+        cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+        click.echo(f'Cutoff: {cutoff.date()} (results sent before this date)')
+
+        if dry_run:
+            repo_session = db.session
+            count = (
+                repo_session.query(CampaignResult)
+                .filter(CampaignResult.sent_at < cutoff)
+                .filter(CampaignResult.email != 'deleted@anonymized.local')
+                .count()
+            )
+            click.echo(f'Dry run — {count} result(s) would be anonymized.')
+            return
+
+        repo = CampaignResultRepository()
+        count = repo.anonymize_older_than(cutoff)
+        click.echo(f'Done — {count} campaign result(s) anonymized.')
+
+    @app.cli.command('purge-old-audit-logs')
+    @click.option('--days', default=365, show_default=True,
+                  help='Delete audit logs created more than N days ago.')
+    @click.option('--dry-run', is_flag=True, default=False,
+                  help='Report how many rows would be deleted without modifying data.')
+    @with_appcontext
+    def purge_old_audit_logs(days, dry_run):
+        """Delete audit logs older than N days (GDPR Art. 5.1.e retention)."""
+        from app.repository.audit_log_repository import AuditLogRepository
+        from app.models.audit_log import AuditLog
+
+        cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+        click.echo(f'Cutoff: {cutoff.date()} (logs created before this date)')
+
+        if dry_run:
+            count = db.session.query(AuditLog).filter(AuditLog.created_at < cutoff).count()
+            click.echo(f'Dry run — {count} audit log(s) would be deleted.')
+            return
+
+        repo = AuditLogRepository()
+        count = repo.delete_older_than(cutoff)
+        click.echo(f'Done — {count} audit log(s) deleted.')

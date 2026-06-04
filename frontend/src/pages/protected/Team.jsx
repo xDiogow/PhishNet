@@ -6,11 +6,12 @@ import {
   Search,
   Plus,
   Trash2,
+  ShieldOff,
   Copy,
   Check,
   Target as TargetIcon
 } from 'lucide-react'
-import { getTeamMembers, getTargets, addTarget, deleteTarget } from '../../services/teamService'
+import { getTeamMembers, getTargets, addTarget, deleteTarget, gdprEraseTarget } from '../../services/teamService'
 import { createInvitation } from '../../services/invitationsService'
 import { useUser } from '../../contexts/UserContext'
 import { formatDateShort } from '../../utils/dateUtils'
@@ -126,6 +127,25 @@ export default function Team() {
       await fetchData()
     } catch (error) {
       console.error('Error deleting target:', error)
+    } finally {
+      setTargetActionLoading(false)
+    }
+  }
+
+  const handleGdprErase = async (targetId, targetName) => {
+    if (!window.confirm(
+      `GDPR Erasure — ${targetName}\n\n` +
+      `This will permanently anonymize all campaign history for this target (email, name, position replaced with placeholders), then delete the target record.\n\n` +
+      `This action cannot be undone. Continue?`
+    )) {
+      return
+    }
+    try {
+      setTargetActionLoading(true)
+      await gdprEraseTarget(targetId)
+      await fetchData()
+    } catch (error) {
+      console.error('Error erasing target (GDPR):', error)
     } finally {
       setTargetActionLoading(false)
     }
@@ -352,14 +372,26 @@ export default function Team() {
                     <td className="px-6 py-4 whitespace-nowrap text-gray-600 text-sm">{target.email}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-gray-600 text-sm">{target.position || '-'}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-right">
-                      <button
-                        onClick={() => handleDeleteTarget(target.id)}
-                        disabled={targetActionLoading}
-                        aria-label={`Remove target ${target.first_name} ${target.last_name}`}
-                        className="text-red-500 hover:text-red-700 transition-colors disabled:opacity-50"
-                      >
-                        <Trash2 aria-hidden="true" className="w-4 h-4" />
-                      </button>
+                      <div className="flex items-center justify-end gap-3">
+                        <button
+                          onClick={() => handleGdprErase(target.id, `${target.first_name} ${target.last_name}`)}
+                          disabled={targetActionLoading}
+                          aria-label={`GDPR erase target ${target.first_name} ${target.last_name}`}
+                          title="GDPR erasure — anonymize history and delete"
+                          className="text-amber-500 hover:text-amber-700 transition-colors disabled:opacity-50"
+                        >
+                          <ShieldOff aria-hidden="true" className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteTarget(target.id)}
+                          disabled={targetActionLoading}
+                          aria-label={`Remove target ${target.first_name} ${target.last_name}`}
+                          title="Delete target (campaign history preserved)"
+                          className="text-red-500 hover:text-red-700 transition-colors disabled:opacity-50"
+                        >
+                          <Trash2 aria-hidden="true" className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))

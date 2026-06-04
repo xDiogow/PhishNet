@@ -56,3 +56,18 @@ export const deleteTarget = async (targetId) => {
         throw error
     }
 }
+
+/**
+ * GDPR Art. 17 erasure: anonymize campaign history then delete the target.
+ */
+export const gdprEraseTarget = async (targetId) => {
+    try {
+        const response = await apiRequest(`/team/targets/${targetId}/gdpr`, {
+            method: 'DELETE'
+        })
+        return response
+    } catch (error) {
+        console.error('Error erasing target (GDPR):', error)
+        throw error
+    }
+}

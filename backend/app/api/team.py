@@ -1,10 +1,11 @@
 """Team API routes.
 
 Routes:
-  GET  /api/team              list all users in the caller's tenant
-  GET  /api/team/targets      list phishing targets for the caller's tenant
-  POST /api/team/targets      add a new phishing target
-  DEL  /api/team/targets/<id> remove a phishing target
+  GET    /api/team                         list all users in the caller's tenant
+  GET    /api/team/targets                 list phishing targets for the caller's tenant
+  POST   /api/team/targets                 add a new phishing target
+  DELETE /api/team/targets/<id>            remove a phishing target (history preserved)
+  DELETE /api/team/targets/<id>/gdpr       GDPR Art. 17 erasure: anonymize history then delete
 """
 from flask import Blueprint, jsonify, current_app, request
 from flask_jwt_extended import jwt_required
@@ -185,3 +186,51 @@ def delete_target(target_id):
     except Exception as e:
         current_app.logger.exception('Error deleting target')
         return jsonify({'error': 'Failed to delete target', 'message': str(e)}), 500
+
+
+@bp.route('/targets/<int:target_id>/gdpr', methods=['DELETE'])
+@jwt_required()
+def gdpr_erase_target(target_id):
+    """GDPR Art. 17 erasure: anonymize campaign history then delete the target.
+
+    Unlike the standard delete, this endpoint overwrites PII (email, names,
+    position) in every CampaignResult row linked to this target before removing
+    the target record. The anonymized rows are retained for statistical purposes.
+    """
+    try:
+        from app.repository.campaign_result_repository import CampaignResultRepository
+
+        user = get_current_user()
+        target_repo = TargetRepository()
+
+        target = target_repo.get_by_id(target_id)
+        if not target or target.tenant_id != user.tenant_id:
+            return jsonify({'error': 'Target not found'}), 404
+
+        email = target.email
+
+        result_repo = CampaignResultRepository()
+        anonymized = result_repo.anonymize_by_email(email, user.tenant_id)
+
+        target_repo.delete_by_id(target_id)
+
+        audit_service.log_action(
+            tenant_id=user.tenant_id,
+            user_id=user.id,
+            action='GDPR_ERASURE',
+            resource_type='Target',
+            resource_id=str(target_id),
+            details={
+                'anonymized_results': anonymized,
+                'note': 'PII anonymized in campaign history per GDPR Art. 17'
+            }
+        )
+
+        return jsonify({
+            'message': 'Target erased and campaign history anonymized',
+            'anonymized_results': anonymized
+        }), 200
+
+    except Exception as e:
+        current_app.logger.exception('Error during GDPR erasure')
+        return jsonify({'error': 'GDPR erasure failed', 'message': str(e)}), 500

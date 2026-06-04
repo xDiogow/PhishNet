@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional, List, Tuple
 from sqlalchemy import desc
 from app.models.audit_log import AuditLog
@@ -46,6 +47,22 @@ class AuditLogRepository(BaseRepository[AuditLog]):
         """
         query = self._apply_filters(tenant_id, user_id, action, resource_type)
         return query.order_by(desc(AuditLog.created_at)).all()
+
+    def delete_older_than(self, cutoff: datetime) -> int:
+        """Delete all audit logs created before cutoff (system-wide retention purge).
+
+        Returns the number of rows deleted.
+        """
+        count = (
+            self.session.query(AuditLog)
+            .filter(AuditLog.created_at < cutoff)
+            .count()
+        )
+        self.session.query(AuditLog).filter(AuditLog.created_at < cutoff).delete(
+            synchronize_session=False
+        )
+        self.session.commit()
+        return count
 
     def _apply_filters(
         self,
