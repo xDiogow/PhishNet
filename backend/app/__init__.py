@@ -38,6 +38,9 @@ def create_app(config_object=None):
     # Register error handlers
     @app.errorhandler(Exception)
     def handle_exception(e):
+        from werkzeug.exceptions import HTTPException
+        if isinstance(e, HTTPException):
+            return e
         app.logger.exception('Unhandled exception occurred')
         return jsonify({
             'error': str(e),

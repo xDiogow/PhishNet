@@ -31,8 +31,10 @@ class Config:
     MAIL_FROM = os.getenv('MAIL_FROM', 'phishnet@company.com')
     MAIL_TIMEOUT = int(os.getenv('MAIL_TIMEOUT', 30))  # seconds per SMTP connection
 
-    # Base URL used to build tracking links embedded in phishing emails
+    # Base URL used to build tracking links embedded in phishing emails (backend)
     APP_BASE_URL = os.getenv('APP_BASE_URL', 'http://localhost:5000')
+    # Frontend URL used for post-submission redirects (e.g. /caught page)
+    FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost')
 
 class DevelopmentConfig(Config):
     DEBUG = True
@@ -50,3 +52,4 @@ class TestingConfig(Config):
     JWT_SECRET_KEY = 'test-jwt-secret-key'
     LOG_LEVEL = 'DEBUG'
     REDIS_URL = 'redis://localhost:6379/1'  # separate DB index for tests
+    RATELIMIT_STORAGE_URI = 'memory://'

@@ -97,30 +97,15 @@ def landing_page(token):
         return 'Not found', 404
 
     html = template.landing_page_html
-    form_action = f'/phish/{token}'
-
-    # Inject form action — replace {{FORM_ACTION}} placeholder or patch the
-    # first bare <form> tag that has no action attribute yet.
-    if '{{FORM_ACTION}}' in html:
-        html = html.replace('{{FORM_ACTION}}', form_action)
-    elif '<form' in html.lower():
-        import re
-        html = re.sub(
-            r'(<form\b)',
-            f'<form action="{form_action}" method="POST"',
-            html,
-            count=1,
-            flags=re.IGNORECASE,
-        )
-
     # Personalise with target data.
     # Handles both {{.Email}} and the space variant {{ EMAIL}} seen in some templates.
     placeholders = {
-        '{{.Email}}':     result.email or '',
-        '{{ EMAIL}}':     result.email or '',
-        '{{.FirstName}}': result.first_name or '',
-        '{{.LastName}}':  result.last_name or '',
-        '{{.Position}}':  result.position or '',
+        '{{FORM_ACTION}}': f'/phish/{token}',
+        '{{.Email}}':      result.email or '',
+        '{{ EMAIL}}':      result.email or '',
+        '{{.FirstName}}':  result.first_name or '',
+        '{{.LastName}}':   result.last_name or '',
+        '{{.Position}}':   result.position or '',
     }
     for placeholder, value in placeholders.items():
         html = html.replace(placeholder, value)
@@ -141,5 +126,5 @@ def landing_page_submit(token):
         _increment_stat(result.campaign_id, 'submitted_count')
         logger.info(f"Submission tracked: token={token}, campaign={result.campaign_id}")
 
-    base_url = current_app.config.get('APP_BASE_URL', '').rstrip('/')
-    return redirect(f'{base_url}/caught' if base_url else '/caught', code=302)
+    frontend_url = current_app.config.get('FRONTEND_URL', '').rstrip('/')
+    return redirect(f'{frontend_url}/caught' if frontend_url else '/caught', code=302)

