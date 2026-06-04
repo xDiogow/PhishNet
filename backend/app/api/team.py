@@ -170,7 +170,7 @@ def delete_target(target_id):
             return jsonify({'error': 'Target not found'}), 404
 
         email = target.email
-        target_repo.delete_by_id(target_id)
+        target_repo.delete(target_id)
 
         audit_service.log_action(
             tenant_id=user.tenant_id,
@@ -212,7 +212,7 @@ def gdpr_erase_target(target_id):
         result_repo = CampaignResultRepository()
         anonymized = result_repo.anonymize_by_email(email, user.tenant_id)
 
-        target_repo.delete_by_id(target_id)
+        target_repo.delete(target_id)
 
         audit_service.log_action(
             tenant_id=user.tenant_id,

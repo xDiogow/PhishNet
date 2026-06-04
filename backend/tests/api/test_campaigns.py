@@ -100,6 +100,8 @@ def another_user(db_session, another_tenant):
 
 
 class TestGetAllCampaigns:
+    """EF13 (campaign list), EF17 (tenant isolation)"""
+
     def test_get_all_campaigns_success(self, client, auth_headers, test_campaign):
         response = client.get('/api/campaigns', headers=auth_headers)
 
@@ -134,6 +136,8 @@ class TestGetAllCampaigns:
 
 
 class TestGetCampaign:
+    """EF08 (campaign detail), EF17 (tenant isolation)"""
+
     def test_get_campaign_success(self, client, auth_headers, test_campaign):
         response = client.get(f'/api/campaigns/{test_campaign.id}', headers=auth_headers)
 
@@ -164,6 +168,8 @@ class TestGetCampaign:
 
 
 class TestGetCampaignSummary:
+    """EF13 — real-time stats (sent / opened / clicked / submitted)"""
+
     def test_get_campaign_summary_success(self, client, auth_headers, test_campaign):
         with patch('app.services.campaign_service.CampaignService.get_campaign_summary') as mock:
             mock.return_value = {
@@ -183,6 +189,8 @@ class TestGetCampaignSummary:
 
 
 class TestCreateCampaign:
+    """EF08 — campaign creation and immediate launch"""
+
     def test_create_campaign_success(self, client, auth_headers, test_template, test_tenant,
                                      test_user, db_session):
         with patch('app.services.campaign_service.CampaignService.create_campaign') as mock:
@@ -227,6 +235,8 @@ class TestCreateCampaign:
 
 
 class TestDeleteCampaign:
+    """EF08 (campaign lifecycle), EF17 (tenant isolation)"""
+
     def test_delete_campaign_success(self, client, auth_headers, test_campaign):
         with patch('app.services.campaign_service.CampaignService.delete_campaign'):
             response = client.delete(f'/api/campaigns/{test_campaign.id}', headers=auth_headers)
@@ -251,6 +261,8 @@ class TestDeleteCampaign:
 
 
 class TestCompleteCampaign:
+    """EF09 — stop a running campaign"""
+
     def test_complete_campaign_success(self, client, auth_headers, test_campaign):
         with patch('app.services.campaign_service.CampaignService.complete_campaign') as mock:
             mock.return_value = test_campaign

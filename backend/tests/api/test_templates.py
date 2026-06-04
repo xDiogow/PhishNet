@@ -79,6 +79,8 @@ def regular_headers(regular_user):
 
 
 class TestGetAllTemplates:
+    """EF07 — template listing"""
+
     def test_get_all_templates_success(self, client, regular_headers, test_template):
         response = client.get('/api/templates', headers=regular_headers)
 
@@ -95,6 +97,8 @@ class TestGetAllTemplates:
 
 
 class TestGetTemplate:
+    """EF07 — template detail (admin only)"""
+
     def test_get_template_success(self, client, admin_headers, test_template):
         response = client.get(f'/api/templates/{test_template.id}', headers=admin_headers)
 
@@ -120,6 +124,8 @@ class TestGetTemplate:
 
 
 class TestCreateTemplate:
+    """EF07 — template creation with HTML email and landing page (admin only)"""
+
     def test_create_template_success(self, client, admin_headers):
         template_data = {
             'name': 'New Template',
@@ -171,6 +177,8 @@ class TestCreateTemplate:
 
 
 class TestUpdateTemplate:
+    """EF07 — template update (admin only)"""
+
     def test_update_template_name(self, client, admin_headers, test_template):
         response = client.put(f'/api/templates/{test_template.id}',
                               json={'name': 'Updated Name'},
@@ -201,6 +209,8 @@ class TestUpdateTemplate:
 
 
 class TestDeleteTemplate:
+    """EF07 — template deletion (admin only)"""
+
     def test_delete_template_success(self, client, admin_headers, test_template):
         response = client.delete(f'/api/templates/{test_template.id}', headers=admin_headers)
 

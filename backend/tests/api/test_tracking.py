@@ -108,6 +108,8 @@ def test_result(db_session, test_campaign):
 
 
 class TestOpenPixel:
+    """EF10 — open-tracking pixel (1×1 GIF), idempotency"""
+
     def test_returns_gif(self, client, test_result):
         response = client.get(f'/track/o/{test_result.tracking_token}')
 
@@ -138,6 +140,8 @@ class TestOpenPixel:
 
 
 class TestClickRedirect:
+    """EF11 — click tracking and 302 redirect to landing page"""
+
     def test_redirects_to_landing_page(self, client, test_result):
         response = client.get(f'/track/c/{test_result.tracking_token}')
 
@@ -162,6 +166,8 @@ class TestClickRedirect:
 
 
 class TestLandingPage:
+    """EF07 (placeholder substitution), EF11 (landing page served), EF12 (form action injection)"""
+
     def test_serves_landing_page(self, client, test_result):
         response = client.get(f'/phish/{test_result.tracking_token}')
 
@@ -205,6 +211,8 @@ class TestLandingPage:
 
 
 class TestSubmission:
+    """EF12 — credential submission tracking, idempotency, redirect to /caught"""
+
     def test_records_submission(self, client, test_result, db_session):
         client.post(f'/phish/{test_result.tracking_token}',
                     data={'email': 'target@example.com', 'password': 'secret'})

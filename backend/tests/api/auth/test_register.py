@@ -86,7 +86,7 @@ def existing_user(db_session, test_tenant):
 
 
 class TestRegister:
-    """Tests for POST /api/auth/register"""
+    """Tests for POST /api/auth/register — EF02 (invitation code), EF03 (rate limiting), EF17 (tenant isolation)"""
 
     def test_register_success(self, client, db_session, test_tenant, valid_invitation):
         """Test successfully registering a user"""

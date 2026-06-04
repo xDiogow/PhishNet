@@ -53,7 +53,7 @@ const renderWithRouter = (component) => {
   )
 }
 
-describe('Templates Page', () => {
+describe('Templates Page — EF07 (template management, admin-only writes)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.spyOn(templatesService, 'getTemplates').mockResolvedValue(mockTemplates)

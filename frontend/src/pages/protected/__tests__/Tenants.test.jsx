@@ -56,7 +56,7 @@ const renderWithRouter = (component) => {
   )
 }
 
-describe('Tenants Page', () => {
+describe('Tenants Page — EF04 (admin tenant CRUD), EF05 (invitation management)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.spyOn(tenantsService, 'getTenants').mockResolvedValue(mockTenants)

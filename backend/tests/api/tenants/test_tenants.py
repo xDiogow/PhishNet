@@ -92,7 +92,7 @@ def regular_headers(regular_user):
 
 
 class TestCreateTenant:
-    """Tests for POST /api/tenants"""
+    """Tests for POST /api/tenants — EF04 (admin tenant creation)"""
 
     @patch('app.api.tenants.tenants.create_tenant')
     def test_create_tenant_success(self, mock_create_tenant, client, admin_headers):
@@ -158,7 +158,7 @@ class TestCreateTenant:
 
 
 class TestGetAllTenants:
-    """Tests for GET /api/tenants"""
+    """Tests for GET /api/tenants — EF04 (admin tenant listing)"""
 
     def test_get_all_tenants_success(self, client, admin_headers, test_tenant, another_tenant):
         """Test successfully getting all tenants"""
@@ -186,7 +186,7 @@ class TestGetAllTenants:
 
 
 class TestGetTenant:
-    """Tests for GET /api/tenants/<id>"""
+    """Tests for GET /api/tenants/<id> — EF04 (admin tenant detail)"""
 
     def test_get_tenant_success(self, client, admin_headers, test_tenant):
         """Test successfully getting a tenant by ID"""
@@ -206,7 +206,7 @@ class TestGetTenant:
 
 
 class TestUpdateTenant:
-    """Tests for PUT /api/tenants/<id>"""
+    """Tests for PUT /api/tenants/<id> — EF04 (admin tenant update)"""
 
     def test_update_tenant_success(self, client, admin_headers, test_tenant):
         """Test successfully updating a tenant"""
@@ -250,7 +250,7 @@ class TestUpdateTenant:
 
 
 class TestDeleteTenant:
-    """Tests for DELETE /api/tenants/<id>"""
+    """Tests for DELETE /api/tenants/<id> — EF04 (admin tenant deletion, blocked if users exist)"""
 
     def test_delete_tenant_success(self, client, admin_headers, db_session):
         """Test successfully deleting a tenant"""

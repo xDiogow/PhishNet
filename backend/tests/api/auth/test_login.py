@@ -127,7 +127,7 @@ def another_user(db_session, another_tenant):
 
 
 class TestLogin:
-    """Tests for POST /api/auth/login"""
+    """Tests for POST /api/auth/login — EF01 (JWT authentication), EF17 (tenant isolation)"""
 
     def test_login_success(self, client, regular_user):
         """Test successfully logging in"""

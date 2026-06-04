@@ -158,7 +158,7 @@ def another_headers(another_user):
 
 
 class TestCreateInvitation:
-    """Tests for POST /api/tenant-invitations"""
+    """Tests for POST /api/tenant-invitations — EF05 (operator generates invitation codes)"""
 
     def test_create_invitation_success(self, client, operator_headers, test_tenant):
         """Test successfully creating an invitation"""
@@ -208,7 +208,7 @@ class TestCreateInvitation:
 
 
 class TestValidateInvitation:
-    """Tests for POST /api/tenant-invitations/validate"""
+    """Tests for POST /api/tenant-invitations/validate — EF02 (registration gate), EF05 (expiry, single-use)"""
 
     def test_validate_invitation_success(self, client, test_invitation):
         """Test successfully validating an invitation (no auth required)"""
@@ -252,7 +252,7 @@ class TestValidateInvitation:
 
 
 class TestGetInvitation:
-    """Tests for GET /api/tenant-invitations/<invitation_code>"""
+    """Tests for GET /api/tenant-invitations/<invitation_code> — EF05 (invitation lookup)"""
 
     def test_get_invitation_success(self, client, operator_headers, test_invitation):
         """Test successfully getting an invitation by code"""
@@ -281,7 +281,7 @@ class TestGetInvitation:
 
 
 class TestGetInvitationsByTenant:
-    """Tests for GET /api/tenant-invitations/tenant/<tenant_id>"""
+    """Tests for GET /api/tenant-invitations/tenant/<tenant_id> — EF05 (list invitations per tenant)"""
 
     def test_get_invitations_by_tenant_success(self, client, operator_headers, test_tenant,
                                                 test_invitation, used_invitation, expired_invitation):

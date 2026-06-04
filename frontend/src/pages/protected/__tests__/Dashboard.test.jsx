@@ -32,7 +32,7 @@ const mockTenants = [
 
 const renderWithRouter = (component) => render(<BrowserRouter>{component}</BrowserRouter>)
 
-describe('Dashboard Page', () => {
+describe('Dashboard Page — EF13 (real-time stats), EF08 (campaigns list)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.spyOn(campaignsService, 'getCampaigns').mockResolvedValue(mockCampaigns)

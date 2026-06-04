@@ -4,8 +4,10 @@ Tests for Team API endpoints
 import pytest
 from flask_jwt_extended import create_access_token
 
+from datetime import datetime, timezone
+
 from app.extensions import db, bcrypt
-from app.models import User, Tenant
+from app.models import User, Tenant, Target, Campaign, CampaignStatus, CampaignResult, Template
 
 
 @pytest.fixture
@@ -155,7 +157,7 @@ def another_auth_headers(another_user):
 
 
 class TestGetTeamMembers:
-    """Tests for GET /api/team"""
+    """Tests for GET /api/team — EF06 (target management), EF17 (tenant isolation)"""
 
     def test_get_team_members_success(self, client, auth_headers, test_user,
                                        operator_user, admin_user, inactive_user):
@@ -211,3 +213,107 @@ class TestGetTeamMembers:
         members = {m['id']: m for m in response.get_json()['team_members']}
         assert members[operator_user.id]['is_operator'] is True
         assert members[test_user.id]['is_operator'] is False
+
+
+class TestGdprEraseTarget:
+    """EF16 — GDPR Art. 17 right to erasure: PII anonymization + target deletion"""
+
+    @pytest.fixture
+    def target(self, db_session, test_tenant):
+        t = Target(
+            email="victim@example.com",
+            first_name="Jean",
+            last_name="Dupont",
+            position="Engineer",
+            tenant_id=test_tenant.id,
+        )
+        db_session.add(t)
+        db_session.commit()
+        db_session.refresh(t)
+        return t
+
+    @pytest.fixture
+    def campaign_with_result(self, db_session, test_tenant, test_user, target):
+        """Campaign result linked to the target's email."""
+        tmpl = Template(
+            name="GDPR Template",
+            subject="Test",
+            email_html="<p>test</p>",
+            landing_page_html="<p>test</p>",
+            created_by_user_id=test_user.id,
+        )
+        db_session.add(tmpl)
+        db_session.commit()
+        db_session.refresh(tmpl)
+
+        campaign = Campaign(
+            name="GDPR Campaign",
+            tenant_id=test_tenant.id,
+            template_id=tmpl.id,
+            created_by_user_id=test_user.id,
+            status=CampaignStatus.RUNNING,
+            launched_at=datetime.now(timezone.utc),
+        )
+        db_session.add(campaign)
+        db_session.commit()
+        db_session.refresh(campaign)
+
+        result = CampaignResult(
+            campaign_id=campaign.id,
+            email=target.email,
+            first_name=target.first_name,
+            last_name=target.last_name,
+            position=target.position,
+            tracking_token="gdpr-test-token-unique-1234",
+            status="Sent",
+            sent_at=datetime.now(timezone.utc),
+        )
+        db_session.add(result)
+        db_session.commit()
+        db_session.refresh(result)
+        return result
+
+    def test_gdpr_erase_deletes_target(self, client, auth_headers, target, db_session):
+        response = client.delete(
+            f"/api/team/targets/{target.id}/gdpr",
+            headers=auth_headers,
+        )
+
+        assert response.status_code == 200
+        deleted = db_session.get(Target, target.id)
+        assert deleted is None
+
+    def test_gdpr_erase_anonymizes_pii_in_campaign_results(
+        self, client, auth_headers, target, campaign_with_result, db_session
+    ):
+        client.delete(f"/api/team/targets/{target.id}/gdpr", headers=auth_headers)
+
+        db_session.expire_all()
+        result = db_session.get(CampaignResult, campaign_with_result.id)
+        assert result.email != "victim@example.com"
+        assert result.first_name != "Jean"
+        assert result.last_name != "Dupont"
+
+    def test_gdpr_erase_reports_anonymized_count(
+        self, client, auth_headers, target, campaign_with_result
+    ):
+        response = client.delete(
+            f"/api/team/targets/{target.id}/gdpr", headers=auth_headers
+        )
+
+        data = response.get_json()
+        assert "anonymized_results" in data
+        assert data["anonymized_results"] >= 1
+
+    def test_gdpr_erase_tenant_isolation(self, client, another_auth_headers, target):
+        """EF17 — cannot erase a target belonging to another tenant"""
+        response = client.delete(
+            f"/api/team/targets/{target.id}/gdpr",
+            headers=another_auth_headers,
+        )
+
+        assert response.status_code == 404
+
+    def test_gdpr_erase_requires_auth(self, client, target):
+        response = client.delete(f"/api/team/targets/{target.id}/gdpr")
+        assert response.status_code == 401

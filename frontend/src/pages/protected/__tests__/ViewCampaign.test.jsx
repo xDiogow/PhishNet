@@ -72,7 +72,7 @@ const renderWithRouter = (component) => {
   )
 }
 
-describe('ViewCampaign Page', () => {
+describe('ViewCampaign Page — EF08 (campaign detail), EF13 (live stats per target)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.spyOn(campaignsService, 'getCampaign').mockResolvedValue(mockCampaign)

@@ -79,7 +79,7 @@ pytest            # Run all tests
 pytest -v         # Verbose output
 ```
 
-**Test Coverage:** 101 tests passing
+**Test Coverage:** 104 tests passing
 
 ### Frontend Tests
 
@@ -90,7 +90,7 @@ npm run test:ui        # Run tests with UI
 npm run test:coverage  # Coverage report
 ```
 
-**Test Coverage:** 45 tests passing
+**Test Coverage:** 47 tests passing (includes automated RGAA/WCAG 2.1 AA accessibility tests via axe-core)
 
 ---
 
@@ -163,3 +163,20 @@ npm run test:coverage  # Coverage report
 ### Audit Logs
 - `GET /api/audit-logs` — List audit log entries for your tenant
 - `GET /api/audit-logs/export` — Export audit log as CSV
+
+---
+
+## 📚 Documentation
+
+The `docs/` folder contains all project documentation.
+
+| Document | Description |
+|---|---|
+| [Cahier des Charges](docs/Cahier_des_Charges_PhishNet.docx) | Functional requirements, MoSCoW priorities, user stories (BC02.C5) |
+| [Architecture logicielle](docs/architecture.pdf) | Layered architecture diagram — API → Service → Repository → DB |
+| [Diagramme ER](docs/er-diagram.pdf) | Database schema — 9 tables, FK constraints, indexes |
+| [Wireframes](docs/wireframes.pdf) | UI mockups for all protected pages |
+| [Dossier de Projet RNCP](docs/Dossier_Projet_PhishNet_RNCP37873.docx) | Project dossier for TP CDA certification — RNCP 37873 Niveau 6 |
+
+> Each backend test class references the functional requirement(s) it validates (e.g. `EF01`, `EF08`).
+> See `docs/Cahier_des_Charges_PhishNet.docx` for the full requirements table.
