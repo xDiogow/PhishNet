@@ -1,0 +1,47 @@
+# Staging environment — use with:
+#   docker compose -f docker-compose.yml -f docker-compose.staging.yml up -d
+#
+# Differences vs production:
+#   - Frontend exposed on port 8080 (not 80)
+#   - More verbose logging (LOG_LEVEL=DEBUG)
+#   - 2 Gunicorn workers instead of 4
+#   - Isolated postgres volume (postgres_staging_data)
+#   - Container names suffixed with -staging
+
+services:
+  db:
+    container_name: phishnet-db-staging
+    volumes:
+      - postgres_staging_data:/var/lib/postgresql/data
+
+  redis:
+    container_name: phishnet-redis-staging
+
+  backend:
+    container_name: phishnet-backend-staging
+    environment:
+      FLASK_DEBUG: "false"
+      LOG_LEVEL: DEBUG
+    command: >
+      sh -c "
+        echo 'Waiting for database...' &&
+        sleep 10 &&
+        if [ ! -f 'migrations/env.py' ]; then
+          flask db init &&
+          flask db migrate -m 'Initial migration' &&
+          flask db upgrade;
+        else
+          flask db upgrade || (flask db migrate -m 'Auto migration' && flask db upgrade);
+        fi &&
+        flask seed-templates &&
+        gunicorn --bind 0.0.0.0:5000 --workers 2 --timeout 120 --access-logfile - --error-logfile - wsgi:app
+      "
+
+  frontend:
+    container_name: phishnet-frontend-staging
+    ports:
+      - "8080:80"
+
+volumes:
+  postgres_staging_data:
+    driver: local
