@@ -1,0 +1,15 @@
+# ruff.toml — Linter Python (BC01 · RNCP 37873)
+target-version = "py312"
+line-length = 120
+
+[lint]
+select = ["E", "F", "W"]
+ignore = [
+  "E501",   # line too long (géré à la main)
+  "E402",   # import not at top — nécessaire pour les patterns Flask (create_app, blueprints)
+]
+
+[lint.per-file-ignores]
+"tests/**/*.py" = ["F811"]      # redéfinition de fixtures pytest
+"app/__init__.py" = ["F401"]    # imports re-exportés (extensions, models)
+"app/models/__init__.py" = ["F401"]
