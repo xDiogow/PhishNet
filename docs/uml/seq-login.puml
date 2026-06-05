@@ -1,0 +1,53 @@
+@startuml DS-01 Authentification
+!theme plain
+skinparam defaultFontName Arial
+skinparam sequenceArrowThickness 1.5
+skinparam sequenceParticipantBorderColor #2c3e50
+skinparam sequenceLifeLineBorderColor #aaaaaa
+skinparam sequenceBoxBorderColor #dddddd
+skinparam noteBorderColor #f39c12
+skinparam noteBackgroundColor #FEF9E7
+
+title DS-01 — Authentification (login utilisateur)
+
+actor       "Utilisateur"       as U
+participant "Frontend (React)"  as FE #d5e8d4
+participant "Backend (Flask)"   as BE #ffe6cc
+database    "PostgreSQL"        as DB #dae8fc
+
+U -> FE : Saisit email + mot de passe
+FE -> BE : POST /api/auth/login\n{email, password}
+activate BE
+
+BE -> DB : SELECT * FROM users\nWHERE email = ?
+activate DB
+DB --> BE : User { password_hash, tenant_id, is_admin … }
+deactivate DB
+
+note over BE
+  bcrypt.check_password_hash()
+  Rate-limit : 5 req/min (Flask-Limiter + Redis)
+end note
+
+alt Credentials invalides
+  BE --> FE : 401 { error: "Invalid credentials" }
+else Compte inactif
+  BE --> FE : 403 { error: "User account is inactive" }
+else Succès
+  BE -> DB : INSERT audit_log\n(action = LOGIN)
+  activate DB
+  DB --> BE : OK
+  deactivate DB
+
+  BE --> FE : 200 OK\n{ access_token, user: { id, email, is_admin, is_operator } }
+  deactivate BE
+
+  note over FE
+    Stocke JWT en mémoire React (useState)
+    — jamais en localStorage (protection XSS)
+  end note
+
+  FE --> U : Redirige → /dashboard
+end
+
+@enduml

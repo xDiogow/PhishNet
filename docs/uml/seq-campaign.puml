@@ -1,0 +1,74 @@
+@startuml DS-02 Création de campagne
+!theme plain
+skinparam defaultFontName Arial
+skinparam sequenceArrowThickness 1.5
+skinparam noteBorderColor #f39c12
+skinparam noteBackgroundColor #FEF9E7
+
+title DS-02 — Création et lancement d'une campagne de phishing
+
+actor       "Opérateur"         as OP
+participant "Frontend"          as FE #d5e8d4
+participant "Backend API"       as BE #ffe6cc
+participant "CampaignService"   as CS #f8cecc
+participant "EmailService"      as ES #e1d5e7
+database    "PostgreSQL"        as DB #dae8fc
+entity      "SMTP Server"       as SMTP
+
+OP -> FE : Saisit nom + template,\nclique « Lancer »
+
+FE -> BE : POST /api/campaigns\n{name, template_id} [JWT]
+activate BE
+
+note over BE : Valide JWT\nIdentifie tenant_id
+
+BE -> CS : create_campaign(\n  name, template_id,\n  tenant_id, user_id)
+activate CS
+
+CS -> DB : SELECT template WHERE id = template_id
+activate DB
+DB --> CS : Template { subject, email_html, landing_page_html }
+deactivate DB
+
+CS -> DB : SELECT targets WHERE tenant_id = ?
+activate DB
+DB --> CS : [Target × N]
+deactivate DB
+
+CS -> DB : INSERT Campaign (status = RUNNING, launched_at = now)
+activate DB
+DB --> CS : campaign.id
+deactivate DB
+
+CS -> DB : INSERT CampaignResult × N\n(uuid tracking_token / cible)
+activate DB
+DB --> CS : OK
+deactivate DB
+
+loop Pour chaque cible
+  CS -> ES : send_phishing_email(\n  email, token, template)
+  activate ES
+  note over ES
+    Substitue {{TRACKING_PIXEL}},
+    {{CLICK_URL}}, {{.FirstName}} …
+  end note
+  ES -> SMTP : STARTTLS / SSL\nenvoie email MIME multipart
+  SMTP --> ES : OK / Error
+  deactivate ES
+end
+
+CS -> DB : INSERT CampaignStats\n(total, sent_count)
+CS -> DB : INSERT audit_log (CREATE_CAMPAIGN)
+activate DB
+DB --> CS : OK
+deactivate DB
+
+CS --> BE : Campaign (id, status = RUNNING)
+deactivate CS
+
+BE --> FE : 201 Created\n{ campaign }
+deactivate BE
+
+FE --> OP : Affiche campagne créée\n(statut : Running ✓)
+
+@enduml

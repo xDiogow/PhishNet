@@ -1,0 +1,73 @@
+@startuml PhishNet — Cas d'utilisation
+!theme plain
+skinparam actorStyle awesome
+skinparam packageStyle rectangle
+skinparam usecaseBorderColor #2980b9
+skinparam usecaseBackgroundColor #EBF5FB
+skinparam actorBorderColor #2c3e50
+skinparam arrowColor #555555
+skinparam noteBorderColor #f39c12
+skinparam defaultFontName Arial
+
+left to right direction
+
+actor "Utilisateur"      as U  #2980b9
+actor "Opérateur"        as O  #8e44ad
+actor "Administrateur"   as A  #c0392b
+actor "Cible (employé)"  as C  #e67e22
+
+O -up-|> U : hérite de
+A -up-|> O : hérite de
+
+rectangle "«system» PhishNet" {
+
+  package "Authentification" {
+    usecase "Se connecter"             as UC_LOGIN
+    usecase "S'inscrire via invitation" as UC_REGISTER
+  }
+
+  package "Consultation" {
+    usecase "Voir les statistiques"     as UC_STATS
+    usecase "Exporter logs d'audit"     as UC_EXPORT
+  }
+
+  package "Gestion des campagnes" {
+    usecase "Créer une campagne"        as UC_CREATE
+    usecase "Arrêter une campagne"      as UC_STOP
+  }
+
+  package "Gestion de l'équipe" {
+    usecase "Gérer l'équipe"            as UC_TEAM
+    usecase "Gérer les cibles"          as UC_TARGETS
+  }
+
+  package "Administration (admin)" {
+    usecase "Gérer les tenants"         as UC_TENANTS
+    usecase "Gérer les templates"       as UC_TEMPLATES
+  }
+
+  package "Phishing (public)" {
+    usecase "Recevoir email de phishing" as UC_EMAIL
+    usecase "Cliquer un lien"            as UC_CLICK
+    usecase "Soumettre des credentials"  as UC_SUBMIT
+  }
+}
+
+U --> UC_LOGIN
+U --> UC_REGISTER
+U --> UC_STATS
+U --> UC_EXPORT
+
+O --> UC_CREATE
+O --> UC_STOP
+O --> UC_TEAM
+O --> UC_TARGETS
+
+A --> UC_TENANTS
+A --> UC_TEMPLATES
+
+C --> UC_EMAIL
+C --> UC_CLICK
+C --> UC_SUBMIT
+
+@enduml

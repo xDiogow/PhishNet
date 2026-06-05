@@ -1,0 +1,85 @@
+@startuml DS-03 Tracking
+!theme plain
+skinparam defaultFontName Arial
+skinparam sequenceArrowThickness 1.5
+skinparam noteBorderColor #f39c12
+skinparam noteBackgroundColor #FEF9E7
+
+title DS-03 — Tracking d'un email de phishing (open → clic → soumission)
+
+actor    "Cible (navigateur)" as C
+entity   "Nginx (proxy)"      as N
+participant "Backend Tracking" as BE #ffe6cc
+database "PostgreSQL"         as DB #dae8fc
+
+== ① Open tracking — pixel chargé à l'ouverture de l'email ==
+
+C -> N  : GET /track/o/{token}\n[pixel 1×1 chargé par le client mail]
+N -> BE : Proxie la requête
+activate BE
+
+BE -> DB : UPDATE campaign_results\nSET opened_at = now(), status = 'Opened'\nWHERE tracking_token = {token}\n  AND opened_at IS NULL
+activate DB
+DB --> BE : OK
+deactivate DB
+
+BE --> C : 200 OK  image/gif (1×1 px transparent)\nCache-Control: no-store
+deactivate BE
+
+== ② Click tracking — clic sur le lien dans l'email ==
+
+C -> N  : GET /track/c/{token}\n[clic sur le lien de phishing]
+N -> BE : Proxie la requête
+activate BE
+
+BE -> DB : UPDATE campaign_results\nSET clicked_at = now(), status = 'Clicked'\nWHERE tracking_token = {token}\n  AND clicked_at IS NULL
+activate DB
+DB --> BE : OK
+deactivate DB
+
+BE --> C : 302 Redirect → /phish/{token}
+deactivate BE
+
+C -> N  : GET /phish/{token}
+N -> BE : Proxie la requête
+activate BE
+
+BE -> DB : SELECT campaign_result, template\nWHERE tracking_token = {token}
+activate DB
+DB --> BE : Result + Template HTML
+deactivate DB
+
+note over BE
+  Remplace les placeholders :
+  {{.Email}}, {{.FirstName}}, {{.LastName}},
+  {{.Position}}, {{FORM_ACTION}}
+end note
+
+BE --> C : 200 OK  text/html\n(landing page personnalisée)
+deactivate BE
+
+== ③ Soumission credentials ==
+
+C -> N  : POST /phish/{token}\n{username, password}
+N -> BE : Proxie la requête
+activate BE
+
+note over BE
+  Aucun credential stocké
+  (privacy by design — RGPD Art. 5)
+end note
+
+BE -> DB : UPDATE campaign_results\nSET submitted_at = now(),\n    status = 'Submitted Data'\nWHERE tracking_token = {token}\n  AND submitted_at IS NULL
+activate DB
+DB --> BE : OK
+deactivate DB
+
+BE --> C : 302 Redirect → {FRONTEND_URL}/caught
+deactivate BE
+
+note over C
+  Page pédagogique affichée :
+  « Oops, You've Been Caught! »
+end note
+
+@enduml
