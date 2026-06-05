@@ -1,5 +1,6 @@
 import logging
 from flask import Flask, jsonify
+from sqlalchemy import text
 from .config import Config
 from .extensions import db, migrate, jwt, bcrypt, cors, limiter
 from .api import register_blueprints
@@ -43,6 +44,35 @@ def create_app(config_object=None):
 
     register_blueprints(app)
     register_commands(app)
+
+    @app.route('/api/health')
+    def health():
+        checks = {}
+        status_code = 200
+
+        try:
+            db.session.execute(text('SELECT 1'))
+            checks['database'] = 'ok'
+        except Exception:
+            checks['database'] = 'error'
+            status_code = 503
+
+        try:
+            import redis as redis_lib
+            r = redis_lib.from_url(
+                app.config.get('REDIS_URL', 'redis://localhost:6379/0'),
+                socket_connect_timeout=2,
+            )
+            r.ping()
+            checks['redis'] = 'ok'
+        except Exception:
+            checks['redis'] = 'error'
+            status_code = 503
+
+        return jsonify({
+            'status': 'healthy' if status_code == 200 else 'unhealthy',
+            'checks': checks,
+        }), status_code
 
     # Register error handlers
     @app.errorhandler(Exception)
