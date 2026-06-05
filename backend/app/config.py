@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -12,6 +13,8 @@ class Config:
     DEBUG = os.getenv('FLASK_DEBUG', 'False') == 'True'
     REDIS_URL = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
     RATELIMIT_STORAGE_URI = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)
+    SESSION_BLOCKLIST_ENABLED = True
 
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', f'sqlite:///{BASE_DIR / "app.db"}')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
@@ -53,3 +56,4 @@ class TestingConfig(Config):
     LOG_LEVEL = 'DEBUG'
     REDIS_URL = 'redis://localhost:6379/1'  # separate DB index for tests
     RATELIMIT_STORAGE_URI = 'memory://'
+    SESSION_BLOCKLIST_ENABLED = False  # avoids Redis dependency in unit tests

@@ -20,6 +20,15 @@ def create_app(config_object=None):
     jwt.init_app(app)
     bcrypt.init_app(app)
     limiter.init_app(app)
+
+    from app.repository.session_repository import session_repo
+
+    @jwt.token_in_blocklist_loader
+    def check_if_token_revoked(jwt_header, jwt_payload):
+        from flask import current_app
+        if not current_app.config.get('SESSION_BLOCKLIST_ENABLED', True):
+            return False
+        return session_repo.is_token_revoked(jwt_payload["jti"])
     cors.init_app(app, resources={
         r"/api/*": {
             "origins": app.config['CORS_ORIGINS'],
