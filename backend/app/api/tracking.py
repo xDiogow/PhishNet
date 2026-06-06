@@ -6,6 +6,7 @@ Routes:
   GET  /phish/<token>     serve landing page HTML
   POST /phish/<token>     record credential submission → redirect to /caught
 """
+import html as html_module
 import logging
 from datetime import datetime, timezone
 
@@ -99,13 +100,16 @@ def landing_page(token):
     html = template.landing_page_html
     # Personalise with target data.
     # Handles both {{.Email}} and the space variant {{ EMAIL}} seen in some templates.
+    # User-supplied fields are HTML-escaped to prevent stored XSS if a target's
+    # name/email contains HTML special characters.
+    # FORM_ACTION is a system-generated UUID path — no escaping needed.
     placeholders = {
         '{{FORM_ACTION}}': f'/phish/{token}',
-        '{{.Email}}':      result.email or '',
-        '{{ EMAIL}}':      result.email or '',
-        '{{.FirstName}}':  result.first_name or '',
-        '{{.LastName}}':   result.last_name or '',
-        '{{.Position}}':   result.position or '',
+        '{{.Email}}':      html_module.escape(result.email or ''),
+        '{{ EMAIL}}':      html_module.escape(result.email or ''),
+        '{{.FirstName}}':  html_module.escape(result.first_name or ''),
+        '{{.LastName}}':   html_module.escape(result.last_name or ''),
+        '{{.Position}}':   html_module.escape(result.position or ''),
     }
     for placeholder, value in placeholders.items():
         html = html.replace(placeholder, value)

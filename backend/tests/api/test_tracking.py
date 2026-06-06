@@ -209,6 +209,31 @@ class TestLandingPage:
         response = client.get('/phish/nonexistent-token')
         assert response.status_code == 404
 
+    def test_html_special_chars_in_target_data_are_escaped(self, client, db_session, test_campaign):
+        """Stored XSS prevention: HTML special chars in target fields must be escaped."""
+        token = "xss-test-token-001"
+        result = CampaignResult(
+            campaign_id=test_campaign.id,
+            email='victim<script>alert(1)</script>@evil.com',
+            first_name='<b>Evil</b>',
+            last_name='O\'Brien & "Co"',
+            position='<img src=x onerror=alert(1)>',
+            tracking_token=token,
+            status='Sent',
+        )
+        db_session.add(result)
+        db_session.commit()
+
+        response = client.get(f'/phish/{token}')
+
+        assert response.status_code == 200
+        assert b'<script>' not in response.data
+        assert b'<b>Evil</b>' not in response.data
+        assert b'<img src=x' not in response.data
+        assert b'&lt;script&gt;' in response.data
+        assert b'&lt;b&gt;Evil&lt;/b&gt;' in response.data
+        assert b'O&#x27;Brien &amp; &quot;Co&quot;' in response.data
+
 
 class TestSubmission:
     """EF12 — credential submission tracking, idempotency, redirect to /caught"""
