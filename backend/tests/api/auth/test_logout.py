@@ -3,7 +3,7 @@ Tests for POST /api/auth/logout — EF17 (session security), EF01 (authenticatio
 """
 import pytest
 from unittest.mock import patch
-from app.extensions import db, bcrypt
+from app.extensions import bcrypt
 from app.models import User, Tenant
 from app.repository.session_repository import session_repo
 

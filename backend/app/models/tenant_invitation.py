@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import Integer, BigInteger, String, Boolean, DateTime, ForeignKey, UniqueConstraint, Index
 
@@ -14,15 +14,15 @@ class TenantInvitation(Base):
 
     invitation_code: Mapped[str] = mapped_column(String(64), nullable=False)
     tenant_id: Mapped[int] = mapped_column(ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
-    
+
     is_used: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     used_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     used_by_user_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
-    
+
     expires_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-    
+
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
-    
+
     __table_args__ = (
         UniqueConstraint("invitation_code", name="uq_tenant_invitation_code"),
         Index("ix_tenant_invitations_code", "invitation_code"),

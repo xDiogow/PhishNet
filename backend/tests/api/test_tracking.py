@@ -3,7 +3,7 @@ import pytest
 import uuid
 from datetime import datetime, timezone
 
-from app.extensions import db, bcrypt
+from app.extensions import bcrypt
 from app.models import User, Tenant, Template, Campaign, CampaignStatus
 from app.models.campaign_result import CampaignResult
 from app.models.campaign_stats import CampaignStats

@@ -2,7 +2,7 @@
 import pytest
 from flask_jwt_extended import create_access_token
 
-from app.extensions import db, bcrypt
+from app.extensions import bcrypt
 from app.models import User, Tenant, Template
 
 

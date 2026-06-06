@@ -32,7 +32,7 @@ class CampaignResult(Base):
     clicked_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     submitted_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
-    campaign: Mapped["Campaign"] = relationship("Campaign", back_populates="results")
+    campaign: Mapped["Campaign"] = relationship("Campaign", back_populates="results")  # noqa: F821
 
     __table_args__ = (
         Index("ix_campaign_results_campaign_id", "campaign_id"),

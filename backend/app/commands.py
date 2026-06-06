@@ -1,7 +1,6 @@
 """Flask CLI commands for database seeding and data retention."""
 import click
 from datetime import datetime, timezone, timedelta
-from flask import current_app
 from flask.cli import with_appcontext
 
 from app.extensions import db

@@ -9,8 +9,6 @@ import logging
 import uuid
 from datetime import datetime, timezone
 
-from flask import current_app
-from sqlalchemy import func
 
 from app.extensions import db
 from app.models.campaign import Campaign, CampaignStatus

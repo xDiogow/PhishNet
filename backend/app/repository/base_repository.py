@@ -40,7 +40,7 @@ class BaseRepository(Generic[ModelType]):
                 query = query.filter(getattr(self.model, attr_name) == attr_value)
             else:
                 raise ValueError(f"Model {self.model.__name__} has no attribute '{attr_name}'")
-        
+
         return query.all()
 
     def create(self, obj: ModelType):

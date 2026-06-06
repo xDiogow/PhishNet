@@ -1,5 +1,4 @@
 from flask import Blueprint, request, jsonify, current_app
-from flask_jwt_extended import jwt_required
 from app.services.tenant_service import create_tenant, get_tenant_by_id, get_all_tenants
 from app.utils.auth_helper import admin_required
 from app.repository.tenant_repository import TenantRepository
@@ -23,29 +22,29 @@ def create_tenant_route():
     """Create a new tenant with an initial invitation."""
     try:
         data = request.get_json()
-        
+
         if not data:
             return jsonify({'error': 'No data provided'}), 400
-        
+
         name = data.get('name')
         invitation_expires_days = data.get('invitation_expires_days')
-        
+
         if not name:
             return jsonify({
                 'error': 'Missing required field',
                 'required': ['name']
             }), 400
-        
+
         result = create_tenant(name, invitation_expires_days)
-        
+
         if result['status'] == 'error':
             return jsonify({
                 'error': result['message']
             }), 409
-        
+
         tenant = result['tenant']
         invitation = result['invitation']
-        
+
         return jsonify({
             'message': result['message'],
             'tenant': tenant_to_dict(tenant),
@@ -58,7 +57,7 @@ def create_tenant_route():
                 'created_at': invitation.created_at.isoformat() if invitation.created_at else None
             }
         }), 201
-        
+
     except Exception as e:
         current_app.logger.exception('Error creating tenant')
         return jsonify({'error': 'Failed to create tenant', 'message': str(e)}), 500
@@ -86,7 +85,7 @@ def get_tenant_route(tenant_id):
         tenant = get_tenant_by_id(tenant_id)
         if not tenant:
             return jsonify({'error': 'Tenant not found'}), 404
-        
+
         return jsonify(tenant_to_dict(tenant)), 200
     except Exception as e:
         current_app.logger.exception('Error getting tenant')
@@ -99,23 +98,23 @@ def update_tenant_route(tenant_id):
     """Update a tenant."""
     try:
         data = request.get_json()
-        
+
         if not data:
             return jsonify({'error': 'No data provided'}), 400
-        
+
         tenant_repo = TenantRepository()
         tenant = tenant_repo.get_by_id(tenant_id)
-        
+
         if not tenant:
             return jsonify({'error': 'Tenant not found'}), 404
-        
+
         update_data = {}
-        
+
         if 'name' in data:
             name = data['name'].strip()
             if not name:
                 return jsonify({'error': 'Tenant name cannot be empty'}), 400
-            
+
             if name != tenant.name:
                 existing_tenant = tenant_repo.get_by_name(name)
                 if existing_tenant:
@@ -124,18 +123,18 @@ def update_tenant_route(tenant_id):
                         'message': 'Tenant names must be unique'
                     }), 400
             update_data['name'] = name
-        
+
         if not update_data:
             return jsonify({'error': 'No fields to update'}), 400
-        
+
         updated_tenant = tenant_repo.update_by_id(tenant_id, **update_data)
-        
+
         return jsonify({
             'status': 'success',
             'message': 'Tenant updated successfully',
             'tenant': tenant_to_dict(updated_tenant)
         }), 200
-            
+
     except ValueError as e:
         current_app.logger.error(f'Validation error updating tenant: {e}')
         return jsonify({'error': 'Invalid tenant data', 'message': str(e)}), 400
@@ -151,14 +150,14 @@ def delete_tenant_route(tenant_id):
     try:
         tenant_repo = TenantRepository()
         tenant = tenant_repo.get_by_id(tenant_id)
-        
+
         if not tenant:
             return jsonify({'error': 'Tenant not found'}), 404
-        
+
         # Check if tenant has users
         user_repo = UserRepository()
         users = user_repo.get_all_by_tenant_id(tenant_id, active_only=False)
-        
+
         if users:
             user_emails = [user.email for user in users]
             return jsonify({
@@ -167,14 +166,14 @@ def delete_tenant_route(tenant_id):
                 'users': user_emails,
                 'details': 'Please delete or reassign all users before deleting this tenant'
             }), 400
-        
+
         tenant_repo.delete(tenant_id)
-        
+
         return jsonify({
             'status': 'success',
             'message': 'Tenant deleted successfully'
         }), 200
-            
+
     except ValueError as e:
         return jsonify({'error': 'Invalid tenant ID', 'message': str(e)}), 400
     except Exception as e:

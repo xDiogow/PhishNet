@@ -38,11 +38,11 @@ def create_tenant(name: str, invitation_expires_days: int = None):
     tenant = tenant_repo.create(tenant)
 
     invitation_code = secrets.token_urlsafe(32)
-    
+
     expires_at = None
     if invitation_expires_days is not None:
         expires_at = datetime.now(timezone.utc) + timedelta(days=invitation_expires_days)
-    
+
     invitation = TenantInvitation(
         invitation_code=invitation_code,
         tenant_id=tenant.id,
@@ -50,7 +50,7 @@ def create_tenant(name: str, invitation_expires_days: int = None):
         expires_at=expires_at
     )
     invitation = invitation_repo.create(invitation)
-    
+
     return {
         'status': 'success',
         'message': 'Tenant created successfully',

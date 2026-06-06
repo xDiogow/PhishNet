@@ -6,7 +6,7 @@ from flask_jwt_extended import create_access_token
 
 from datetime import datetime, timezone
 
-from app.extensions import db, bcrypt
+from app.extensions import bcrypt
 from app.models import User, Tenant, Target, Campaign, CampaignStatus, CampaignResult, Template
 
 

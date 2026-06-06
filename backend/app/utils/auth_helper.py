@@ -10,7 +10,7 @@ def get_current_user():
     user_id = get_jwt_identity()
     if not user_id:
         return None
-    
+
     user_repo = UserRepository()
     return user_repo.get_by_id(user_id)
 
@@ -23,12 +23,12 @@ def admin_required(f):
         user_id = get_jwt_identity()
         user_repo = UserRepository()
         user = user_repo.get_by_id(user_id)
-        
+
         if not user:
             return jsonify({'error': 'User not found'}), 404
-        
+
         if not user.is_admin:
             return jsonify({'error': 'Admin access required'}), 403
-        
+
         return f(*args, **kwargs)
     return decorated_function

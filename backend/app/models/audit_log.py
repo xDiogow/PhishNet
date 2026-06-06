@@ -25,7 +25,7 @@ class AuditLog(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 
     # Relationships
-    user: Mapped["User"] = relationship("User", foreign_keys=[user_id])
+    user: Mapped["User"] = relationship("User", foreign_keys=[user_id])  # noqa: F821
 
     __table_args__ = (
         Index("ix_audit_logs_tenant_id", "tenant_id"),

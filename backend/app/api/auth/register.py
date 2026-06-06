@@ -14,48 +14,48 @@ from . import bp
 def register():
     try:
         data = request.get_json()
-        
+
         if not data:
             return jsonify({'error': 'No data provided'}), 400
-        
+
         email = data.get('email')
         first_name = data.get('first_name')
         last_name = data.get('last_name')
         password = data.get('password')
         invitation_code = data.get('invitation_code')
-        
+
         if not email or not first_name or not last_name or not password or not invitation_code:
             return jsonify({
                 'error': 'Missing required fields',
                 'required': ['email', 'first_name', 'last_name', 'password', 'invitation_code']
             }), 400
-        
+
         if '@' not in email:
             return jsonify({'error': 'Invalid email format'}), 400
-        
+
         if len(password) < 6:
             return jsonify({'error': 'Password must be at least 6 characters long'}), 400
-        
+
         first_name = first_name.strip()
         last_name = last_name.strip()
         if not first_name or not last_name:
             return jsonify({'error': 'First name and last name cannot be empty'}), 400
-        
+
         user_repo = UserRepository()
-        
+
         validation_result = validate_invitation(invitation_code)
         if validation_result['status'] == 'error':
             return jsonify({
                 'message': validation_result['message']
             }), 400
-        
+
         invitation = validation_result['invitation']
         tenant_id = invitation.tenant_id
-        
+
         existing_user = user_repo.get_by_email(email)
         if existing_user:
             return jsonify({'error': 'User with this email already exists'}), 409
-        
+
         password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
 
         is_first_user = user_repo.count() == 0
@@ -69,30 +69,30 @@ def register():
             is_active=True,
             is_admin=is_first_user,
         )
-        
+
         try:
             user = user_repo.create(user)
         except IntegrityError as e:
             current_app.logger.error(f'Integrity error during user creation: {e}')
             return jsonify({'error': 'User creation failed due to constraint violation'}), 409
-        
+
         use_result = use_invitation(invitation_code, user.id)
         if use_result['status'] == 'error':
             current_app.logger.warning(f'Failed to mark invitation as used: {use_result["message"]}')
-        
+
         try:
             tenant_repo = TenantRepository()
             tenant = tenant_repo.get_by_id(tenant_id)
-            
+
             # Set first user as operator if tenant doesn't have one
             if tenant and not tenant.operator_id:
                 tenant_repo.update_by_id(tenant_id, operator_id=user.id)
                 tenant.operator_id = user.id
         except Exception as e:
             current_app.logger.warning(f'Failed to update tenant operator: {e}')
-        
+
         access_token = create_access_token(identity=str(user.id))
-        
+
         # Check if user is operator
         tenant_repo = TenantRepository()
         tenant = tenant_repo.get_by_id(tenant_id)
@@ -127,7 +127,7 @@ def register():
             },
             'access_token': access_token
         }), 201
-        
+
     except Exception as e:
         current_app.logger.exception('Error during registration')
         return jsonify({'error': 'Registration failed', 'message': str(e)}), 500

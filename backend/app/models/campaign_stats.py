@@ -19,7 +19,7 @@ class CampaignStats(Base):
     reported_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
     # Relationship back to campaign
-    campaign: Mapped["Campaign"] = relationship("Campaign", back_populates="stats")
+    campaign: Mapped["Campaign"] = relationship("Campaign", back_populates="stats")  # noqa: F821
 
     def __repr__(self) -> str:
         return f"CampaignStats(campaign_id={self.campaign_id!r}, total={self.total_targets!r}, opened={self.opened_count!r})"

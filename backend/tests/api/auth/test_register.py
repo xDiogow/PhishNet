@@ -2,10 +2,9 @@
 Tests for Register API endpoint
 """
 import pytest
-from unittest.mock import patch
 from datetime import datetime, timedelta, timezone
 
-from app.extensions import db, bcrypt
+from app.extensions import bcrypt
 from app.models import User, Tenant, TenantInvitation
 
 

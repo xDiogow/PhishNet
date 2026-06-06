@@ -1,7 +1,7 @@
 """Initial migration with Audit Logging
 
 Revision ID: d77508c6a7df
-Revises: 
+Revises:
 Create Date: 2026-01-21 10:58:17.916585
 
 """

@@ -54,18 +54,18 @@ def get_team_members():
     """Get all team members in the same tenant as the current user."""
     try:
         from app.repository.tenant_repository import TenantRepository
-        
+
         user = get_current_user()
         if not user:
             return jsonify({'error': 'User not found'}), 404
-        
+
         tenant_repo = TenantRepository()
         tenant = tenant_repo.get_by_id(user.tenant_id)
         tenant_operator_id = tenant.operator_id if tenant else None
-        
+
         user_repo = UserRepository()
         team_members = user_repo.get_all_by_tenant_id(user.tenant_id, active_only=False)
-        
+
         return jsonify({
             'team_members': [user_to_dict(member, tenant_operator_id) for member in team_members]
         }), 200

@@ -17,5 +17,5 @@ class UserRepository(BaseRepository[User]):
         """Get all users by tenant_id."""
         query = self.session.query(self.model).filter(self.model.tenant_id == tenant_id)
         if active_only:
-            query = query.filter(self.model.is_active == True)
+            query = query.filter(self.model.is_active.is_(True))
         return query.all()
