@@ -15,6 +15,7 @@ if TYPE_CHECKING:
 
 class CampaignStatus(str, Enum):
     DRAFT = "draft"
+    SCHEDULED = "scheduled"
     RUNNING = "running"
     STOPPED = "stopped"
     ARCHIVED = "archived"
@@ -32,6 +33,8 @@ class Campaign(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
     launched_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     stopped_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    scheduled_start_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    scheduled_end_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
     stats: Mapped[Optional["CampaignStats"]] = relationship("CampaignStats", back_populates="campaign", uselist=False, cascade="all, delete-orphan")
     results: Mapped[List["CampaignResult"]] = relationship("CampaignResult", back_populates="campaign", cascade="all, delete-orphan")

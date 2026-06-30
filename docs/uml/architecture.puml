@@ -1,0 +1,108 @@
+@startuml PhishNet — Architecture logicielle
+!theme plain
+skinparam defaultFontName Arial
+skinparam linetype ortho
+skinparam ranksep 30
+skinparam nodesep 20
+
+skinparam rectangle {
+  BackgroundColor #FAFAFA
+  BorderColor #AAAAAA
+  FontSize 11
+}
+skinparam component {
+  BackgroundColor #FAFAFA
+  BorderColor #AAAAAA
+  FontSize 10
+}
+skinparam package {
+  FontSize 11
+  FontStyle bold
+}
+skinparam arrow {
+  Color #777777
+  FontSize 9
+}
+skinparam defaultTextAlignment center
+
+' ── ACTEUR EXTERNE ─────────────────────────────────────────────────────────────
+
+actor "Navigateur\n(Utilisateur)" as Browser
+
+' ── SYSTÈME PRINCIPAL ──────────────────────────────────────────────────────────
+
+rectangle "«system» PhishNet" {
+
+  ' ── COUCHE CLIENT ────────────────────────────────────────────────────────────
+  package "Frontend — React (Browser)" #e8f5e9 {
+    component "React 18 · Vite 7 · Tailwind CSS\nReact Router v7 · Recharts" as FE
+    note right of FE
+      Pages : Dashboard · Campaigns
+      Templates · Team · Tenants
+      Audit Log
+    end note
+  }
+
+  ' ── PROXY ────────────────────────────────────────────────────────────────────
+  package "Reverse Proxy — Nginx :80" #e3f2fd {
+    component "Sert le SPA (static)\nProxy /api/* /track/* /phish/* → :5000" as Nginx
+  }
+
+  ' ── BACKEND ──────────────────────────────────────────────────────────────────
+  package "Backend — Flask · Gunicorn :5000" #fff3e0 {
+
+    package "API Layer" #fff8f0 {
+      component "Flask Blueprints\nJWT · Tenant isolation\n/auth /campaigns /templates\n/team /tenants /track /phish\n/audit-logs /api/health" as API
+    }
+
+    package "Service Layer" #fce4ec {
+      component "CampaignService\nEmailService\nTenantService · AuditLogService" as SVC
+      note right of SVC
+        Envoi SMTP · Tokens UUID
+        Substitution placeholders
+      end note
+    }
+
+    package "Repository Layer" #f3e5f5 {
+      component "CampaignRepository · UserRepository\nTemplateRepository · TargetRepository\nTenantRepository · SessionRepository" as REPO
+      note right of REPO
+        SQLAlchemy ORM (SQL)
+        redis-py (NoSQL)
+      end note
+    }
+  }
+
+  ' ── DONNÉES ──────────────────────────────────────────────────────────────────
+  package "Data Layer" #e8eaf6 {
+    database "PostgreSQL 15\n:5432" as PG {
+      component "9 tables\nAlembic migrations\nCascade · FK indexes" as PGTables
+    }
+    database "Redis 7\n:6379" as Redis {
+      component "JWT blocklist (NoSQL)\nRate limiting\n5 req/min /auth/*" as RedisData
+    }
+  }
+
+}
+
+' ── SERVICES EXTERNES ──────────────────────────────────────────────────────────
+
+package "Services externes" #f5f5f5 {
+  component "SMTP\nport 587 (STARTTLS)\nport 465 (SSL)" as SMTP
+  component "GitHub Actions\nCI : pytest · ESLint · Vitest · Vite build\nCD : Docker build → push GHCR" as CICD
+}
+
+' ── FLUX ───────────────────────────────────────────────────────────────────────
+
+Browser  -down->  FE       : HTTPS
+FE       -down->  Nginx    : HTTPS · REST · JWT
+Nginx    -down->  API      : HTTP · réseau Docker interne
+
+API      -down->  SVC      : appel service
+SVC      -down->  REPO     : accès données
+REPO     -down->  PG       : SQLAlchemy · psycopg2
+REPO     -down->  Redis    : redis-py
+
+SVC      -right-> SMTP     : STARTTLS / SSL
+CICD     ..>      Nginx    : déploiement image Docker (GHCR)
+
+@enduml

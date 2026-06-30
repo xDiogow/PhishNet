@@ -2,8 +2,9 @@
 import pytest
 from flask_jwt_extended import create_access_token
 
-from app.extensions import bcrypt
+from app.extensions import bcrypt, db
 from app.models import User, Tenant, Template
+from app.models.campaign import Campaign, CampaignStatus
 
 
 @pytest.fixture
@@ -176,6 +177,22 @@ class TestCreateTemplate:
         assert 'Admin access required' in response.get_json()['error']
 
 
+@pytest.fixture
+def running_campaign(db_session, test_tenant, admin_user, test_template):
+    """A RUNNING campaign that references test_template."""
+    campaign = Campaign(
+        name='Active Campaign',
+        tenant_id=test_tenant.id,
+        template_id=test_template.id,
+        status=CampaignStatus.RUNNING,
+        created_by_user_id=admin_user.id,
+    )
+    db_session.add(campaign)
+    db_session.commit()
+    db_session.refresh(campaign)
+    return campaign
+
+
 class TestUpdateTemplate:
     """EF07 — template update (admin only)"""
 
@@ -207,6 +224,28 @@ class TestUpdateTemplate:
                               json={'name': 'Updated'}, headers=regular_headers)
         assert response.status_code == 403
 
+    def test_update_template_blocked_while_running(self, client, admin_headers, test_template, running_campaign):
+        """TC-D-04 — Cannot edit a template used by a RUNNING campaign."""
+        response = client.put(f'/api/templates/{test_template.id}',
+                              json={'name': 'Should be blocked'},
+                              headers=admin_headers)
+        assert response.status_code == 409
+        data = response.get_json()
+        assert 'running campaign' in data['error'].lower()
+        assert 'Active Campaign' in data['message']
+
+    def test_update_template_allowed_after_campaign_stopped(self, client, admin_headers, test_template,
+                                                             running_campaign, db_session):
+        """TC-D-05 — Can edit a template once its campaign is stopped."""
+        running_campaign.status = CampaignStatus.STOPPED
+        db_session.commit()
+
+        response = client.put(f'/api/templates/{test_template.id}',
+                              json={'name': 'Now allowed'},
+                              headers=admin_headers)
+        assert response.status_code == 200
+        assert response.get_json()['template']['name'] == 'Now allowed'
+
 
 class TestDeleteTemplate:
     """EF07 — template deletion (admin only)"""
@@ -228,3 +267,10 @@ class TestDeleteTemplate:
     def test_delete_template_requires_admin(self, client, regular_headers, test_template):
         response = client.delete(f'/api/templates/{test_template.id}', headers=regular_headers)
         assert response.status_code == 403
+
+    def test_delete_template_blocked_while_running(self, client, admin_headers, test_template, running_campaign):
+        """TC-D-06 — Cannot delete a template used by a RUNNING campaign."""
+        response = client.delete(f'/api/templates/{test_template.id}', headers=admin_headers)
+        assert response.status_code == 409
+        data = response.get_json()
+        assert 'running campaign' in data['error'].lower()

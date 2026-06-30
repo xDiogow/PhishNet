@@ -19,8 +19,10 @@ HTML placeholders available to template authors:
 from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.models.template import Template
+from app.models.campaign import Campaign, CampaignStatus
 from app.repository.template_repository import TemplateRepository
 from app.utils.auth_helper import admin_required
+from app.extensions import db
 
 bp = Blueprint('templates', __name__, url_prefix='/api/templates')
 
@@ -127,10 +129,26 @@ def create_template():
         return jsonify({'error': 'Failed to create template', 'message': str(e)}), 500
 
 
+def _running_campaigns_using(template_id: int) -> list:
+    """Return running campaigns that reference this template."""
+    return (
+        db.session.query(Campaign)
+        .filter(
+            Campaign.template_id == template_id,
+            Campaign.status == CampaignStatus.RUNNING,
+        )
+        .all()
+    )
+
+
 @bp.route('/<int:template_id>', methods=['PUT'])
 @admin_required
 def update_template(template_id):
-    """Partially update a template. All fields are optional — only provided fields are changed."""
+    """Partially update a template. All fields are optional — only provided fields are changed.
+
+    Returns 409 if the template is currently used by a RUNNING campaign — editing it
+    would change the landing page rendered for already-sent tracking links.
+    """
     try:
         data = request.get_json()
         if not data:
@@ -140,6 +158,17 @@ def update_template(template_id):
         template = repo.get_by_id(template_id)
         if not template:
             return jsonify({'error': 'Template not found'}), 404
+
+        running = _running_campaigns_using(template_id)
+        if running:
+            names = ', '.join(c.name for c in running)
+            return jsonify({
+                'error': 'Template is in use by a running campaign',
+                'message': (
+                    f"Cannot edit this template while campaign(s) [{names}] are running. "
+                    "Stop the campaign first, then update the template."
+                ),
+            }), 409
 
         email_data = data.get('email_template_data')
         landing_data = data.get('landing_page_data')
@@ -175,12 +204,27 @@ def update_template(template_id):
 @bp.route('/<int:template_id>', methods=['DELETE'])
 @admin_required
 def delete_template(template_id):
-    """Permanently delete a template. Campaigns that already used it are unaffected."""
+    """Permanently delete a template.
+
+    Returns 409 if the template is used by a RUNNING campaign.
+    """
     try:
         repo = TemplateRepository()
         template = repo.get_by_id(template_id)
         if not template:
             return jsonify({'error': 'Template not found'}), 404
+
+        running = _running_campaigns_using(template_id)
+        if running:
+            names = ', '.join(c.name for c in running)
+            return jsonify({
+                'error': 'Template is in use by a running campaign',
+                'message': (
+                    f"Cannot delete this template while campaign(s) [{names}] are running. "
+                    "Stop the campaign first."
+                ),
+            }), 409
+
         repo.delete(template_id)
         return jsonify({'status': 'success', 'message': 'Template deleted successfully'}), 200
     except Exception as e:

@@ -279,7 +279,9 @@ export default function Campaigns() {
                       <td className="hidden sm:table-cell px-4 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-1 text-sm text-gray-900">
                           <Calendar aria-hidden="true" className="w-4 h-4 text-gray-400" />
-                          {formatDateShort(campaign.launched_at || campaign.created_at)}
+                          {campaign.status === 'scheduled'
+                            ? formatDateShort(campaign.scheduled_start_at)
+                            : formatDateShort(campaign.launched_at || campaign.created_at)}
                         </div>
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">

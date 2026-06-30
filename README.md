@@ -79,7 +79,7 @@ pytest            # Run all tests
 pytest -v         # Verbose output
 ```
 
-**Test Coverage:** 104 tests passing
+**Test Coverage:** 125 tests passing
 
 ### Frontend Tests
 
@@ -177,6 +177,7 @@ The `docs/` folder contains all project documentation.
 | [Diagramme ER](docs/er-diagram.pdf) | Database schema — 9 tables, FK constraints, indexes |
 | [Wireframes](docs/wireframes.pdf) | UI mockups for all protected pages |
 | [Dossier de Projet RNCP](docs/Dossier_Projet_PhishNet_RNCP37873.docx) | Project dossier for TP CDA certification — RNCP 37873 Niveau 6 |
+| [Procédure de déploiement](docs/deployment.md) | Step-by-step deployment guide — Docker Compose, CI/CD, rollback, backups (BC03) |
 
 > Each backend test class references the functional requirement(s) it validates (e.g. `EF01`, `EF08`).
 > See `docs/Cahier_des_Charges_PhishNet.docx` for the full requirements table.

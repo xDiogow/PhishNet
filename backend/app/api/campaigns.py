@@ -34,6 +34,8 @@ def campaign_to_dict(campaign: Campaign) -> dict:
         'created_at': campaign.created_at.isoformat() if campaign.created_at else None,
         'launched_at': campaign.launched_at.isoformat() if campaign.launched_at else None,
         'stopped_at': campaign.stopped_at.isoformat() if campaign.stopped_at else None,
+        'scheduled_start_at': campaign.scheduled_start_at.isoformat() if campaign.scheduled_start_at else None,
+        'scheduled_end_at': campaign.scheduled_end_at.isoformat() if campaign.scheduled_end_at else None,
     }
 
 
@@ -99,12 +101,16 @@ def get_campaign_summary(campaign_id):
 @bp.route('', methods=['POST'])
 @jwt_required()
 def create_campaign():
-    """Create and immediately launch a phishing campaign.
+    """Create a phishing campaign, optionally scheduling it for a future date.
 
-    Requires ``name`` and ``template_id`` in the request body. The campaign is
-    sent to every target currently registered for the caller's tenant. Raises
-    400 if the tenant has no targets configured.
+    Required fields: ``name``, ``template_id``.
+    Optional fields: ``scheduled_start_at``, ``scheduled_end_at`` (ISO-8601 strings).
+
+    If ``scheduled_start_at`` is in the future the campaign is created with
+    status=SCHEDULED and emails are not sent yet. The background scheduler will
+    launch it automatically. Otherwise the campaign launches immediately.
     """
+    from datetime import datetime, timezone
     try:
         data = request.get_json()
         if not data:
@@ -125,12 +131,38 @@ def create_campaign():
         except (ValueError, TypeError):
             return jsonify({'error': 'template_id must be a valid integer'}), 400
 
+        def _parse_dt(value):
+            if not value:
+                return None
+            try:
+                dt = datetime.fromisoformat(value.replace('Z', '+00:00'))
+                if dt.tzinfo is None:
+                    dt = dt.replace(tzinfo=timezone.utc)
+                return dt
+            except (ValueError, AttributeError):
+                raise ValueError(f"Invalid datetime format: {value!r}. Use ISO-8601.")
+
+        scheduled_start_at = _parse_dt(data.get('scheduled_start_at'))
+        scheduled_end_at   = _parse_dt(data.get('scheduled_end_at'))
+
+        if scheduled_end_at and scheduled_start_at and scheduled_end_at <= scheduled_start_at:
+            return jsonify({'error': 'scheduled_end_at must be after scheduled_start_at'}), 400
+
+        raw_ids = data.get('target_ids')
+        if raw_ids is not None:
+            if not isinstance(raw_ids, list) or not all(isinstance(i, int) for i in raw_ids):
+                return jsonify({'error': 'target_ids must be a list of integers'}), 400
+        target_ids = raw_ids if raw_ids else None
+
         service = CampaignService()
         campaign = service.create_campaign(
             name=data['name'],
             template_id=template_id,
             tenant_id=user.tenant_id,
             user_id=user.id,
+            scheduled_start_at=scheduled_start_at,
+            scheduled_end_at=scheduled_end_at,
+            target_ids=target_ids,
         )
 
         from app.services.audit_log_service import audit_service

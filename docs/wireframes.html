@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PhishNet — Maquettes Fonctionnelles</title>
+  <style>
+    @page { margin: 12mm; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f0f0f0;
+      color: #222;
+      padding: 40px 32px;
+    }
+    h1 { font-size: 26px; margin-bottom: 6px; color: #111; }
+    .subtitle { color: #666; font-size: 13px; margin-bottom: 48px; }
+
+    .screen-title {
+      font-size: 15px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: #555;
+      margin-bottom: 10px;
+      padding-left: 4px;
+    }
+    .screen-desc {
+      font-size: 12px;
+      color: #888;
+      margin-bottom: 14px;
+      padding-left: 4px;
+      break-after: avoid;
+      page-break-after: avoid;
+    }
+
+    .screen-title {
+      break-before: page;
+      page-break-before: always;
+    }
+
+    .frame {
+      background: #fff;
+      border: 2px solid #bbb;
+      border-radius: 6px;
+      overflow: hidden;
+      width: 960px;
+      margin-bottom: 64px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.10);
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .wf-topbar {
+      background: #2c2c2c;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      gap: 16px;
+    }
+    .wf-topbar-logo {
+      background: #555;
+      border-radius: 3px;
+      width: 90px;
+      height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ccc;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .06em;
+    }
+    .wf-topbar-nav { display: flex; gap: 4px; flex: 1; }
+    .wf-topbar-link {
+      color: #aaa;
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 3px;
+      cursor: default;
+    }
+    .wf-topbar-link.active { background: #444; color: #fff; }
+    .wf-topbar-user {
+      background: #444;
+      border-radius: 50%;
+      width: 28px; height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #bbb;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .wf-layout { display: flex; min-height: 480px; }
+    .wf-content { flex: 1; padding: 24px 28px; }
+
+    .wf-page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .wf-page-header h2 { font-size: 18px; color: #111; }
+    .wf-page-header p { font-size: 12px; color: #888; margin-top: 2px; }
+
+    .wf-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 4px;
+      padding: 7px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: default;
+    }
+    .wf-btn-primary { background: #333; color: #fff; border: none; }
+    .wf-btn-outline  { background: transparent; color: #444; border: 1px solid #bbb; }
+    .wf-btn-danger   { background: transparent; color: #b00; border: 1px solid #d99; }
+    .wf-btn-sm { padding: 4px 10px; font-size: 11px; }
+
+    .wf-stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+    .wf-stat-card {
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 14px 16px;
+      background: #fafafa;
+    }
+    .wf-stat-label { font-size: 10px; color: #999; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+    .wf-stat-value { font-size: 26px; font-weight: 700; color: #111; }
+    .wf-stat-sub   { font-size: 10px; color: #aaa; margin-top: 4px; }
+
+    .wf-search-bar { display: flex; gap: 10px; margin-bottom: 16px; }
+    .wf-input {
+      flex: 1;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      padding: 7px 12px;
+      font-size: 12px;
+      color: #888;
+      background: #fafafa;
+    }
+    .wf-select {
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      padding: 7px 12px;
+      font-size: 12px;
+      color: #888;
+      background: #fafafa;
+      min-width: 120px;
+    }
+
+    .wf-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .wf-table th {
+      text-align: left;
+      padding: 8px 12px;
+      background: #f2f2f2;
+      border-bottom: 1px solid #ddd;
+      color: #666;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+    .wf-table td { padding: 10px 12px; border-bottom: 1px solid #eee; color: #333; vertical-align: middle; }
+    .wf-table tr:last-child td { border-bottom: none; }
+
+    .wf-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; }
+    .wf-badge-running   { background: #d4edda; color: #155724; }
+    .wf-badge-stopped   { background: #f8d7da; color: #721c24; }
+    .wf-badge-draft     { background: #e2e3e5; color: #383d41; }
+    .wf-badge-archived  { background: #fff3cd; color: #856404; }
+    .wf-badge-sent      { background: #e2e3e5; color: #383d41; }
+    .wf-badge-opened    { background: #cce5ff; color: #004085; }
+    .wf-badge-clicked   { background: #fff3cd; color: #856404; }
+    .wf-badge-submitted { background: #f8d7da; color: #721c24; }
+
+    .wf-progress { background: #e8e8e8; border-radius: 3px; height: 6px; width: 80px; overflow: hidden; }
+    .wf-progress-fill { height: 100%; background: #555; border-radius: 3px; }
+
+    .wf-form-row { margin-bottom: 16px; }
+    .wf-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #555;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      margin-bottom: 5px;
+      display: block;
+    }
+    .wf-form-input {
+      width: 100%;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      padding: 8px 12px;
+      font-size: 12px;
+      color: #888;
+      background: #fafafa;
+    }
+    .wf-card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .wf-select-card {
+      border: 1.5px solid #ccc;
+      border-radius: 5px;
+      padding: 12px;
+      cursor: default;
+      background: #fafafa;
+    }
+    .wf-select-card.selected { border-color: #333; background: #f0f0f0; }
+    .wf-select-card-title { font-size: 12px; font-weight: 600; color: #222; margin-bottom: 3px; }
+    .wf-select-card-sub   { font-size: 11px; color: #888; }
+
+    .wf-checklist { list-style: none; font-size: 12px; }
+    .wf-checklist li {
+      padding: 5px 0;
+      border-bottom: 1px solid #f0f0f0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #333;
+    }
+    .wf-check-box { width: 14px; height: 14px; border: 1.5px solid #aaa; border-radius: 2px; flex-shrink: 0; }
+    .wf-check-box.checked { background: #333; border-color: #333; }
+
+    .wf-tabs { display: flex; border-bottom: 2px solid #ddd; margin-bottom: 20px; }
+    .wf-tab {
+      padding: 8px 18px;
+      font-size: 12px;
+      color: #888;
+      cursor: default;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+    }
+    .wf-tab.active { color: #111; font-weight: 700; border-bottom-color: #333; }
+
+    .wf-chart {
+      background: #f5f5f5;
+      border: 1px dashed #ccc;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #bbb;
+      font-size: 11px;
+    }
+
+    .wf-alert { border-radius: 4px; padding: 10px 14px; font-size: 12px; margin-bottom: 14px; }
+    .wf-alert-info { background: #e8f4fd; border-left: 3px solid #6ab0de; color: #1a5276; }
+
+    .wf-login-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 480px;
+      background: #f5f5f5;
+    }
+    .wf-login-card {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 36px 40px;
+      width: 360px;
+    }
+    .wf-login-logo {
+      background: #2c2c2c;
+      border-radius: 4px;
+      width: 48px; height: 48px;
+      margin: 0 auto 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 900;
+      font-size: 18px;
+    }
+    .wf-login-title { font-size: 18px; font-weight: 700; text-align: center; margin-bottom: 4px; }
+    .wf-login-sub   { font-size: 12px; color: #999; text-align: center; margin-bottom: 24px; }
+
+    .wf-modal {
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      width: 440px;
+      box-shadow: 0 8px 32px rgba(0,0,0,.12);
+    }
+    .wf-modal-header {
+      padding: 16px 20px 12px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .wf-modal-title  { font-size: 14px; font-weight: 700; }
+    .wf-modal-close  { color: #aaa; font-size: 16px; cursor: default; }
+    .wf-modal-body   { padding: 20px; }
+    .wf-modal-footer { padding: 12px 20px; border-top: 1px solid #eee; display: flex; justify-content: flex-end; gap: 8px; }
+
+    .wf-template-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .wf-template-card { border: 1px solid #ddd; border-radius: 5px; overflow: hidden; background: #fafafa; }
+    .wf-template-preview {
+      background: repeating-linear-gradient(0deg, #f0f0f0, #f0f0f0 10px, #e8e8e8 10px, #e8e8e8 12px);
+      height: 100px;
+      border-bottom: 1px solid #ddd;
+    }
+    .wf-template-info    { padding: 10px 12px; }
+    .wf-template-name    { font-size: 12px; font-weight: 700; color: #222; }
+    .wf-template-subject { font-size: 11px; color: #888; margin-top: 2px; }
+    .wf-template-actions { display: flex; gap: 6px; margin-top: 8px; }
+
+    .wf-divider { border: none; border-top: 1px solid #e8e8e8; margin: 16px 0; }
+
+    .legend {
+      max-width: 960px;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 16px 20px;
+      margin-bottom: 48px;
+      font-size: 12px;
+      color: #555;
+    }
+    .legend strong { color: #111; }
+
+    .toc {
+      max-width: 960px;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 16px 20px;
+      margin-bottom: 48px;
+    }
+    .toc h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .07em; color: #555; margin-bottom: 10px; }
+    .toc ol { padding-left: 20px; font-size: 13px; line-height: 2; }
+    .toc a  { color: #333; }
+
+    .annotation {
+      display: inline-block;
+      background: #fff9c4;
+      border: 1px solid #f5d000;
+      border-radius: 3px;
+      font-size: 10px;
+      padding: 1px 6px;
+      color: #6b5900;
+      margin-left: 6px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>PhishNet — Maquettes Fonctionnelles</h1>
+  <p class="subtitle">Basse fidélité</p>
+
+  <div class="legend">
+    <strong>Conventions :</strong> Les maquettes représentent la structure et les interactions, pas le style graphique final.
+    Les zones grisées indiquent des zones de contenu dynamique.
+    Les <span class="annotation">notes</span> signalent des points d'interaction clés.
+  </div>
+
+  <div class="toc">
+    <h2>Sommaire des écrans</h2>
+    <ol>
+      <li><a href="#login">Login</a></li>
+      <li><a href="#register">Register (invitation code)</a></li>
+      <li><a href="#dashboard">Dashboard</a></li>
+      <li><a href="#campaigns">Campaigns list</a></li>
+      <li><a href="#create-campaign">Create campaign</a></li>
+      <li><a href="#campaign-detail">Campaign detail</a></li>
+      <li><a href="#templates">Email templates</a></li>
+      <li><a href="#template-editor">Template editor (admin)</a></li>
+      <li><a href="#team">Team &amp; Targets</a></li>
+      <li><a href="#tenants">Tenant management (admin)</a></li>
+      <li><a href="#audit">Audit log</a></li>
+      <li><a href="#caught">Awareness page (public)</a></li>
+    </ol>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- 1. LOGIN                                                        -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <p class="screen-title" id="login">1. Login</p>
+  <p class="screen-desc">Écran public · Authentification par e-mail + mot de passe · JWT retourné en cookie HttpOnly</p>
+  <div class="frame">
+    <div class="wf-login-wrap">
+      <div class="wf-login-card">
+        <div class="wf-login-logo">PN</div>
+        <div class="wf-login-title">Sign in to PhishNet</div>
+        <div class="wf-login-sub">Phishing simulation platform</div>
+
+        <div class="wf-form-row">
+          <label class="wf-label">Email address</label>
+          <div class="wf-form-input" style="color:#bbb;">john.doe@company.com</div>
+        </div>
+        <div class="wf-form-row">
+          <label class="wf-label">Password</label>
+          <div class="wf-form-input" style="color:#bbb;">••••••••</div>
+        </div>
+
+        <div class="wf-btn wf-btn-primary" style="width:100%; justify-content:center; margin-top:8px;">
+          Sign in
+        </div>
+
+        <hr class="wf-divider" />
+        <div style="text-align:center; font-size:12px; color:#aaa;">
+          Don't have an account?
+          <span style="color:#333; font-weight:600; text-decoration:underline;">Register with an invitation code</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- 2. REGISTER                                                     -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <p class="screen-title" id="register">2. Register</p>
+  <p class="screen-desc">Écran public · Inscription via code d'invitation à usage unique</p>
+  <div class="frame">
+    <div class="wf-login-wrap">
+      <div class="wf-login-card" style="width:400px;">
+        <div class="wf-login-logo">PN</div>
+        <div class="wf-login-title">Create your account</div>
+        <div class="wf-login-sub">Enter the invitation code provided by your operator</div>
+
+        <div class="wf-alert wf-alert-info">
+          Invitation code validated — Tenant: <strong>Acme Corp</strong>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;">
+          <div class="wf-form-row" style="margin:0;">
+            <label class="wf-label">First name</label>
+            <div class="wf-form-input" style="color:#bbb;">John</div>
+          </div>
+          <div class="wf-form-row" style="margin:0;">
+            <label class="wf-label">Last name</label>
+            <div class="wf-form-input" style="color:#bbb;">Doe</div>
+          </div>
+        </div>
+        <div class="wf-form-row">
+          <label class="wf-label">Email address</label>
+          <div class="wf-form-input" style="color:#bbb;">john.doe@acme.com</div>
+        </div>
+        <div class="wf-form-row">
+          <label class="wf-label">Password</label>
+          <div class="wf-form-input" style="color:#bbb;">••••••••</div>
+        </div>
+        <div class="wf-form-row">
+          <label class="wf-label">Invitation code</label>
+          <div class="wf-form-input" style="color:#333;">INV-ACME-2024</div>
+        </div>
+
+        <div class="wf-btn wf-btn-primary" style="width:100%; justify-content:center;">
+          Create account
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- 3. DASHBOARD                                                    -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <p class="screen-title" id="dashboard">3. Dashboard</p>
+  <p class="screen-desc">Écran protégé · Vue synthétique par tenant · Accès rapide aux fonctionnalités clés</p>
+  <div class="frame">
+    <div class="wf-topbar">
+      <div class="wf-topbar-logo">PHISHNET</div>
+      <div class="wf-topbar-nav">
+        <span class="wf-topbar-link active">Dashboard</span>
+        <span class="wf-topbar-link">Campaigns</span>
+        <span class="wf-topbar-link">Templates</span>
+        <span class="wf-topbar-link">Team</span>
+        <span class="wf-topbar-link">Tenants</span>
+      </div>
+      <div class="wf-topbar-user">JD</div>
+    </div>
+    <div class="wf-layout">
+      
+      <div class="wf-content">
+        <div class="wf-page-header">
+          <div>
+            <h2>Dashboard</h2>
+            <p>Welcome, John · Tenant: Acme Corp</p>
+          </div>
+          <div class="wf-btn wf-btn-primary">+ New Campaign</div>
+        </div>
+
+        <div class="wf-stats-row">
+          <div class="wf-stat-card">
+            <div class="wf-stat-label">Active Campaigns</div>
+            <div class="wf-stat-value">3</div>
+            <div class="wf-stat-sub">out of 12 total</div>
+          </div>
+          <div class="wf-stat-card">
+            <div class="wf-stat-label">Registered Targets</div>
+            <div class="wf-stat-value">148</div>
+            <div class="wf-stat-sub">employees targeted</div>
+          </div>
+          <div class="wf-stat-card">
+            <div class="wf-stat-label">Avg. Click Rate</div>
+            <div class="wf-stat-value">24%</div>
+            <div class="wf-stat-sub">last 30 days</div>
+          </div>
+          <div class="wf-stat-card">
+            <div class="wf-stat-label">Data Submitted</div>
+            <div class="wf-stat-value">11%</div>
+            <div class="wf-stat-sub">compromise rate</div>
+          </div>
+        </div>
+
+        <div style="font-size:13px; font-weight:700; margin-bottom:10px;">Recent Campaigns</div>
+        <table class="wf-table">
+          <thead>
+            <tr>
+              <th>Campaign Name</th>
+              <th>Status</th>
+              <th>Targets</th>
+              <th>Opened</th>
+              <th>Clicked</th>
+              <th>Launched</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>HR Alert — January 2025</td>
+              <td><span class="wf-badge wf-badge-running">Running</span></td>
+              <td>45</td>
+              <td>28 (62%)</td>
+              <td>12 (27%)</td>
+              <td>Jan 10, 2025</td>
+            </tr>
+            <tr>
+              <td>Password Reset</td>
+              <td><span class="wf-badge wf-badge-stopped">Stopped</span></td>
+              <td>60</td>
+              <td>50 (83%)</td>
+              <td>18 (30%)</td>
+              <td>Dec 02, 2024</td>
+            </tr>
+            <tr>
+              <td>Slack Update</td>
+              <td><span class="wf-badge wf-badge-archived">Archived</span></td>
+              <td>43</td>
+              <td>30 (70%)</td>
+              <td>9 (21%)</td>
+              <td>Nov 15, 2024</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- 4. CAMPAIGNS LIST                                              -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <p class="screen-title" id="campaigns">4. Campaigns list</p>
+  <p class="screen-desc">Écran protégé · Recherche, filtrage par statut · Accès au détail ou suppression</p>
+  <div class="frame">
+    <div class="wf-topbar">
+      <div class="wf-topbar-logo">PHISHNET</div>
+      <div class="wf-topbar-nav">
+        <span class="wf-topbar-link">Dashboard</span>
+        <span class="wf-topbar-link active">Campaigns</span>
+        <span class="wf-topbar-link">Templates</span>
+        <span class="wf-topbar-link">Team</span>
+      </div>
+      <div class="wf-topbar-user">JD</div>
+    </div>
+    <div class="wf-layout">
+      
+      <div class="wf-content">
+        <div class="wf-page-header">
+          <div>
+            <h2>Campaigns</h2>
+            <p>12 campaigns total</p>
+          </div>
+          <div class="wf-btn wf-btn-primary">+ New Campaign</div>
+        </div>
+
+        <div class="wf-search-bar">
+          <div class="wf-input">Search campaigns…</div>
+          <div class="wf-select">All statuses ▾</div>
+        </div>
+
+        <table class="wf-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Status</th>
+              <th>Template</th>
+              <th>Targets</th>
+              <th>Progress</th>
+              <th>Launch Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>HR Alert — Jan. 2025</strong></td>
+              <td><span class="wf-badge wf-badge-running">Running</span></td>
+              <td>Password Reset</td>
+              <td>45</td>
+              <td>
+                <div style="display:flex; align-items:center; gap:6px;">
+                  <div class="wf-progress"><div class="wf-progress-fill" style="width:62%"></div></div>
+                  <span style="font-size:10px; color:#888;">62%</span>
+                </div>
+              </td>
+              <td>Jan 10, 2025</td>
+              <td style="white-space:nowrap;">
+                <span class="wf-btn wf-btn-outline wf-btn-sm">View</span>
+                <span class="wf-btn wf-btn-danger wf-btn-sm">Stop</span>
+              </td>
+            </tr>
+            <tr>
+              <td><strong>Password Reset</strong></td>
+              <td><span class="wf-badge wf-badge-stopped">Stopped</span></td>
+              <td>Security Alert</td>
+              <td>60</td>
+              <td>
+                <div style="display:flex; align-items:center; gap:6px;">
+                  <div class="wf-progress"><div class="wf-progress-fill" style="width:83%"></div></div>
+                  <span style="font-size:10px; color:#888;">83%</span>
+                </div>
+              </td>
+              <td>Dec 02, 2024</td>
+              <td><span class="wf-btn wf-btn-outline wf-btn-sm">View</span></td>
+            </tr>
+            <tr>
+              <td><strong>Slack Update</strong></td>
+              <td><span class="wf-badge wf-badge-draft">Draft</span></td>
+              <td>Software Update</td>
+              <td>43</td>
+              <td>
+                <div style="display:flex; align-items:center; gap:6px;">
+                  <div class="wf-progress"><div class="wf-progress-fill" style="width:0%"></div></div>
+                  <span style="font-size:10px; color:#888;">—</span>
+                </div>
+              </td>
+              <td>—</td>
+              <td>
+                <span class="wf-btn wf-btn-outline wf-btn-sm">View</span>
+                <span class="wf-btn wf-btn-danger wf-btn-sm">Delete</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- 5. CREATE CAMPAIGN                                              -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <p class="screen-title" id="create-campaign">5. Create campaign</p>
+  <p class="screen-desc">Écran protégé · Sélection du template + des cibles · Lancement immédiat</p>
+  <div class="frame">
+    <div class="wf-topbar">
+      <div class="wf-topbar-logo">PHISHNET</div>
+      <div class="wf-topbar-nav">
+        <span class="wf-topbar-link">Dashboard</span>
+        <span class="wf-topbar-link active">Campaigns</span>
+        <span class="wf-topbar-link">Templates</span>
+        <span class="wf-topbar-link">Team</span>
+      </div>
+      <div class="wf-topbar-user">JD</div>
+    </div>
+    <div class="wf-layout">
+      
+      <div class="wf-content" style="max-width: 680px;">
+        <div class="wf-page-header">
+          <div><h2>New Campaign</h2></div>
+          <div class="wf-btn wf-btn-outline">← Back</div>
+        </div>
+
+        <div class="wf-form-row">
+          <label class="wf-label">Campaign Name <span style="color:#b00;">*</span></label>
+          <div class="wf-form-input" style="color:#bbb;">e.g. HR Alert — January 2025</div>
+        </div>
+
+        <div class="wf-form-row">
+          <label class="wf-label">Email Template <span style="color:#b00;">*</span></label>
+          <div class="wf-card-grid">
+            <div class="wf-select-card selected">
+              <div class="wf-select-card-title">Password Reset ✓</div>
+              <div class="wf-select-card-sub">Subject: Action required on your account</div>
+            </div>
+            <div class="wf-select-card">
+              <div class="wf-select-card-title">Security Alert</div>
+              <div class="wf-select-card-sub">Subject: Suspicious login detected</div>
+            </div>
+            <div class="wf-select-card">
+              <div class="wf-select-card-title">Software Update</div>
+              <div class="wf-select-card-sub">Subject: Critical update available</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="wf-form-row">
+          <label class="wf-label">Targets <span style="color:#b00;">*</span></label>
+          <div class="wf-input" style="margin-bottom:8px;">Search targets…</div>
+          <ul class="wf-checklist">
+            <li><div class="wf-check-box checked"></div>Alice Martin · alice@acme.com · HR</li>
+            <li><div class="wf-check-box checked"></div>Bob Lefevre · bob@acme.com · IT</li>
+            <li><div class="wf-check-box checked"></div>Claire Durand · claire@acme.com · Finance</li>
+            <li><div class="wf-check-box"></div>David Moreau · david@acme.com · Management</li>
+          </ul>
+          <div style="font-size:11px; color:#888; margin-top:6px;">3 targets selected out of 148</div>
+        </div>
+
+        <hr class="wf-divider" />
+        <div style="display:flex; justify-content:flex-end; gap:10px;">
+          <div class="wf-btn wf-btn-outline">Cancel</div>
+          <div class="wf-btn wf-btn-primary">🚀 Launch Campaign</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- 6. CAMPAIGN DETAIL                                              -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <p class="screen-title" id="campaign-detail">6. Campaign detail</p>
+  <p class="screen-desc">Écran protégé · Statistiques en temps réel · Résultats par cible · Arrêt de campagne</p>
+  <div class="frame">
+    <div class="wf-topbar">
+      <div class="wf-topbar-logo">PHISHNET</div>
+      <div class="wf-topbar-nav">
+        <span class="wf-topbar-link">Dashboard</span>
+        <span class="wf-topbar-link active">Campaigns</span>
+        <span class="wf-topbar-link">Templates</span>
+        <span class="wf-topbar-link">Team</span>
+      </div>
+      <div class="wf-topbar-user">JD</div>
+    </div>
+    <div class="wf-layout">
+      
+      <div class="wf-content">
+        <div class="wf-page-header">
+          <div>
+            <h2>HR Alert — January 2025 <span class="wf-badge wf-badge-running" style="font-size:12px; vertical-align:middle;">Running</span></h2>
+            <p>Template: Password Reset · Launched Jan 10, 2025 · 45 targets</p>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <div class="wf-btn wf-btn-danger">⬛ Stop Campaign</div>
+          </div>
+        </div>
+
+        <div class="wf-stats-row">
+          <div class="wf-stat-card">
+            <div class="wf-stat-label">Emails Sent</div>
+            <div class="wf-stat-value">45</div>
+            <div class="wf-stat-sub">100% of targets</div>
+          </div>
+          <div class="wf-stat-card">
+            <div class="wf-stat-label">Emails Opened</div>
+            <div class="wf-stat-value">28</div>
+            <div class="wf-stat-sub">62% of sent</div>
+          </div>
+          <div class="wf-stat-card">
+            <div class="wf-stat-label">Links Clicked</div>
+            <div class="wf-stat-value">12</div>
+            <div class="wf-stat-sub">27% of sent</div>
+          </div>
+          <div class="wf-stat-card">
+            <div class="wf-stat-label">Data Submitted</div>
+            <div class="wf-stat-value">5</div>
+            <div class="wf-stat-sub">11% of sent</div>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px;">
+          <div class="wf-chart" style="height:140px;">Funnel chart (Sent → Opened → Clicked → Submitted)</div>
+          <div class="wf-chart" style="height:140px;">Status breakdown (Pie chart)</div>
+        </div>
+
+        <div class="wf-search-bar">
+          <div class="wf-input">Search targets…</div>
+          <div class="wf-select">All statuses ▾</div>
+        </div>
+
+        <table class="wf-table">
+          <thead>
+            <tr>
+              <th>Target</th>
+              <th>Position</th>
+              <th>Status</th>
+              <th>Email Sent</th>
+              <th>Opened</th>
+              <th>Clicked</th>
+              <th>Submitted</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Alice Martin<br/><span style="font-size:10px;color:#aaa;">alice@acme.com</span></td>
+              <td>HR</td>
+              <td><span class="wf-badge wf-badge-submitted">Submitted Data</span></td>
+              <td>Jan 10, 09:01</td>
+              <td>Jan 10, 09:14</td>
+              <td>Jan 10, 09:15</td>
+              <td>Jan 10, 09:16</td>
+            </tr>
+            <tr>
+              <td>Bob Lefevre<br/><span style="font-size:10px;color:#aaa;">bob@acme.com</span></td>
+              <td>IT</td>
+              <td><span class="wf-badge wf-badge-clicked">Clicked</span></td>
+              <td>Jan 10, 09:01</td>
+              <td>Jan 10, 10:02</td>
+              <td>Jan 10, 10:03</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td>Claire Durand<br/><span style="font-size:10px;color:#aaa;">claire@acme.com</span></td>
+              <td>Finance</td>
+              <td><span class="wf-badge wf-badge-opened">Opened</span></td>
+              <td>Jan 10, 09:01</td>
+              <td>Jan 11, 08:30</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td>David Moreau<br/><span style="font-size:10px;color:#aaa;">david@acme.com</span></td>
+              <td>Management</td>
+              <td><span class="wf-badge wf-badge-sent">Sent</span></td>
+              <td>Jan 10, 09:01</td>
+              <td>—</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- 7. TEMPLATES                                                    -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <p class="screen-title" id="templates">7. Email templates</p>
+  <p class="screen-desc">Écran protégé · Liste en grille · Création/édition réservée aux admins</p>
+  <div class="frame">
+    <div class="wf-topbar">
+      <div class="wf-topbar-logo">PHISHNET</div>
+      <div class="wf-topbar-nav">
+        <span class="wf-topbar-link">Dashboard</span>
+        <span class="wf-topbar-link">Campaigns</span>
+        <span class="wf-topbar-link active">Templates</span>
+        <span class="wf-topbar-link">Team</span>
+      </div>
+      <div class="wf-topbar-user">AD</div>
+    </div>
+    <div class="wf-layout">
+      
+      <div class="wf-content">
+        <div class="wf-page-header">
+          <div><h2>Email Templates</h2><p>6 templates available</p></div>
+          <div class="wf-btn wf-btn-primary">+ New Template</div>
+        </div>
+
+        <div class="wf-search-bar" style="margin-bottom:20px;">
+          <div class="wf-input">Search templates…</div>
+        </div>
+
+        <div class="wf-template-grid">
+          <div class="wf-template-card">
+            <div class="wf-template-preview"></div>
+            <div class="wf-template-info">
+              <div class="wf-template-name">Password Reset</div>
+              <div class="wf-template-subject">Subject: Action required on your account</div>
+              <div class="wf-template-actions">
+                <span class="wf-btn wf-btn-outline wf-btn-sm">View</span>
+                <span class="wf-btn wf-btn-outline wf-btn-sm">Edit</span>
+                <span class="wf-btn wf-btn-danger wf-btn-sm">Delete</span>
+              </div>
+            </div>
+          </div>
+          <div class="wf-template-card">
+            <div class="wf-template-preview"></div>
+            <div class="wf-template-info">
+              <div class="wf-template-name">Security Alert</div>
+              <div class="wf-template-subject">Subject: Suspicious login detected</div>
+              <div class="wf-template-actions">
+                <span class="wf-btn wf-btn-outline wf-btn-sm">View</span>
+                <span class="wf-btn wf-btn-outline wf-btn-sm">Edit</span>
+                <span class="wf-btn wf-btn-danger wf-btn-sm">Delete</span>
+              </div>
+            </div>
+          </div>
+          <div class="wf-template-card">
+            <div class="wf-template-preview"></div>
+            <div class="wf-template-info">
+              <div class="wf-template-name">Software Update</div>
+              <div class="wf-template-subject">Subject: Critical update available</div>
+              <div class="wf-template-actions">
+                <span class="wf-btn wf-btn-outline wf-btn-sm">View</span>
+                <span class="wf-btn wf-btn-outline wf-btn-sm">Edit</span>
+                <span class="wf-btn wf-btn-danger wf-btn-sm">Delete</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- 8. TEMPLATE EDITOR                                             -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <p class="screen-title" id="template-editor">8. Template editor (admin)</p>
+  <p class="screen-desc">Écran admin · Édition HTML e-mail + landing page · Placeholders de personnalisation</p>
+  <div class="frame">
+    <div class="wf-topbar">
+      <div class="wf-topbar-logo">PHISHNET</div>
+      <div class="wf-topbar-nav">
+        <span class="wf-topbar-link">Dashboard</span>
+        <span class="wf-topbar-link">Campaigns</span>
+        <span class="wf-topbar-link active">Templates</span>
+        <span class="wf-topbar-link">Team</span>
+      </div>
+      <div class="wf-topbar-user">AD</div>
+    </div>
+    <div class="wf-layout">
+      
+      <div class="wf-content">
+        <div class="wf-page-header">
+          <div><h2>Edit: Password Reset</h2></div>
+          <div style="display:flex; gap:8px;">
+            <div class="wf-btn wf-btn-outline">Cancel</div>
+            <div class="wf-btn wf-btn-primary">Save</div>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+          <div>
+            <div class="wf-form-row">
+              <label class="wf-label">Template Name</label>
+              <div class="wf-form-input">Password Reset</div>
+            </div>
+            <div class="wf-form-row">
+              <label class="wf-label">Email Subject</label>
+              <div class="wf-form-input">Action required on your account, {{.FirstName}}</div>
+            </div>
+            <div class="wf-form-row">
+              <label class="wf-label">Redirect URL (post-submission)</label>
+              <div class="wf-form-input" style="color:#bbb;">https://hr-portal.acme.com/</div>
+            </div>
+            <div style="background:#f5f5f5; border:1px solid #ddd; border-radius:4px; padding:10px; font-size:11px; color:#666;">
+              <strong>Available placeholders:</strong><br/>
+              <code>{{"{{"}.Email{{"}}"}}</code> · <code>{{"{{"}.FirstName{{"}}"}}</code> · <code>{{"{{"}.LastName{{"}}"}}</code> ·
+              <code>{{"{{"}.Position{{"}}"}}</code> · <code>{{"{{"}}TRACKING_PIXEL{{"}}"}}</code> ·
+              <code>{{"{{"}}CLICK_URL{{"}}"}}</code> · <code>{{"{{"}}FORM_ACTION{{"}}"}}</code>
+            </div>
+          </div>
+          <div>
+            <div class="wf-tabs">
+              <div class="wf-tab active">Email HTML body</div>
+              <div class="wf-tab">Landing page HTML</div>
+            </div>
+            <div style="background:#1e1e1e; border-radius:4px; padding:12px; font-family:monospace; font-size:11px; color:#d4d4d4; min-height:200px;">
+              &lt;html&gt;&lt;body&gt;<br/>
+              &nbsp;&nbsp;&lt;p&gt;Hello {{"{{"}.FirstName{{"}}"}},&lt;/p&gt;<br/>
+              &nbsp;&nbsp;&lt;p&gt;A suspicious login was detected...&lt;/p&gt;<br/>
+              &nbsp;&nbsp;&lt;a href="{{"{{"}}CLICK_URL{{"}}"}}"&gt;Reset my password&lt;/a&gt;<br/>
+              &nbsp;&nbsp;{{"{{"}}TRACKING_PIXEL{{"}}"}}<br/>
+              &lt;/body&gt;&lt;/html&gt;
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- 9. TEAM & TARGETS                                               -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <p class="screen-title" id="team">9. Team &amp; Targets</p>
+  <p class="screen-desc">Écran protégé · Deux onglets : membres de l'équipe / cibles de phishing · Ajout de cibles</p>
+  <div class="frame">
+    <div class="wf-topbar">
+      <div class="wf-topbar-logo">PHISHNET</div>
+      <div class="wf-topbar-nav">
+        <span class="wf-topbar-link">Dashboard</span>
+        <span class="wf-topbar-link">Campaigns</span>
+        <span class="wf-topbar-link">Templates</span>
+        <span class="wf-topbar-link active">Team</span>
+      </div>
+      <div class="wf-topbar-user">JD</div>
+    </div>
+    <div class="wf-layout">
+      
+      <div class="wf-content">
+        <div class="wf-page-header">
+          <div><h2>Team &amp; Targets</h2></div>
+          <div class="wf-btn wf-btn-primary">+ Add Target</div>
+        </div>
+
+        <div class="wf-tabs">
+          <div class="wf-tab">Team Members (4)</div>
+          <div class="wf-tab active">Phishing Targets (148)</div>
+        </div>
+
+        <div class="wf-search-bar">
+          <div class="wf-input">Search targets…</div>
+        </div>
+
+        <table class="wf-table">
+          <thead>
+            <tr><th>Name</th><th>Email</th><th>Position</th><th>Actions</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Alice Martin</td>
+              <td>alice@acme.com</td>
+              <td>HR Manager</td>
+              <td><span class="wf-btn wf-btn-danger wf-btn-sm">Remove</span></td>
+            </tr>
+            <tr>
+              <td>Bob Lefevre</td>
+              <td>bob@acme.com</td>
+              <td>IT Engineer</td>
+              <td><span class="wf-btn wf-btn-danger wf-btn-sm">Remove</span></td>
+            </tr>
+            <tr>
+              <td>Claire Durand</td>
+              <td>claire@acme.com</td>
+              <td>Finance Controller</td>
+              <td><span class="wf-btn wf-btn-danger wf-btn-sm">Remove</span></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div style="margin-top:24px;">
+          <div style="font-size:11px; text-transform:uppercase; color:#aaa; letter-spacing:.06em; margin-bottom:8px;">
+            Preview: Add target modal
+          </div>
+          <div class="wf-modal" style="margin:0; box-shadow:none;">
+            <div class="wf-modal-header">
+              <div class="wf-modal-title">Add Target</div>
+              <div class="wf-modal-close">✕</div>
+            </div>
+            <div class="wf-modal-body">
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
+                <div>
+                  <label class="wf-label">First name</label>
+                  <div class="wf-form-input" style="color:#bbb;">First name</div>
+                </div>
+                <div>
+                  <label class="wf-label">Last name</label>
+                  <div class="wf-form-input" style="color:#bbb;">Last name</div>
+                </div>
+              </div>
+              <div class="wf-form-row">
+                <label class="wf-label">Email</label>
+                <div class="wf-form-input" style="color:#bbb;">firstname.lastname@company.com</div>
+              </div>
+              <div class="wf-form-row">
+                <label class="wf-label">Position</label>
+                <div class="wf-form-input" style="color:#bbb;">HR Manager</div>
+              </div>
+            </div>
+            <div class="wf-modal-footer">
+              <div class="wf-btn wf-btn-outline">Cancel</div>
+              <div class="wf-btn wf-btn-primary">Add</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- 10. TENANTS (ADMIN)                                             -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <p class="screen-title" id="tenants">10. Tenant management (admin)</p>
+  <p class="screen-desc">Écran admin uniquement · Création et suppression de tenants · Génération d'invitations</p>
+  <div class="frame">
+    <div class="wf-topbar">
+      <div class="wf-topbar-logo">PHISHNET</div>
+      <div class="wf-topbar-nav">
+        <span class="wf-topbar-link">Dashboard</span>
+        <span class="wf-topbar-link">Campaigns</span>
+        <span class="wf-topbar-link">Templates</span>
+        <span class="wf-topbar-link active">Tenants</span>
+      </div>
+      <div class="wf-topbar-user">AD</div>
+    </div>
+    <div class="wf-layout">
+      
+      <div class="wf-content">
+        <div class="wf-page-header">
+          <div><h2>Tenants</h2><p>3 client organisations</p></div>
+          <div class="wf-btn wf-btn-primary">+ New Tenant</div>
+        </div>
+
+        <table class="wf-table">
+          <thead>
+            <tr><th>Organisation</th><th>Operator</th><th>Members</th><th>Campaigns</th><th>Created</th><th>Actions</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Acme Corp</strong></td>
+              <td>john.doe@acme.com</td>
+              <td>12</td>
+              <td>8</td>
+              <td>Sep 05, 2024</td>
+              <td style="white-space:nowrap;">
+                <span class="wf-btn wf-btn-outline wf-btn-sm">View</span>
+                <span class="wf-btn wf-btn-outline wf-btn-sm">Invite</span>
+                <span class="wf-btn wf-btn-danger wf-btn-sm">Delete</span>
+              </td>
+            </tr>
+            <tr>
+              <td><strong>Beta SAS</strong></td>
+              <td>marie.leroux@beta.com</td>
+              <td>5</td>
+              <td>3</td>
+              <td>Oct 12, 2024</td>
+              <td style="white-space:nowrap;">
+                <span class="wf-btn wf-btn-outline wf-btn-sm">View</span>
+                <span class="wf-btn wf-btn-outline wf-btn-sm">Invite</span>
+                <span class="wf-btn wf-btn-danger wf-btn-sm">Delete</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- 11. AUDIT LOG                                                   -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <p class="screen-title" id="audit">11. Audit log</p>
+  <p class="screen-desc">Écran admin · Traçabilité de toutes les actions · Filtrage · Export CSV</p>
+  <div class="frame">
+    <div class="wf-topbar">
+      <div class="wf-topbar-logo">PHISHNET</div>
+      <div class="wf-topbar-nav">
+        <span class="wf-topbar-link">Dashboard</span>
+        <span class="wf-topbar-link">Campaigns</span>
+        <span class="wf-topbar-link">Templates</span>
+        <span class="wf-topbar-link active">Audit</span>
+      </div>
+      <div class="wf-topbar-user">AD</div>
+    </div>
+    <div class="wf-layout">
+      
+      <div class="wf-content">
+        <div class="wf-page-header">
+          <div><h2>Audit Log</h2><p>All recorded actions</p></div>
+          <div class="wf-btn wf-btn-outline">⬇ Export CSV</div>
+        </div>
+
+        <div class="wf-search-bar">
+          <div class="wf-input">Search…</div>
+          <div class="wf-select">All types ▾</div>
+          <div class="wf-select">All users ▾</div>
+          <div class="wf-input" style="max-width:130px; color:#bbb;">Start date</div>
+          <div class="wf-input" style="max-width:130px; color:#bbb;">End date</div>
+        </div>
+
+        <table class="wf-table">
+          <thead>
+            <tr><th>Timestamp</th><th>User</th><th>Action</th><th>Resource</th><th>IP</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="white-space:nowrap;">Jan 10, 2025 09:01:14</td>
+              <td>john.doe@acme.com</td>
+              <td><span class="wf-badge wf-badge-running">CREATE_CAMPAIGN</span></td>
+              <td>Campaign #42 — HR Alert</td>
+              <td>192.168.1.10</td>
+            </tr>
+            <tr>
+              <td style="white-space:nowrap;">Jan 09, 2025 17:22:05</td>
+              <td>admin@phishnet.io</td>
+              <td><span class="wf-badge wf-badge-draft">CREATE_TENANT</span></td>
+              <td>Tenant — Beta SAS</td>
+              <td>10.0.0.1</td>
+            </tr>
+            <tr>
+              <td style="white-space:nowrap;">Jan 08, 2025 11:10:30</td>
+              <td>marie.leroux@beta.com</td>
+              <td><span class="wf-badge wf-badge-opened">LOGIN</span></td>
+              <td>—</td>
+              <td>82.64.12.44</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- 12. CAUGHT PAGE (PUBLIC)                                        -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <p class="screen-title" id="caught">12. Awareness page (public)</p>
+  <p class="screen-desc">Écran public · Affiché après soumission de données sur la landing page d'hameçonnage</p>
+  <div class="frame">
+    <div class="wf-login-wrap" style="background:#fff;">
+      <div style="max-width:500px; text-align:center; padding:40px;">
+        <div style="font-size:48px; margin-bottom:16px;">🎣</div>
+        <div style="font-size:22px; font-weight:800; color:#111; margin-bottom:8px;">
+          You've been phished!
+        </div>
+        <div style="font-size:13px; color:#666; line-height:1.7; margin-bottom:24px;">
+          This was a security awareness test organised by your company.<br/>
+          You just submitted your credentials on a fake login page.<br/>
+          In a real attack, your account could have been compromised.
+        </div>
+        <div style="background:#fff9c4; border:1px solid #f5d000; border-radius:6px; padding:16px; font-size:12px; color:#6b5900; text-align:left; margin-bottom:24px;">
+          <strong>Security tips:</strong>
+          <ul style="margin-top:8px; padding-left:18px; line-height:2;">
+            <li>Always check the URL before entering your credentials.</li>
+            <li>Be suspicious of urgent emails asking for immediate action.</li>
+            <li>When in doubt, contact your IT department.</li>
+          </ul>
+        </div>
+        <div class="wf-btn wf-btn-primary" style="display:inline-flex;">
+          Learn more about cybersecurity
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

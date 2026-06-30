@@ -68,6 +68,8 @@ export default function ViewCampaign() {
         return 'bg-green-50 text-green-700 ring-green-600/20'
       case 'completed':
         return 'bg-blue-50 text-blue-700 ring-blue-600/20'
+      case 'scheduled':
+        return 'bg-blue-50 text-blue-700 ring-blue-600/20'
       case 'draft':
         return 'bg-gray-50 text-gray-600 ring-gray-500/10'
       case 'stopped':
@@ -85,6 +87,8 @@ export default function ViewCampaign() {
         return <Activity aria-hidden="true" className="h-4 w-4" />
       case 'completed':
         return <CheckCircle2 aria-hidden="true" className="h-4 w-4" />
+      case 'scheduled':
+        return <Calendar aria-hidden="true" className="h-4 w-4" />
       case 'stopped':
       case 'archived':
         return <AlertTriangle aria-hidden="true" className="h-4 w-4" />
@@ -284,6 +288,7 @@ export default function ViewCampaign() {
             Timeline
           </h2>
           <dl className="space-y-4">
+            {/* Created — always visible */}
             <div className="flex justify-between items-start">
               <dt className="text-sm font-medium text-gray-500 flex items-center gap-2">
                 <div className="h-2 w-2 rounded-full bg-blue-500"></div>
@@ -293,24 +298,102 @@ export default function ViewCampaign() {
                 {campaign.created_at ? formatDate(campaign.created_at) : 'N/A'}
               </dd>
             </div>
-            <div className="flex justify-between items-start">
-              <dt className="text-sm font-medium text-gray-500 flex items-center gap-2">
-                <div className={`h-2 w-2 rounded-full ${campaign.launched_at ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                Launched
-              </dt>
-              <dd className="text-sm text-gray-900">
-                {campaign.launched_at ? formatDate(campaign.launched_at) : 'Not launched'}
-              </dd>
-            </div>
-            <div className="flex justify-between items-start">
-              <dt className="text-sm font-medium text-gray-500 flex items-center gap-2">
-                <div className={`h-2 w-2 rounded-full ${campaign.stopped_at ? 'bg-red-500' : 'bg-gray-300'}`}></div>
-                Stopped
-              </dt>
-              <dd className="text-sm text-gray-900">
-                {campaign.stopped_at ? formatDate(campaign.stopped_at) : 'Still active'}
-              </dd>
-            </div>
+
+            {/* SCHEDULED — waiting to launch */}
+            {campaign.status === 'scheduled' && (
+              <>
+                <div className="flex justify-between items-start">
+                  <dt className="text-sm font-medium text-gray-500 flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-blue-400 animate-pulse"></div>
+                    Launches at
+                  </dt>
+                  <dd className="text-sm font-medium text-blue-700">
+                    {formatDate(campaign.scheduled_start_at)}
+                  </dd>
+                </div>
+                <div className="flex justify-between items-start">
+                  <dt className="text-sm font-medium text-gray-500 flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-gray-300"></div>
+                    Stops at
+                  </dt>
+                  <dd className="text-sm text-gray-500">
+                    {formatDate(campaign.scheduled_end_at)}
+                  </dd>
+                </div>
+              </>
+            )}
+
+            {/* RUNNING — launched, will stop at scheduled_end_at or manually */}
+            {campaign.status === 'running' && (
+              <>
+                <div className="flex justify-between items-start">
+                  <dt className="text-sm font-medium text-gray-500 flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
+                    Launched
+                  </dt>
+                  <dd className="text-sm text-gray-900">
+                    {campaign.launched_at ? formatDate(campaign.launched_at) : '—'}
+                  </dd>
+                </div>
+                {campaign.scheduled_end_at && (
+                  <div className="flex justify-between items-start">
+                    <dt className="text-sm font-medium text-gray-500 flex items-center gap-2">
+                      <div className="h-2 w-2 rounded-full bg-orange-400"></div>
+                      Stops at
+                    </dt>
+                    <dd className="text-sm text-gray-900">
+                      {formatDate(campaign.scheduled_end_at)}
+                    </dd>
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* STOPPED / ARCHIVED — show full history */}
+            {(campaign.status === 'stopped' || campaign.status === 'archived') && (
+              <>
+                {campaign.scheduled_start_at && (
+                  <div className="flex justify-between items-start">
+                    <dt className="text-sm font-medium text-gray-500 flex items-center gap-2">
+                      <div className="h-2 w-2 rounded-full bg-blue-400"></div>
+                      Scheduled Start
+                    </dt>
+                    <dd className="text-sm text-gray-900">
+                      {formatDate(campaign.scheduled_start_at)}
+                    </dd>
+                  </div>
+                )}
+                <div className="flex justify-between items-start">
+                  <dt className="text-sm font-medium text-gray-500 flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-green-500"></div>
+                    Launched
+                  </dt>
+                  <dd className="text-sm text-gray-900">
+                    {campaign.launched_at ? formatDate(campaign.launched_at) : '—'}
+                  </dd>
+                </div>
+                <div className="flex justify-between items-start">
+                  <dt className="text-sm font-medium text-gray-500 flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-red-500"></div>
+                    Stopped
+                  </dt>
+                  <dd className="text-sm text-gray-900">
+                    {campaign.stopped_at ? formatDate(campaign.stopped_at) : '—'}
+                  </dd>
+                </div>
+              </>
+            )}
+
+            {/* DRAFT — no dates yet */}
+            {campaign.status === 'draft' && (
+              <div className="flex justify-between items-start">
+                <dt className="text-sm font-medium text-gray-500 flex items-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-gray-300"></div>
+                  Launch
+                </dt>
+                <dd className="text-sm text-gray-400 italic">Not scheduled</dd>
+              </div>
+            )}
           </dl>
         </div>
       </div>

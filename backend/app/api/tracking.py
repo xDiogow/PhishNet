@@ -15,6 +15,7 @@ from flask import Blueprint, redirect, make_response, current_app
 from app.extensions import db
 from app.models.campaign_result import CampaignResult
 from app.models.campaign_stats import CampaignStats
+from app.services.campaign_service import CampaignService
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +41,7 @@ def _increment_stat(campaign_id: int, field: str) -> None:
     if stats:
         setattr(stats, field, getattr(stats, field) + 1)
         db.session.commit()
+    CampaignService().invalidate_summary_cache(campaign_id)
 
 
 # ── Open tracking ──────────────────────────────────────────────────────────────

@@ -45,6 +45,10 @@ def create_app(config_object=None):
     register_blueprints(app)
     register_commands(app)
 
+    if not app.config.get('TESTING'):
+        from app.scheduler import start_scheduler
+        start_scheduler(app)
+
     @app.route('/api/health')
     def health():
         checks = {}

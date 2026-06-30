@@ -9,3 +9,4 @@ gunicorn==26.0.0
 psycopg2-binary==2.9.12
 redis==7.4.0
 Flask-Limiter[redis]==3.10.1
+APScheduler==3.10.4

@@ -1,0 +1,141 @@
+@startuml PhishNet — Schéma ER
+!theme plain
+skinparam defaultFontName Arial
+skinparam linetype ortho
+skinparam EntityBackgroundColor #FAFAFA
+skinparam EntityBorderColor #AAAAAA
+skinparam EntityHeaderBackgroundColor #1a237e
+skinparam EntityFontColor #FFFFFF
+skinparam ArrowColor #777777
+skinparam NoteBorderColor #f39c12
+
+' ── ENTITÉS ────────────────────────────────────────────────────────────────────
+
+entity "tenants" as tenants {
+  * id           : INT <<PK>>
+  --
+  * name         : VARCHAR(200)
+  operator_id    : INT <<FK>>
+  * created_at   : DATETIME
+}
+
+entity "users" as users {
+  * id            : INT <<PK>>
+  --
+  * email         : VARCHAR(255) <<UQ>>
+  * first_name    : VARCHAR(100)
+  * last_name     : VARCHAR(100)
+  * password_hash : VARCHAR(255)
+  * tenant_id     : INT <<FK>>
+  * is_active     : BOOLEAN
+  * is_admin      : BOOLEAN
+  * created_at    : DATETIME
+}
+
+entity "tenant_invitations" as invitations {
+  * id              : INT <<PK>>
+  --
+  * invitation_code : VARCHAR <<UQ>>
+  * tenant_id       : INT <<FK>>
+  * is_used         : BOOLEAN
+  used_at           : DATETIME
+  used_by_user_id   : BIGINT
+  expires_at        : DATETIME
+  * created_at      : DATETIME
+}
+
+entity "templates" as templates {
+  * id                  : INT <<PK>>
+  --
+  * name                : VARCHAR(200)
+  * subject             : VARCHAR(500)
+  * email_html          : TEXT
+  * landing_page_html   : TEXT
+  redirect_url          : VARCHAR
+  created_by_user_id    : INT <<FK>>
+  * created_at          : DATETIME
+}
+
+entity "targets" as targets {
+  * id          : INT <<PK>>
+  --
+  * email       : VARCHAR(255)
+  * first_name  : VARCHAR(100)
+  * last_name   : VARCHAR(100)
+  position      : VARCHAR(100)
+  * tenant_id   : INT <<FK>>
+  * created_at  : DATETIME
+}
+
+entity "campaigns" as campaigns {
+  * id                  : INT <<PK>>
+  --
+  * name                : VARCHAR(200)
+  * tenant_id           : INT <<FK>>
+  template_id           : INT <<FK>>
+  * status              : ENUM
+  created_by_user_id    : INT <<FK>>
+  * created_at          : DATETIME
+  launched_at           : DATETIME
+  stopped_at            : DATETIME
+}
+
+entity "campaign_results" as results {
+  * id              : INT <<PK>>
+  --
+  * campaign_id     : INT <<FK>>
+  * email           : VARCHAR
+  * first_name      : VARCHAR
+  * last_name       : VARCHAR
+  position          : VARCHAR
+  * tracking_token  : VARCHAR(36) <<UQ>>
+  * status          : VARCHAR(50)
+  sent_at           : DATETIME
+  opened_at         : DATETIME
+  clicked_at        : DATETIME
+  submitted_at      : DATETIME
+}
+
+entity "campaign_stats" as stats {
+  * campaign_id      : INT <<PK, FK>>
+  --
+  * total_targets    : INT
+  * sent_count       : INT
+  * opened_count     : INT
+  * clicked_count    : INT
+  * submitted_count  : INT
+  * reported_count   : INT
+}
+
+entity "audit_logs" as audit {
+  * id             : INT <<PK>>
+  --
+  user_id          : INT <<FK>>
+  * tenant_id      : INT <<FK>>
+  * action         : VARCHAR(100)
+  * resource_type  : VARCHAR(100)
+  resource_id      : VARCHAR(100)
+  details          : JSON
+  ip_address       : VARCHAR(45)
+  * created_at     : DATETIME
+}
+
+' ── RELATIONS ──────────────────────────────────────────────────────────────────
+
+tenants         ||--o{  users        : "CASCADE"
+tenants         |o--o{  invitations  : "CASCADE"
+tenants         |o--o{  targets      : "CASCADE"
+tenants         ||--o{  campaigns    : "CASCADE"
+tenants         ||--o{  audit        : "CASCADE"
+
+users           |o--o{  campaigns    : "created_by (RESTRICT)"
+users           |o--o{  templates    : "created_by (RESTRICT)"
+users           |o--o{  audit        : "SET NULL"
+users           |o--||  tenants      : "operator_id (SET NULL)"
+
+templates       |o--o{  campaigns    : "RESTRICT"
+
+campaigns       ||--o{  results      : "CASCADE"
+campaigns       ||--||  stats        : "CASCADE"
+
+@enduml
