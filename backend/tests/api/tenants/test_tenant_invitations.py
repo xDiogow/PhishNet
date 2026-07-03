@@ -7,6 +7,8 @@ from flask_jwt_extended import create_access_token
 
 from app.extensions import bcrypt
 from app.models import User, Tenant, TenantInvitation
+from app.models.user_permission import ALL_PERMISSIONS
+from app.repository.user_permission_repository import UserPermissionRepository
 
 
 @pytest.fixture
@@ -35,9 +37,7 @@ def operator_user(db_session, test_tenant):
     db_session.add(user)
     db_session.commit()
     db_session.refresh(user)
-    # Set as operator
-    test_tenant.operator_id = user.id
-    db_session.commit()
+    UserPermissionRepository().grant_all(user.id, test_tenant.id, ALL_PERMISSIONS)
     return user
 
 
@@ -232,7 +232,7 @@ class TestValidateInvitation:
                                json={'invitation_code': 'invalid-code-12345'})
 
         assert response.status_code == 400
-        assert 'Invalid invitation code' in response.get_json()['message']
+        assert 'Invalid invitation code' in response.get_json()['error']
 
     def test_validate_invitation_used(self, client, used_invitation):
         """Test validating an already-used invitation"""
@@ -240,7 +240,7 @@ class TestValidateInvitation:
                                json={'invitation_code': used_invitation.invitation_code})
 
         assert response.status_code == 400
-        assert 'already been used' in response.get_json()['message']
+        assert 'already been used' in response.get_json()['error']
 
     def test_validate_invitation_expired(self, client, expired_invitation):
         """Test validating an expired invitation"""
@@ -248,7 +248,7 @@ class TestValidateInvitation:
                                json={'invitation_code': expired_invitation.invitation_code})
 
         assert response.status_code == 400
-        assert 'expired' in response.get_json()['message']
+        assert 'expired' in response.get_json()['error']
 
 
 class TestGetInvitation:
@@ -315,7 +315,7 @@ class TestGetInvitationsByTenant:
         )
         db_session.add(user)
         db_session.flush()
-        tenant.operator_id = user.id
+        UserPermissionRepository().grant_all(user.id, tenant.id, ALL_PERMISSIONS)
         db_session.commit()
 
         token = create_access_token(identity=str(user.id))

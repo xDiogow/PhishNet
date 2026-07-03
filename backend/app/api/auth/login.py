@@ -1,7 +1,8 @@
 from flask import request, jsonify, current_app
-from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_access_token, set_access_cookies
 from app.extensions import bcrypt, limiter
 from app.repository.user_repository import UserRepository
+from app.repository.user_permission_repository import UserPermissionRepository
 from . import bp
 
 
@@ -27,7 +28,6 @@ def login():
 
         user_repo = UserRepository()
 
-        # Find user by email
         user = user_repo.get_by_email(email)
         if tenant_id and user and user.tenant_id != tenant_id:
             user = None
@@ -43,12 +43,9 @@ def login():
 
         access_token = create_access_token(identity=str(user.id))
 
-        from app.repository.tenant_repository import TenantRepository
-        tenant_repo = TenantRepository()
-        tenant = tenant_repo.get_by_id(user.tenant_id)
-        is_operator = tenant and tenant.operator_id == user.id
+        perm_repo = UserPermissionRepository()
+        permissions = perm_repo.get_permissions(user.id, user.tenant_id)
 
-        # Log successful login
         from app.services.audit_log_service import audit_service
         audit_service.log_action(
             user_id=user.id,
@@ -59,7 +56,7 @@ def login():
             details={'email': user.email}
         )
 
-        return jsonify({
+        response = jsonify({
             'message': 'Login successful',
             'user': {
                 'id': user.id,
@@ -68,11 +65,12 @@ def login():
                 'last_name': user.last_name,
                 'tenant_id': user.tenant_id,
                 'is_admin': user.is_admin,
-                'is_operator': is_operator
+                'permissions': permissions,
             },
-            'access_token': access_token
-        }), 200
+        })
+        set_access_cookies(response, access_token)
+        return response, 200
 
     except Exception as e:
         current_app.logger.exception('Error during login')
-        return jsonify({'error': 'Login failed', 'message': str(e)}), 500
+        return jsonify({'error': 'Login failed'}), 500

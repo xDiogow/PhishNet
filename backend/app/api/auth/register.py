@@ -1,10 +1,11 @@
 from flask import request, jsonify, current_app
-from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_access_token, set_access_cookies
 from sqlalchemy.exc import IntegrityError
 from app.extensions import bcrypt, limiter
 from app.repository.user_repository import UserRepository
-from app.repository.tenant_repository import TenantRepository
+from app.repository.user_permission_repository import UserPermissionRepository
 from app.models.user import User
+from app.models.user_permission import ALL_PERMISSIONS
 from app.services.tenant_invitation_service import validate_invitation, use_invitation
 from . import bp
 
@@ -45,9 +46,7 @@ def register():
 
         validation_result = validate_invitation(invitation_code)
         if validation_result['status'] == 'error':
-            return jsonify({
-                'message': validation_result['message']
-            }), 400
+            return jsonify({'error': validation_result['message']}), 400
 
         invitation = validation_result['invitation']
         tenant_id = invitation.tenant_id
@@ -57,7 +56,6 @@ def register():
             return jsonify({'error': 'User with this email already exists'}), 409
 
         password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
-
         is_first_user = user_repo.count() == 0
 
         user = User(
@@ -80,25 +78,16 @@ def register():
         if use_result['status'] == 'error':
             current_app.logger.warning(f'Failed to mark invitation as used: {use_result["message"]}')
 
-        try:
-            tenant_repo = TenantRepository()
-            tenant = tenant_repo.get_by_id(tenant_id)
+        # First user on a tenant gets all permissions
+        perm_repo = UserPermissionRepository()
+        existing_members = user_repo.get_all_by_tenant_id(tenant_id)
+        if len(existing_members) <= 1:
+            perm_repo.grant_all(user.id, tenant_id, ALL_PERMISSIONS)
 
-            # Set first user as operator if tenant doesn't have one
-            if tenant and not tenant.operator_id:
-                tenant_repo.update_by_id(tenant_id, operator_id=user.id)
-                tenant.operator_id = user.id
-        except Exception as e:
-            current_app.logger.warning(f'Failed to update tenant operator: {e}')
+        permissions = perm_repo.get_permissions(user.id, tenant_id)
 
         access_token = create_access_token(identity=str(user.id))
 
-        # Check if user is operator
-        tenant_repo = TenantRepository()
-        tenant = tenant_repo.get_by_id(tenant_id)
-        is_operator = tenant and tenant.operator_id == user.id
-
-        # Log user registration
         from app.services.audit_log_service import audit_service
         audit_service.log_action(
             user_id=user.id,
@@ -114,7 +103,7 @@ def register():
             }
         )
 
-        return jsonify({
+        response = jsonify({
             'message': 'User registered successfully',
             'user': {
                 'id': user.id,
@@ -123,11 +112,12 @@ def register():
                 'last_name': user.last_name,
                 'tenant_id': user.tenant_id,
                 'is_admin': user.is_admin,
-                'is_operator': is_operator
+                'permissions': permissions,
             },
-            'access_token': access_token
-        }), 201
+        })
+        set_access_cookies(response, access_token)
+        return response, 201
 
     except Exception as e:
         current_app.logger.exception('Error during registration')
-        return jsonify({'error': 'Registration failed', 'message': str(e)}), 500
+        return jsonify({'error': 'Registration failed'}), 500

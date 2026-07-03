@@ -12,7 +12,10 @@ export default function Select({
 }) {
   const selectedOption = options.find(opt => opt.value === value)
   const displayText = selectedOption ? selectedOption.label : placeholder
-  const labelId = id ? `${id}-label` : undefined
+  let labelId
+  if (id) {
+    labelId = `${id}-label`
+  }
 
   return (
     <Menu as="div" className={`relative inline-block w-full ${className}`}>
@@ -40,19 +43,15 @@ export default function Select({
         <div className="py-1">
           {options.map((option) => (
             <MenuItem key={option.value}>
-              {({ focus }) => (
-                <button
-                  type="button"
-                  role="option"
-                  aria-selected={value === option.value}
-                  onClick={() => onChange?.(option.value)}
-                  className={`block w-full px-4 py-2 text-left text-sm text-gray-700 ${
-                    focus ? 'bg-gray-100 text-gray-900' : ''
-                  } ${value === option.value ? 'bg-blue-50 text-blue-900 font-medium' : ''}`}
-                >
-                  {option.label}
-                </button>
-              )}
+              <button
+                type="button"
+                role="option"
+                aria-selected={value === option.value}
+                onClick={() => { if (onChange) { onChange(option.value) } }}
+                className={`block w-full px-4 py-2 text-left text-sm text-gray-700 data-focus:bg-gray-100 data-focus:text-gray-900 ${value === option.value ? 'bg-blue-50 text-blue-900 font-medium' : ''}`}
+              >
+                {option.label}
+              </button>
             </MenuItem>
           ))}
         </div>

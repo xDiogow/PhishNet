@@ -3,6 +3,7 @@ Tests for POST /api/auth/logout — EF17 (session security), EF01 (authenticatio
 """
 import pytest
 from unittest.mock import patch
+from flask_jwt_extended import create_access_token
 from app.extensions import bcrypt
 from app.models import User, Tenant
 from app.repository.session_repository import session_repo
@@ -36,13 +37,9 @@ def regular_user(db_session, test_tenant):
 
 
 @pytest.fixture
-def auth_token(client, regular_user):
-    response = client.post('/api/auth/login', json={
-        'email': 'logout_user@example.com',
-        'password': 'password123',
-    })
-    assert response.status_code == 200
-    return response.get_json()['access_token']
+def auth_token(app, regular_user):
+    with app.app_context():
+        return create_access_token(identity=str(regular_user.id))
 
 
 class TestLogout:

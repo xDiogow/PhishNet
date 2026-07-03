@@ -39,7 +39,7 @@ Internet
 
 | Conteneur | Image de base | Rôle |
 |---|---|---|
-| `phishnet-frontend` | `nginx:1.25-alpine` | Sert le SPA React, proxy `/api/*` et `/track/*` vers le backend |
+| `phishnet-frontend` | `nginx:1.25-alpine` | Sert le SPA React, proxy `/api/*`, `/px/*`, `/r/*`, `/secure/*` et `/report/*` vers le backend |
 | `phishnet-backend` | `python:3.11-slim` (multi-stage) | API Flask + Gunicorn, migrations Alembic |
 | `phishnet-db` | `postgres:15-alpine` | Base de données relationnelle principale |
 | `phishnet-redis` | `redis:7-alpine` | Blocklist JWT (sessions révoquées) + rate limiting |
@@ -176,10 +176,15 @@ admin = User(
     email="admin@company.com",
     tenant_id=tenant.id,
     is_admin=True,
-    is_operator=True,
 )
 admin.set_password("ChangeMe123!")
 db.session.add(admin)
+db.session.flush()
+
+# Lui accorder toutes les permissions
+from app.models.user_permission import ALL_PERMISSIONS
+from app.repository.user_permission_repository import UserPermissionRepository
+UserPermissionRepository().grant_all(admin.id, tenant.id, ALL_PERMISSIONS)
 db.session.commit()
 print("Admin créé.")
 ```
@@ -196,9 +201,9 @@ git push origin main
     ▼
 GitHub Actions — CI
   ├── backend-lint    (ruff)
-  ├── backend-tests   (pytest, 125 tests)
+  ├── backend-tests   (pytest, 191 tests)
   ├── frontend-lint   (ESLint)
-  ├── frontend-tests  (Vitest, 47 tests)
+  ├── frontend-tests  (Vitest, 78 tests)
   └── frontend-build  (Vite)
     │  (uniquement si CI = success)
     ▼

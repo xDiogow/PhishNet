@@ -10,7 +10,7 @@ import sys
 import os
 import uuid
 from faker import Faker
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -96,7 +96,7 @@ def generate_data(tenant_id: int, user_id: int, num_targets: int, num_campaigns:
                 CampaignStatus.ARCHIVED,
             ])
 
-            launched_at = datetime.utcnow() - timedelta(days=random.randint(1, 30))
+            launched_at = datetime.now(timezone.utc) - timedelta(days=random.randint(1, 30))
             stopped_at = launched_at + timedelta(days=7) if campaign_status != CampaignStatus.RUNNING else None
 
             campaign = Campaign(

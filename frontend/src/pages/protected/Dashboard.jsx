@@ -37,11 +37,14 @@ export default function Dashboard() {
       setError(null)
       setLoading(true)
 
+      let campaignCount = 0
+      let templateCount = 0
+      let tenantCount = 0
+
       // Fetch campaigns (all users)
-      let campaignsData = []
       try {
-        campaignsData = await getCampaigns()
-        setStats(prev => ({ ...prev, campaigns: campaignsData.length }))
+        const campaignsData = await getCampaigns()
+        campaignCount = campaignsData.length
         setRecentCampaigns(campaignsData.slice(0, 5))
       } catch (err) {
         console.log('Campaigns not available:', err)
@@ -50,7 +53,7 @@ export default function Dashboard() {
       // Fetch templates (all users)
       try {
         const templatesData = await getTemplates()
-        setStats(prev => ({ ...prev, templates: templatesData.length }))
+        templateCount = templatesData.length
       } catch (err) {
         console.log('Templates not available:', err)
       }
@@ -59,11 +62,13 @@ export default function Dashboard() {
       if (isAdmin()) {
         try {
           const tenantsData = await getTenants()
-          setStats(prev => ({ ...prev, tenants: tenantsData.length }))
+          tenantCount = tenantsData.length
         } catch (err) {
           console.log('Tenants not available:', err)
         }
       }
+
+      setStats({ campaigns: campaignCount, templates: templateCount, tenants: tenantCount })
     } catch (err) {
       setError(err.message || 'Failed to load dashboard data')
       console.error('Error fetching dashboard data:', err)
@@ -73,7 +78,8 @@ export default function Dashboard() {
   }
 
   const getStatusColor = (status) => {
-    switch (status?.toLowerCase()) {
+    const lowerStatus = status ? status.toLowerCase() : ''
+    switch (lowerStatus) {
       case 'running':
       case 'in progress':
         return 'bg-green-50 text-green-700 ring-green-600/20'
@@ -97,12 +103,14 @@ export default function Dashboard() {
     )
   }
 
+  const welcomeName = user && user.first_name ? `, ${user.first_name}` : ''
+
   return (
     <div className="space-y-8">
       {/* Welcome Section */}
       <div>
         <h1 className="text-3xl font-bold text-gray-900">
-          Welcome back{user?.first_name ? `, ${user.first_name}` : ''}!
+          Welcome back{welcomeName}!
         </h1>
         <p className="mt-2 text-gray-600">
           Here's an overview of your phishing security awareness training platform.
@@ -327,25 +335,23 @@ export default function Dashboard() {
             </Link>
 
             {isAdmin() && (
-              <>
-                <Link
-                  to="/tenants"
-                  className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors group"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="rounded-lg bg-orange-100 p-2">
-                      <Building2 aria-hidden="true" className="h-5 w-5 text-orange-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">Tenant Organizations</p>
-                      <p className="text-xs text-gray-500">
-                        {stats.tenants} tenants configured
-                      </p>
-                    </div>
+              <Link
+                to="/tenants"
+                className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="rounded-lg bg-orange-100 p-2">
+                    <Building2 aria-hidden="true" className="h-5 w-5 text-orange-600" />
                   </div>
-                  <ArrowRight aria-hidden="true" className="h-5 w-5 text-gray-400 group-hover:text-gray-600" />
-                </Link>
-              </>
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">Tenant Organizations</p>
+                    <p className="text-xs text-gray-500">
+                      {stats.tenants} tenants configured
+                    </p>
+                  </div>
+                </div>
+                <ArrowRight aria-hidden="true" className="h-5 w-5 text-gray-400 group-hover:text-gray-600" />
+              </Link>
             )}
           </div>
         </div>

@@ -1,31 +1,11 @@
 const API_URL = import.meta.env.VITE_API_URL || "/api"
 
-export const getAuthToken = () => {
-    return localStorage.getItem('auth_token')
-}
-
-export const setAuthToken = (token) => {
-    localStorage.setItem('auth_token', token)
-}
-
-export const removeAuthToken = () => {
-    localStorage.removeItem('auth_token')
-}
-
 export const apiRequest = async (endpoint, options = {}) => {
-    const token = getAuthToken()
-
-    const defaultHeaders = {
-        'Content-Type': 'application/json',
-    }
-
-    if (token)
-        defaultHeaders['Authorization'] = `Bearer ${token}`
-
     const config = {
         ...options,
+        credentials: 'include',
         headers: {
-            ...defaultHeaders,
+            'Content-Type': 'application/json',
             ...options.headers,
         },
     }
@@ -33,8 +13,7 @@ export const apiRequest = async (endpoint, options = {}) => {
     try {
         const response = await fetch(`${API_URL}${endpoint}`, config)
 
-        if (response.status == 401) {
-            removeAuthToken()
+        if (response.status === 401) {
             if (window.location.pathname !== '/login') {
                 window.location.href = '/login'
             }
@@ -48,14 +27,8 @@ export const apiRequest = async (endpoint, options = {}) => {
 
         return await response.json()
     } catch (error) {
-        throw new Error(`${error.message || 'An error occurred'}`)
+        throw new Error(error.message || 'An error occurred')
     }
 }
 
-export default {
-    API_URL,
-    getAuthToken,
-    setAuthToken,
-    removeAuthToken,
-    apiRequest,
-}
+export default { API_URL, apiRequest }

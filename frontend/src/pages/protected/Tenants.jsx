@@ -13,29 +13,39 @@ import {
 import { createInvitation, getInvitationsByTenant } from '../../services/invitationsService'
 import { formatDate } from '../../utils/dateUtils'
 
+function getInvitationCardClass(invitation) {
+  if (invitation.is_used) return 'border rounded-lg p-4 bg-gray-50 border-gray-200'
+  if (invitation.is_valid) return 'border rounded-lg p-4 bg-green-50 border-green-200'
+  return 'border rounded-lg p-4 bg-red-50 border-red-200'
+}
+
+function getInvitationBadgeClass(invitation) {
+  if (invitation.is_used) return 'inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset bg-gray-100 text-gray-700 ring-gray-600/20'
+  if (invitation.is_valid) return 'inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset bg-green-100 text-green-700 ring-green-600/20'
+  return 'inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset bg-red-100 text-red-700 ring-red-600/20'
+}
+
 export default function Tenants() {
   const [tenants, setTenants] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [successMessage, setSuccessMessage] = useState(null)
-  
+
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [isInvitationsModalOpen, setIsInvitationsModalOpen] = useState(false)
   const [editingTenant, setEditingTenant] = useState(null)
   const [viewingInvitationsTenant, setViewingInvitationsTenant] = useState(null)
-  
+
   // Invitations data
   const [invitations, setInvitations] = useState([])
   const [loadingInvitations, setLoadingInvitations] = useState(false)
   const [copiedCode, setCopiedCode] = useState(null)
-  
-  // Form data
-  const [formData, setFormData] = useState({
-    name: '',
-    invitation_expires_days: '',
-  })
+
+  // Form fields — one state variable per field
+  const [tenantName, setTenantName] = useState('')
+  const [invitationExpiresDays, setInvitationExpiresDays] = useState('')
 
   useEffect(() => {
     fetchTenants()
@@ -70,19 +80,15 @@ export default function Tenants() {
 
   const handleOpenCreateModal = () => {
     setEditingTenant(null)
-    setFormData({
-      name: '',
-      invitation_expires_days: '',
-    })
+    setTenantName('')
+    setInvitationExpiresDays('')
     setIsModalOpen(true)
   }
 
   const handleOpenEditModal = (tenant) => {
     setEditingTenant(tenant)
-    setFormData({
-      name: tenant.name,
-      invitation_expires_days: '',
-    })
+    setTenantName(tenant.name)
+    setInvitationExpiresDays('')
     setIsModalOpen(true)
   }
 
@@ -104,12 +110,12 @@ export default function Tenants() {
     setInvitations([])
   }
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value,
-    }))
+  const handleNameChange = (e) => {
+    setTenantName(e.target.value)
+  }
+
+  const handleInvitationExpiresDaysChange = (e) => {
+    setInvitationExpiresDays(e.target.value)
   }
 
   const handleSubmit = async (e) => {
@@ -117,29 +123,22 @@ export default function Tenants() {
     try {
       setError(null)
       setSuccessMessage(null)
-      
+
       if (editingTenant) {
-        // Update tenant (name only)
-        await updateTenant(editingTenant.id, {
-          name: formData.name.trim()
-        })
+        await updateTenant(editingTenant.id, { name: tenantName.trim() })
         setSuccessMessage('Tenant updated successfully')
       } else {
-        // Create tenant with invitation
-        const submitData = {
-          name: formData.name.trim()
-        }
-        
-        if (formData.invitation_expires_days) {
-          const days = parseInt(formData.invitation_expires_days)
+        const payload = { name: tenantName.trim() }
+
+        if (invitationExpiresDays) {
+          const days = parseInt(invitationExpiresDays)
           if (days > 0) {
-            submitData.invitation_expires_days = days
+            payload.invitation_expires_days = days
           }
         }
 
-        const response = await createTenant(submitData)
-        
-        // Show success message with invitation code
+        const response = await createTenant(payload)
+
         if (response.invitation) {
           setSuccessMessage(
             `Tenant created successfully! Invitation code: ${response.invitation.invitation_code}`
@@ -150,14 +149,13 @@ export default function Tenants() {
       }
 
       await fetchTenants()
-      
-      // Don't close modal immediately so user can see success message
+
+      // Close the modal after a short delay so the user can read the success message
       setTimeout(() => {
         handleCloseModal()
       }, 3000)
     } catch (err) {
-      const errorMessage = err.message || 'Failed to save tenant'
-      setError(errorMessage)
+      setError(err.message || 'Failed to save tenant')
       console.error('Error saving tenant:', err)
     }
   }
@@ -165,6 +163,11 @@ export default function Tenants() {
   const handleDeleteClick = (tenant) => {
     setEditingTenant(tenant)
     setIsDeleteDialogOpen(true)
+  }
+
+  const handleDeleteCancel = () => {
+    setIsDeleteDialogOpen(false)
+    setEditingTenant(null)
   }
 
   const handleDeleteConfirm = async () => {
@@ -175,8 +178,7 @@ export default function Tenants() {
       setEditingTenant(null)
       await fetchTenants()
     } catch (err) {
-      const errorMessage = err.message || 'Failed to delete tenant'
-      setError(errorMessage)
+      setError(err.message || 'Failed to delete tenant')
       console.error('Error deleting tenant:', err)
       setIsDeleteDialogOpen(false)
       setEditingTenant(null)
@@ -185,14 +187,13 @@ export default function Tenants() {
 
   const handleCreateInvitation = async () => {
     if (!viewingInvitationsTenant) return
-    
+
     try {
       setError(null)
       await createInvitation(viewingInvitationsTenant.id)
       await fetchInvitations(viewingInvitationsTenant.id)
     } catch (err) {
-      const errorMessage = err.message || 'Failed to create invitation'
-      setError(errorMessage)
+      setError(err.message || 'Failed to create invitation')
       console.error('Error creating invitation:', err)
     }
   }
@@ -349,7 +350,7 @@ export default function Tenants() {
             </div>
           </div>
         )}
-        
+
         <form id="tenant-form" onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-gray-700">
@@ -360,8 +361,8 @@ export default function Tenants() {
               name="name"
               type="text"
               required
-              value={formData.name}
-              onChange={handleInputChange}
+              value={tenantName}
+              onChange={handleNameChange}
               placeholder="e.g., Acme Corporation"
             />
           </div>
@@ -376,8 +377,8 @@ export default function Tenants() {
                 name="invitation_expires_days"
                 type="number"
                 min="1"
-                value={formData.invitation_expires_days}
-                onChange={handleInputChange}
+                value={invitationExpiresDays}
+                onChange={handleInvitationExpiresDaysChange}
                 placeholder="Leave empty for no expiration"
               />
               <p className="mt-1 text-xs text-gray-500">
@@ -392,7 +393,7 @@ export default function Tenants() {
       <Modal
         open={isInvitationsModalOpen}
         onClose={handleCloseInvitationsModal}
-        title={`Invitations - ${viewingInvitationsTenant?.name || ''}`}
+        title={viewingInvitationsTenant ? `Invitations - ${viewingInvitationsTenant.name}` : 'Invitations'}
         footer={
           <div className="flex justify-between items-center w-full">
             <Button
@@ -428,78 +429,63 @@ export default function Tenants() {
           </div>
         ) : (
           <div className="space-y-3">
-            {invitations.map((invitation) => (
-              <div
-                key={invitation.id}
-                className={`border rounded-lg p-4 ${
-                  invitation.is_used
-                    ? 'bg-gray-50 border-gray-200'
-                    : invitation.is_valid
-                    ? 'bg-green-50 border-green-200'
-                    : 'bg-red-50 border-red-200'
-                }`}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <code className="text-sm font-mono bg-white px-2 py-1 rounded border">
-                        {invitation.invitation_code}
-                      </code>
-                      <button
-                        onClick={() => handleCopyInvitationCode(invitation.invitation_code)}
-                        className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
-                        title="Copy code"
-                      >
-                        {copiedCode === invitation.invitation_code ? (
-                          <CheckCircle2 className="h-4 w-4 text-green-600" />
-                        ) : (
-                          <Copy className="h-4 w-4" />
-                        )}
-                      </button>
-                    </div>
-                    
-                    <div className="text-xs text-gray-600 space-y-1">
-                      <div>
-                        <span className="font-medium">Created:</span> {formatDate(invitation.created_at)}
+            {invitations.map((invitation) => {
+              let badgeContent
+              if (invitation.is_used) {
+                badgeContent = <><Users className="w-3 h-3 mr-1" /> Used</>
+              } else if (invitation.is_valid) {
+                badgeContent = 'Valid'
+              } else {
+                badgeContent = 'Expired'
+              }
+
+              return (
+                <div key={invitation.id} className={getInvitationCardClass(invitation)}>
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <code className="text-sm font-mono bg-white px-2 py-1 rounded border">
+                          {invitation.invitation_code}
+                        </code>
+                        <button
+                          onClick={() => handleCopyInvitationCode(invitation.invitation_code)}
+                          className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                          title="Copy code"
+                        >
+                          {copiedCode === invitation.invitation_code ? (
+                            <CheckCircle2 className="h-4 w-4 text-green-600" />
+                          ) : (
+                            <Copy className="h-4 w-4" />
+                          )}
+                        </button>
                       </div>
-                      {invitation.expires_at && (
+
+                      <div className="text-xs text-gray-600 space-y-1">
                         <div>
-                          <span className="font-medium">Expires:</span> {formatDate(invitation.expires_at)}
+                          <span className="font-medium">Created:</span> {formatDate(invitation.created_at)}
                         </div>
-                      )}
-                      {invitation.is_used && invitation.used_at && (
-                        <div>
-                          <span className="font-medium">Used:</span> {formatDate(invitation.used_at)}
-                        </div>
-                      )}
+                        {invitation.expires_at && (
+                          <div>
+                            <span className="font-medium">Expires:</span> {formatDate(invitation.expires_at)}
+                          </div>
+                        )}
+                        {invitation.is_used && invitation.used_at && (
+                          <div>
+                            <span className="font-medium">Used:</span> {formatDate(invitation.used_at)}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                  
-                  <div>
-                    <span
-                      className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${
-                        invitation.is_used
-                          ? 'bg-gray-100 text-gray-700 ring-gray-600/20'
-                          : invitation.is_valid
-                          ? 'bg-green-100 text-green-700 ring-green-600/20'
-                          : 'bg-red-100 text-red-700 ring-red-600/20'
-                      }`}
-                    >
-                      {invitation.is_used ? (
-                        <>
-                          <Users className="w-3 h-3 mr-1" />
-                          Used
-                        </>
-                      ) : invitation.is_valid ? (
-                        'Valid'
-                      ) : (
-                        'Expired'
-                      )}
-                    </span>
+
+                    <div>
+                      <span className={getInvitationBadgeClass(invitation)}>
+                        {badgeContent}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </Modal>
@@ -507,10 +493,7 @@ export default function Tenants() {
       {/* Delete Confirmation Dialog */}
       <ConfirmDialog
         open={isDeleteDialogOpen}
-        onClose={() => {
-          setIsDeleteDialogOpen(false)
-          setEditingTenant(null)
-        }}
+        onClose={handleDeleteCancel}
         onConfirm={handleDeleteConfirm}
         title="Delete Tenant"
         message={

@@ -58,6 +58,22 @@ export const deleteTarget = async (targetId) => {
 }
 
 /**
+ * Set permissions for a team member.
+ */
+export const setMemberPermissions = async (memberId, permissions) => {
+    try {
+        const response = await apiRequest(`/team/${memberId}/permissions`, {
+            method: 'PUT',
+            body: JSON.stringify({ permissions })
+        })
+        return response
+    } catch (error) {
+        console.error('Error setting member permissions:', error)
+        throw error
+    }
+}
+
+/**
  * GDPR Art. 17 erasure: anonymize campaign history then delete the target.
  */
 export const gdprEraseTarget = async (targetId) => {

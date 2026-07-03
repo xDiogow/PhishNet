@@ -8,6 +8,8 @@ from datetime import datetime, timezone
 
 from app.extensions import bcrypt
 from app.models import User, Tenant, Target, Campaign, CampaignStatus, CampaignResult, Template
+from app.models.user_permission import ALL_PERMISSIONS
+from app.repository.user_permission_repository import UserPermissionRepository
 
 
 @pytest.fixture
@@ -65,9 +67,7 @@ def operator_user(db_session, test_tenant):
     db_session.add(user)
     db_session.commit()
     db_session.refresh(user)
-    # Set as operator
-    test_tenant.operator_id = user.id
-    db_session.commit()
+    UserPermissionRepository().grant_all(user.id, test_tenant.id, ALL_PERMISSIONS)
     return user
 
 
@@ -111,7 +111,7 @@ def inactive_user(db_session, test_tenant):
 
 @pytest.fixture
 def another_user(db_session, another_tenant):
-    """Create a user from another tenant"""
+    """Create a user from another tenant with full permissions in their tenant"""
     password_hash = bcrypt.generate_password_hash("anotherpassword123").decode('utf-8')
     user = User(
         email="another@example.com",
@@ -125,6 +125,7 @@ def another_user(db_session, another_tenant):
     db_session.add(user)
     db_session.commit()
     db_session.refresh(user)
+    UserPermissionRepository().grant_all(user.id, another_tenant.id, ALL_PERMISSIONS)
     return user
 
 
@@ -211,8 +212,8 @@ class TestGetTeamMembers:
 
         assert response.status_code == 200
         members = {m['id']: m for m in response.get_json()['team_members']}
-        assert members[operator_user.id]['is_operator'] is True
-        assert members[test_user.id]['is_operator'] is False
+        assert 'manage_team' in members[operator_user.id]['permissions']
+        assert members[test_user.id]['permissions'] == []
 
 
 class TestGdprEraseTarget:
@@ -273,10 +274,10 @@ class TestGdprEraseTarget:
         db_session.refresh(result)
         return result
 
-    def test_gdpr_erase_deletes_target(self, client, auth_headers, target, db_session):
+    def test_gdpr_erase_deletes_target(self, client, operator_auth_headers, target, db_session):
         response = client.delete(
             f"/api/team/targets/{target.id}/gdpr",
-            headers=auth_headers,
+            headers=operator_auth_headers,
         )
 
         assert response.status_code == 200
@@ -284,9 +285,9 @@ class TestGdprEraseTarget:
         assert deleted is None
 
     def test_gdpr_erase_anonymizes_pii_in_campaign_results(
-        self, client, auth_headers, target, campaign_with_result, db_session
+        self, client, operator_auth_headers, target, campaign_with_result, db_session
     ):
-        client.delete(f"/api/team/targets/{target.id}/gdpr", headers=auth_headers)
+        client.delete(f"/api/team/targets/{target.id}/gdpr", headers=operator_auth_headers)
 
         db_session.expire_all()
         result = db_session.get(CampaignResult, campaign_with_result.id)
@@ -295,10 +296,10 @@ class TestGdprEraseTarget:
         assert result.last_name != "Dupont"
 
     def test_gdpr_erase_reports_anonymized_count(
-        self, client, auth_headers, target, campaign_with_result
+        self, client, operator_auth_headers, target, campaign_with_result
     ):
         response = client.delete(
-            f"/api/team/targets/{target.id}/gdpr", headers=auth_headers
+            f"/api/team/targets/{target.id}/gdpr", headers=operator_auth_headers
         )
 
         data = response.get_json()

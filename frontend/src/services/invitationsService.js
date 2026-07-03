@@ -2,15 +2,15 @@ import { apiRequest } from '../config/api'
 
 /**
  * Create a new invitation for a tenant.
+ * If email is provided, the backend will also send an invitation email to that address.
  */
-export const createInvitation = async (tenantId, expiresDays = null) => {
+export const createInvitation = async (tenantId, expiresDays = null, email = null) => {
     try {
+        const body = { tenant_id: tenantId, expires_days: expiresDays }
+        if (email) body.email = email
         const response = await apiRequest('/tenant-invitations', {
             method: 'POST',
-            body: JSON.stringify({
-                tenant_id: tenantId,
-                expires_days: expiresDays
-            }),
+            body: JSON.stringify(body),
         })
         return response
     } catch (error) {
@@ -29,7 +29,10 @@ export const getInvitationsByTenant = async (tenantId, isUsed = null) => {
             params.append('is_used', isUsed.toString())
         }
         const queryString = params.toString()
-        const url = `/tenant-invitations/tenant/${tenantId}${queryString ? `?${queryString}` : ''}`
+        let url = '/tenant-invitations/tenant/' + tenantId
+        if (queryString) {
+            url = url + '?' + queryString
+        }
         const response = await apiRequest(url)
         return response.invitations
     } catch (error) {

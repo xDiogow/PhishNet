@@ -1,5 +1,6 @@
-import { createContext, useContext, useState } from 'react'
-import { getAuthToken } from '../config/api'
+import { createContext, useContext, useState, useEffect } from 'react'
+
+const API_URL = import.meta.env.VITE_API_URL || "/api"
 
 const UserContext = createContext(null)
 
@@ -12,35 +13,49 @@ export const useUser = () => {
 }
 
 export const UserProvider = ({ children }) => {
-  const [user, setUser] = useState(() => {
-    try {
-      const stored = localStorage.getItem('user')
-      return stored ? JSON.parse(stored) : null
-    } catch {
-      localStorage.removeItem('user')
-      return null
+  const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const response = await fetch(`${API_URL}/auth/me`, { credentials: 'include' })
+        if (response.ok) {
+          const data = await response.json()
+          setUser(data.user || null)
+        } else {
+          setUser(null)
+        }
+      } catch (error) {
+        setUser(null)
+      } finally {
+        setLoading(false)
+      }
     }
-  })
+    fetchCurrentUser()
+  }, [])
 
   const setUserData = (userData) => {
     setUser(userData)
-    if (userData) {
-      localStorage.setItem('user', JSON.stringify(userData))
-    } else {
-      localStorage.removeItem('user')
-    }
   }
 
   const isAdmin = () => {
-    return user?.is_admin === true
+    if (!user) return false
+    return user.is_admin === true
+  }
+
+  const hasPermission = (permission) => {
+    if (!user) return false
+    if (user.is_admin) return true
+    return Array.isArray(user.permissions) && user.permissions.includes(permission)
   }
 
   const isAuthenticated = () => {
-    return !!getAuthToken() && !!user
+    return user !== null
   }
 
   return (
-    <UserContext.Provider value={{ user, setUser: setUserData, isAdmin, isAuthenticated, loading: false }}>
+    <UserContext.Provider value={{ user, setUser: setUserData, isAdmin, hasPermission, isAuthenticated, loading }}>
       {children}
     </UserContext.Provider>
   )

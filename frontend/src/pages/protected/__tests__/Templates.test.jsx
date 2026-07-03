@@ -5,11 +5,9 @@ import Templates from '../Templates'
 import * as templatesService from '../../../services/templatesService'
 import * as UserContext from '../../../contexts/UserContext'
 
-// Mock the services
 vi.mock('../../../services/templatesService')
 vi.mock('../../../contexts/UserContext')
 
-// Mock the date utils
 vi.mock('../../../utils/dateUtils', () => ({
   formatDate: (date) => date ? new Date(date).toLocaleDateString() : 'N/A'
 }))
@@ -18,11 +16,15 @@ const mockTemplates = [
   {
     id: 1,
     name: 'Security Awareness Template',
+    is_global: true,
+    tenant_id: null,
     created_at: '2024-01-15T10:00:00Z'
   },
   {
     id: 2,
     name: 'Phishing Test Template',
+    is_global: false,
+    tenant_id: 1,
     created_at: '2024-01-20T14:30:00Z'
   }
 ]
@@ -63,7 +65,8 @@ describe('Templates Page — EF07 (template management, admin-only writes)', () 
   describe('User View', () => {
     beforeEach(() => {
       vi.spyOn(UserContext, 'useUser').mockReturnValue({
-        isAdmin: () => false
+        isAdmin: () => false,
+        hasPermission: () => false,
       })
     })
 
@@ -81,15 +84,7 @@ describe('Templates Page — EF07 (template management, admin-only writes)', () 
 
       await waitFor(() => {
         expect(screen.queryByText('Create Template')).not.toBeInTheDocument()
-      })
-    })
-
-    it('should show view details button', async () => {
-      renderWithRouter(<Templates />)
-
-      await waitFor(() => {
-        const viewButtons = screen.getAllByText('View Details')
-        expect(viewButtons).toHaveLength(2)
+        expect(screen.queryByRole('button', { name: /edit template/i })).not.toBeInTheDocument()
       })
     })
 
@@ -107,8 +102,13 @@ describe('Templates Page — EF07 (template management, admin-only writes)', () 
   describe('Admin View', () => {
     beforeEach(() => {
       vi.spyOn(UserContext, 'useUser').mockReturnValue({
-        isAdmin: () => true
+        isAdmin: () => true,
+        hasPermission: () => false,
       })
+      // Both templates global so admin can manage them
+      vi.spyOn(templatesService, 'getTemplates').mockResolvedValue(
+        mockTemplates.map(t => ({ ...t, is_global: true, tenant_id: null }))
+      )
     })
 
     it('should show create template button for admins', async () => {
@@ -119,7 +119,7 @@ describe('Templates Page — EF07 (template management, admin-only writes)', () 
       })
     })
 
-    it('should show edit and delete buttons for admins', async () => {
+    it('should show edit and delete buttons for global templates', async () => {
       renderWithRouter(<Templates />)
 
       await waitFor(() => {
@@ -142,41 +142,18 @@ describe('Templates Page — EF07 (template management, admin-only writes)', () 
         expect(screen.getByText('Create New Template')).toBeInTheDocument()
       })
     })
-  })
 
-  describe('View Template Modal', () => {
-    beforeEach(() => {
-      vi.spyOn(UserContext, 'useUser').mockReturnValue({
-        isAdmin: () => false
-      })
-    })
-
-    it('should open view modal when view details is clicked', async () => {
+    it('should open edit modal with pre-filled data', async () => {
       renderWithRouter(<Templates />)
 
       await waitFor(() => {
-        const viewButton = screen.getAllByText('View Details')[0]
-        fireEvent.click(viewButton)
+        const editButton = screen.getAllByRole('button', { name: /edit template/i })[0]
+        fireEvent.click(editButton)
       })
 
       await waitFor(() => {
-        expect(screen.getByText('Template Details')).toBeInTheDocument()
+        expect(screen.getByText('Edit Template')).toBeInTheDocument()
         expect(templatesService.getTemplate).toHaveBeenCalledWith(1)
-      })
-    })
-
-    it('should display template details in modal', async () => {
-      renderWithRouter(<Templates />)
-
-      await waitFor(() => {
-        const viewButton = screen.getAllByText('View Details')[0]
-        fireEvent.click(viewButton)
-      })
-
-      await waitFor(() => {
-        expect(screen.getByText('Email Template')).toBeInTheDocument()
-        expect(screen.getByText('Landing Page')).toBeInTheDocument()
-        expect(screen.getByText('Security Alert')).toBeInTheDocument()
       })
     })
   })
@@ -184,7 +161,8 @@ describe('Templates Page — EF07 (template management, admin-only writes)', () 
   describe('Error Handling', () => {
     beforeEach(() => {
       vi.spyOn(UserContext, 'useUser').mockReturnValue({
-        isAdmin: () => false
+        isAdmin: () => false,
+        hasPermission: () => false,
       })
     })
 
@@ -192,7 +170,7 @@ describe('Templates Page — EF07 (template management, admin-only writes)', () 
       vi.spyOn(templatesService, 'getTemplates').mockRejectedValue(
         new Error('Failed to fetch templates')
       )
-      
+
       renderWithRouter(<Templates />)
 
       await waitFor(() => {

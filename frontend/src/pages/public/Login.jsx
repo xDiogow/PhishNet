@@ -14,12 +14,12 @@ export default function Login() {
   })
   const [error, setError] = useState(null)
 
-  const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
+  const handleEmailChange = (e) => {
+    setFormData({ ...formData, email: e.target.value })
+  }
+
+  const handlePasswordChange = (e) => {
+    setFormData({ ...formData, password: e.target.value })
   }
 
   const handleSubmit = async (e) => {
@@ -66,7 +66,7 @@ export default function Login() {
                 required
                 autoComplete="email"
                 value={formData.email}
-                onChange={handleChange}
+                onChange={handleEmailChange}
               />
             </div>
 
@@ -88,7 +88,7 @@ export default function Login() {
                 required
                 autoComplete="current-password"
                 value={formData.password}
-                onChange={handleChange}
+                onChange={handlePasswordChange}
               />
             </div>
 

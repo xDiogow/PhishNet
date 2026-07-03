@@ -136,14 +136,18 @@ describe('ViewCampaign Page — EF08 (campaign detail), EF13 (live stats per tar
   })
 
   it('should display timeline information', async () => {
+    vi.spyOn(campaignsService, 'getCampaign').mockResolvedValue({
+      ...mockCampaign,
+      status: 'stopped',
+      stopped_at: '2024-01-20T15:00:00Z',
+    })
     renderWithRouter(<ViewCampaign />)
 
     await waitFor(() => {
       expect(screen.getByText('Timeline')).toBeInTheDocument()
       expect(screen.getByText('Created')).toBeInTheDocument()
       expect(screen.getByText('Launched')).toBeInTheDocument()
-      expect(screen.getByText('Stopped')).toBeInTheDocument()
-      expect(screen.getByText('Still active')).toBeInTheDocument()
+      expect(screen.getAllByText('Stopped').length).toBeGreaterThan(0)
     })
   })
 

@@ -3,7 +3,7 @@ from app.repository.base_repository import BaseRepository
 from app.models.target import Target
 
 
-class TargetRepository(BaseRepository[Target]):
+class TargetRepository(BaseRepository):
     """Repository for Target model."""
 
     def __init__(self):

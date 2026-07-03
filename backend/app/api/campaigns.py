@@ -11,15 +11,31 @@ Routes:
   DELETE /api/campaigns/<id>         delete a campaign (cascades to results)
   POST   /api/campaigns/<id>/complete mark a campaign as stopped
 """
+from datetime import datetime, timezone
+
 from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.models.campaign import Campaign
 from app.repository.campaign_repository import CampaignRepository
+from app.repository.template_repository import TemplateRepository
 from app.repository.user_repository import UserRepository
 from app.services.campaign_service import CampaignService
-from app.utils.auth_helper import get_current_user
+from app.utils.auth_helper import get_current_user, has_permission
 
 bp = Blueprint('campaigns', __name__, url_prefix='/api/campaigns')
+
+
+def _parse_dt(value):
+    """Parse an ISO-8601 datetime string to a timezone-aware datetime, or return None."""
+    if not value:
+        return None
+    try:
+        dt = datetime.fromisoformat(value.replace('Z', '+00:00'))
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt
+    except (ValueError, AttributeError):
+        raise ValueError(f"Invalid datetime format: {value}. Use ISO-8601.")
 
 
 def campaign_to_dict(campaign: Campaign) -> dict:
@@ -52,7 +68,7 @@ def get_all_campaigns():
         return jsonify({'campaigns': [campaign_to_dict(c) for c in campaigns]}), 200
     except Exception as e:
         current_app.logger.exception('Error getting campaigns')
-        return jsonify({'error': 'Failed to get campaigns', 'message': str(e)}), 500
+        return jsonify({'error': 'Failed to get campaigns'}), 500
 
 
 @bp.route('/<int:campaign_id>', methods=['GET'])
@@ -70,7 +86,7 @@ def get_campaign(campaign_id):
         return jsonify(campaign_to_dict(campaign)), 200
     except Exception as e:
         current_app.logger.exception('Error getting campaign')
-        return jsonify({'error': 'Failed to get campaign', 'message': str(e)}), 500
+        return jsonify({'error': 'Failed to get campaign'}), 500
 
 
 @bp.route('/<int:campaign_id>/summary', methods=['GET'])
@@ -95,7 +111,7 @@ def get_campaign_summary(campaign_id):
         return jsonify(data), 200
     except Exception as e:
         current_app.logger.exception('Error getting campaign summary')
-        return jsonify({'error': 'Failed to get campaign summary', 'message': str(e)}), 500
+        return jsonify({'error': 'Failed to get campaign summary'}), 500
 
 
 @bp.route('', methods=['POST'])
@@ -110,7 +126,6 @@ def create_campaign():
     status=SCHEDULED and emails are not sent yet. The background scheduler will
     launch it automatically. Otherwise the campaign launches immediately.
     """
-    from datetime import datetime, timezone
     try:
         data = request.get_json()
         if not data:
@@ -122,6 +137,9 @@ def create_campaign():
         if not user:
             return jsonify({'error': 'User not found'}), 404
 
+        if not has_permission(user, 'manage_campaigns'):
+            return jsonify({'error': 'Permission denied', 'required': 'manage_campaigns'}), 403
+
         missing = [f for f in ['name', 'template_id'] if not data.get(f)]
         if missing:
             return jsonify({'error': 'Missing required fields', 'missing': missing}), 400
@@ -131,16 +149,10 @@ def create_campaign():
         except (ValueError, TypeError):
             return jsonify({'error': 'template_id must be a valid integer'}), 400
 
-        def _parse_dt(value):
-            if not value:
-                return None
-            try:
-                dt = datetime.fromisoformat(value.replace('Z', '+00:00'))
-                if dt.tzinfo is None:
-                    dt = dt.replace(tzinfo=timezone.utc)
-                return dt
-            except (ValueError, AttributeError):
-                raise ValueError(f"Invalid datetime format: {value!r}. Use ISO-8601.")
+        # Validate the template is accessible to this tenant (global or own)
+        template = TemplateRepository().get_by_id_for_tenant(template_id, user.tenant_id)
+        if not template:
+            return jsonify({'error': 'Template not found or not accessible'}), 404
 
         scheduled_start_at = _parse_dt(data.get('scheduled_start_at'))
         scheduled_end_at   = _parse_dt(data.get('scheduled_end_at'))
@@ -150,8 +162,11 @@ def create_campaign():
 
         raw_ids = data.get('target_ids')
         if raw_ids is not None:
-            if not isinstance(raw_ids, list) or not all(isinstance(i, int) for i in raw_ids):
+            if not isinstance(raw_ids, list):
                 return jsonify({'error': 'target_ids must be a list of integers'}), 400
+            for item in raw_ids:
+                if not isinstance(item, int):
+                    return jsonify({'error': 'target_ids must be a list of integers'}), 400
         target_ids = raw_ids if raw_ids else None
 
         service = CampaignService()
@@ -185,7 +200,7 @@ def create_campaign():
         return jsonify({'error': str(e)}), 400
     except Exception as e:
         current_app.logger.exception('Error creating campaign')
-        return jsonify({'error': 'Failed to create campaign', 'message': str(e)}), 500
+        return jsonify({'error': 'Failed to create campaign'}), 500
 
 
 @bp.route('/<int:campaign_id>', methods=['DELETE'])
@@ -196,6 +211,8 @@ def delete_campaign(campaign_id):
         user = get_current_user()
         if not user:
             return jsonify({'error': 'User not found'}), 404
+        if not has_permission(user, 'manage_campaigns'):
+            return jsonify({'error': 'Permission denied', 'required': 'manage_campaigns'}), 403
         # Verify tenant ownership before deleting
         repo = CampaignRepository()
         campaign = repo.get_by_id(campaign_id, tenant_id=user.tenant_id)
@@ -208,7 +225,7 @@ def delete_campaign(campaign_id):
         return jsonify({'error': str(e)}), 400
     except Exception as e:
         current_app.logger.exception('Error deleting campaign')
-        return jsonify({'error': 'Failed to delete campaign', 'message': str(e)}), 500
+        return jsonify({'error': 'Failed to delete campaign'}), 500
 
 
 @bp.route('/<int:campaign_id>/complete', methods=['POST'])
@@ -219,6 +236,8 @@ def complete_campaign(campaign_id):
         user = get_current_user()
         if not user:
             return jsonify({'error': 'User not found'}), 404
+        if not has_permission(user, 'manage_campaigns'):
+            return jsonify({'error': 'Permission denied', 'required': 'manage_campaigns'}), 403
         repo = CampaignRepository()
         campaign = repo.get_by_id(campaign_id, tenant_id=user.tenant_id)
         if not campaign:
@@ -234,4 +253,4 @@ def complete_campaign(campaign_id):
         return jsonify({'error': str(e)}), 400
     except Exception as e:
         current_app.logger.exception('Error completing campaign')
-        return jsonify({'error': 'Failed to complete campaign', 'message': str(e)}), 500
+        return jsonify({'error': 'Failed to complete campaign'}), 500

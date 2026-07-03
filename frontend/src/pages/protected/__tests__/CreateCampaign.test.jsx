@@ -4,9 +4,11 @@ import { BrowserRouter } from 'react-router-dom'
 import CreateCampaign from '../CreateCampaign'
 import * as campaignsService from '../../../services/campaignsService'
 import * as templatesService from '../../../services/templatesService'
+import * as teamService from '../../../services/teamService'
 
 vi.mock('../../../services/campaignsService')
 vi.mock('../../../services/templatesService')
+vi.mock('../../../services/teamService')
 
 // Mock the headlessui Select to a native <select> — avoids transition/portal issues in happy-dom
 vi.mock('../../../components/Select', () => ({
@@ -35,11 +37,17 @@ const mockTemplates = [
   { id: 2, name: 'Phishing Template 2' },
 ]
 
+const mockTargets = [
+  { id: 1, first_name: 'Alice', last_name: 'Martin', email: 'alice@example.com' },
+  { id: 2, first_name: 'Bob', last_name: 'Dupont', email: 'bob@example.com' },
+]
+
 const renderPage = () => render(<BrowserRouter><CreateCampaign /></BrowserRouter>)
 
 describe('CreateCampaign — EF08 (lancement campagne)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.spyOn(teamService, 'getTargets').mockResolvedValue(mockTargets)
   })
 
   describe('Chargement des templates', () => {
@@ -63,6 +71,13 @@ describe('CreateCampaign — EF08 (lancement campagne)', () => {
       renderPage()
       await waitFor(() => expect(screen.getByText(/No templates available/i)).toBeInTheDocument())
       expect(screen.queryByTestId('template-select')).not.toBeInTheDocument()
+    })
+
+    it('affiche un avertissement si aucune cible disponible', async () => {
+      vi.spyOn(templatesService, 'getTemplates').mockResolvedValue(mockTemplates)
+      vi.spyOn(teamService, 'getTargets').mockResolvedValue([])
+      renderPage()
+      await waitFor(() => expect(screen.getByText(/No targets found/i)).toBeInTheDocument())
     })
 
     it('affiche une alerte si le chargement échoue', async () => {
@@ -97,6 +112,7 @@ describe('CreateCampaign — EF08 (lancement campagne)', () => {
   describe('Soumission du formulaire', () => {
     const fillAndSubmit = async () => {
       await waitFor(() => expect(screen.queryByText('Loading templates...')).not.toBeInTheDocument())
+      await waitFor(() => expect(screen.queryByText('Loading targets...')).not.toBeInTheDocument())
       fireEvent.change(screen.getByLabelText(/Campaign Name/i), {
         target: { name: 'name', value: 'Test Campaign' },
       })
@@ -112,10 +128,9 @@ describe('CreateCampaign — EF08 (lancement campagne)', () => {
       renderPage()
       await fillAndSubmit()
       await waitFor(() => {
-        expect(campaignsService.createCampaign).toHaveBeenCalledWith({
-          name: 'Test Campaign',
-          template_id: '1',
-        })
+        expect(campaignsService.createCampaign).toHaveBeenCalledWith(
+          expect.objectContaining({ name: 'Test Campaign', template_id: '1' })
+        )
         expect(mockNavigate).toHaveBeenCalledWith('/campaigns')
       })
     })
@@ -123,13 +138,13 @@ describe('CreateCampaign — EF08 (lancement campagne)', () => {
     it("affiche l'erreur retournée par l'API en cas d'échec", async () => {
       vi.spyOn(templatesService, 'getTemplates').mockResolvedValue(mockTemplates)
       vi.spyOn(campaignsService, 'createCampaign').mockRejectedValue(
-        new Error('No targets found')
+        new Error('Server error')
       )
       renderPage()
       await fillAndSubmit()
       await waitFor(() => {
         expect(screen.getByRole('alert')).toBeInTheDocument()
-        expect(screen.getByText('No targets found')).toBeInTheDocument()
+        expect(screen.getByText('Server error')).toBeInTheDocument()
       })
       expect(mockNavigate).not.toHaveBeenCalled()
     })

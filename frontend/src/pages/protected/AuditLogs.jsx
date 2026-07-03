@@ -27,7 +27,7 @@ export default function AuditLogs() {
       const data = await auditLogAPI.getLogs({
         page,
         per_page: 20,
-        action: actionFilter || undefined
+        action: actionFilter !== '' ? actionFilter : undefined
       })
 
       setLogs(data.logs || [])
@@ -44,7 +44,7 @@ export default function AuditLogs() {
     try {
       setExporting(true)
       await auditLogAPI.exportLogs({
-        action: actionFilter || undefined
+        action: actionFilter !== '' ? actionFilter : undefined
       })
     } catch (error) {
       console.error('Error exporting audit logs:', error)
@@ -71,12 +71,22 @@ export default function AuditLogs() {
     }
   }
 
+  const handleActionFilterChange = (e) => {
+    setActionFilter(e.target.value)
+    setPage(1)
+  }
+
   if (loading && logs.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-gray-600">Loading audit logs...</div>
       </div>
     )
+  }
+
+  const pageNumbers = []
+  for (let i = 1; i <= totalPages; i++) {
+    pageNumbers.push(i)
   }
 
   return (
@@ -106,10 +116,7 @@ export default function AuditLogs() {
           <select
             id="audit-action-filter"
             value={actionFilter}
-            onChange={(e) => {
-              setActionFilter(e.target.value)
-              setPage(1)
-            }}
+            onChange={handleActionFilterChange}
             className="border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             <option value="">All Actions</option>
@@ -241,19 +248,19 @@ export default function AuditLogs() {
                     <span className="sr-only">Previous</span>
                     <ChevronLeft className="h-5 w-5" aria-hidden="true" />
                   </button>
-                  {[...Array(totalPages).keys()].map(i => (
+                  {pageNumbers.map(pageNum => (
                     <button
-                      key={i + 1}
-                      onClick={() => setPage(i + 1)}
-                      aria-current={page === i + 1 ? 'page' : undefined}
-                      aria-label={`Page ${i + 1}`}
+                      key={pageNum}
+                      onClick={() => setPage(pageNum)}
+                      aria-current={page === pageNum ? 'page' : undefined}
+                      aria-label={`Page ${pageNum}`}
                       className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                        page === i + 1
+                        page === pageNum
                           ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
                           : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
                       }`}
                     >
-                      {i + 1}
+                      {pageNum}
                     </button>
                   ))}
                   <button

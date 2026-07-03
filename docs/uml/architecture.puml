@@ -45,14 +45,14 @@ rectangle "«system» PhishNet" {
 
   ' ── PROXY ────────────────────────────────────────────────────────────────────
   package "Reverse Proxy — Nginx :80" #e3f2fd {
-    component "Sert le SPA (static)\nProxy /api/* /track/* /phish/* → :5000" as Nginx
+    component "Sert le SPA (static)\nProxy /api/* /px/* /r/* /secure/* /report/* → :5000" as Nginx
   }
 
   ' ── BACKEND ──────────────────────────────────────────────────────────────────
   package "Backend — Flask · Gunicorn :5000" #fff3e0 {
 
     package "API Layer" #fff8f0 {
-      component "Flask Blueprints\nJWT · Tenant isolation\n/auth /campaigns /templates\n/team /tenants /track /phish\n/audit-logs /api/health" as API
+      component "Flask Blueprints\nJWT · Tenant isolation\n/auth /campaigns /templates\n/team /tenants /px /r /secure /report\n/audit-logs /api/health" as API
     }
 
     package "Service Layer" #fce4ec {
@@ -75,7 +75,7 @@ rectangle "«system» PhishNet" {
   ' ── DONNÉES ──────────────────────────────────────────────────────────────────
   package "Data Layer" #e8eaf6 {
     database "PostgreSQL 15\n:5432" as PG {
-      component "9 tables\nAlembic migrations\nCascade · FK indexes" as PGTables
+      component "10 tables\nAlembic migrations\nCascade · FK indexes" as PGTables
     }
     database "Redis 7\n:6379" as Redis {
       component "JWT blocklist (NoSQL)\nRate limiting\n5 req/min /auth/*" as RedisData

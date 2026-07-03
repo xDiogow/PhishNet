@@ -1,6 +1,6 @@
 import time
 from flask import jsonify
-from flask_jwt_extended import jwt_required, get_jwt
+from flask_jwt_extended import jwt_required, get_jwt, unset_jwt_cookies
 from app.repository.session_repository import session_repo
 from app.utils.auth_helper import get_current_user
 from app.services.audit_log_service import audit_service
@@ -13,7 +13,10 @@ def logout():
     token = get_jwt()
     jti = token["jti"]
     exp = token["exp"]
-    ttl = max(int(exp - time.time()), 0) + 60  # 60s grace buffer
+    remaining = int(exp - time.time())
+    if remaining < 0:
+        remaining = 0
+    ttl = remaining + 60  # keep token blacklisted for its remaining lifetime + 60s grace
 
     session_repo.revoke_token(jti, ttl)
 
@@ -28,4 +31,6 @@ def logout():
             details={'email': user.email}
         )
 
-    return jsonify({'message': 'Successfully logged out'}), 200
+    response = jsonify({'message': 'Successfully logged out'})
+    unset_jwt_cookies(response)
+    return response, 200

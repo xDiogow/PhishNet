@@ -9,6 +9,7 @@ from app.models.campaign_stats import CampaignStats
 from app.models.campaign_result import CampaignResult
 from app.models.tenant_invitation import TenantInvitation
 from app.models.audit_log import AuditLog
+from app.models.user_permission import UserPermission, ALL_PERMISSIONS
 
 __all__ = [
     'Base',
@@ -22,4 +23,6 @@ __all__ = [
     'CampaignResult',
     'TenantInvitation',
     'AuditLog',
+    'UserPermission',
+    'ALL_PERMISSIONS',
 ]

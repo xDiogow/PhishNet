@@ -18,12 +18,28 @@ export default function Register() {
   })
   const [error, setError] = useState(null)
   
-  const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
+  const handleInvitationCodeChange = (e) => {
+    setFormData({ ...formData, invitation_code: e.target.value })
+  }
+
+  const handleFirstNameChange = (e) => {
+    setFormData({ ...formData, first_name: e.target.value })
+  }
+
+  const handleLastNameChange = (e) => {
+    setFormData({ ...formData, last_name: e.target.value })
+  }
+
+  const handleEmailChange = (e) => {
+    setFormData({ ...formData, email: e.target.value })
+  }
+
+  const handlePasswordChange = (e) => {
+    setFormData({ ...formData, password: e.target.value })
+  }
+
+  const handleConfirmPasswordChange = (e) => {
+    setFormData({ ...formData, confirmPassword: e.target.value })
   }
 
   const handleSubmit = async(e) => {
@@ -80,7 +96,7 @@ export default function Register() {
                 required
                 placeholder="Enter your invitation code"
                 value={formData.invitation_code}
-                onChange={handleChange}
+                onChange={handleInvitationCodeChange}
               />
             </div>
 
@@ -95,7 +111,7 @@ export default function Register() {
                 required
                 autoComplete="given-name"
                 value={formData.first_name}
-                onChange={handleChange}
+                onChange={handleFirstNameChange}
               />
             </div>
 
@@ -110,7 +126,7 @@ export default function Register() {
                 required
                 autoComplete="family-name"
                 value={formData.last_name}
-                onChange={handleChange}
+                onChange={handleLastNameChange}
               />
             </div>
 
@@ -125,7 +141,7 @@ export default function Register() {
                 required
                 autoComplete="email"
                 value={formData.email}
-                onChange={handleChange}
+                onChange={handleEmailChange}
               />
             </div>
 
@@ -140,7 +156,7 @@ export default function Register() {
                 required
                 autoComplete="new-password"
                 value={formData.password}
-                onChange={handleChange}
+                onChange={handlePasswordChange}
               />
             </div>
 
@@ -155,7 +171,7 @@ export default function Register() {
                 required
                 autoComplete="new-password"
                 value={formData.confirmPassword}
-                onChange={handleChange}
+                onChange={handleConfirmPasswordChange}
               />
             </div>
 

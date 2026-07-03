@@ -1,5 +1,4 @@
-import csv
-import io
+import math
 from flask import Blueprint, request, jsonify, current_app, Response
 from flask_jwt_extended import jwt_required
 from app.repository.audit_log_repository import AuditLogRepository
@@ -24,8 +23,11 @@ def format_audit_details(log):
     if action == 'USER_REGISTER':
         return f"New user registered: {details.get('first_name')} {details.get('last_name')} ({details.get('email')}) using code {details.get('invitation_code')}"
 
-    # Fallback: pretty print the dictionary keys/values
-    return ", ".join([f"{k.replace('_', ' ').capitalize()}: {v}" for k, v in details.items()])
+    # Fallback: list all key/value pairs
+    parts = []
+    for key, value in details.items():
+        parts.append(f"{key}: {value}")
+    return ", ".join(parts)
 
 def audit_log_to_dict(log):
     """Convert AuditLog model to dictionary."""
@@ -73,12 +75,12 @@ def get_audit_logs():
             'total': total_count,
             'page': page,
             'per_page': per_page,
-            'total_pages': (total_count + per_page - 1) // per_page
+            'total_pages': math.ceil(total_count / per_page) if total_count > 0 else 0
         }), 200
 
     except Exception as e:
         current_app.logger.exception('Error fetching audit logs')
-        return jsonify({'error': 'Failed to fetch audit logs', 'message': str(e)}), 500
+        return jsonify({'error': 'Failed to fetch audit logs'}), 500
 
 @bp.route('/export', methods=['GET'])
 @jwt_required()
@@ -101,28 +103,34 @@ def export_audit_logs():
             resource_type=resource_type_filter
         )
 
-        output = io.StringIO()
-        writer = csv.writer(output)
+        def csv_field(value):
+            text = str(value) if value is not None else ''
+            return '"' + text.replace('"', '""') + '"'
 
-        # Header
-        writer.writerow(['ID', 'Date', 'User Email', 'User Name', 'Action', 'Resource Type', 'Resource ID', 'Details'])
+        csv_lines = []
+        csv_lines.append('"ID","Date","User Email","User Name","Action","Resource Type","Resource ID","Details"')
 
         for log in logs:
-            writer.writerow([
-                log.id,
-                log.created_at.isoformat(),
-                log.user.email if log.user else 'System',
-                f"{log.user.first_name} {log.user.last_name}" if log.user else 'System',
-                log.action,
-                log.resource_type,
-                log.resource_id,
-                format_audit_details(log)
+            user_email = log.user.email if log.user else 'System'
+            user_name = (log.user.first_name + ' ' + log.user.last_name) if log.user else 'System'
+            details = format_audit_details(log)
+            line = ','.join([
+                csv_field(log.id),
+                csv_field(log.created_at.isoformat()),
+                csv_field(user_email),
+                csv_field(user_name),
+                csv_field(log.action),
+                csv_field(log.resource_type),
+                csv_field(log.resource_id),
+                csv_field(details)
             ])
+            csv_lines.append(line)
 
-        response = Response(output.getvalue(), mimetype='text/csv')
+        csv_content = '\n'.join(csv_lines)
+        response = Response(csv_content, mimetype='text/csv')
         response.headers.set("Content-Disposition", "attachment", filename="audit_logs.csv")
         return response
 
     except Exception as e:
         current_app.logger.exception('Error exporting audit logs')
-        return jsonify({'error': 'Failed to export audit logs', 'message': str(e)}), 500
+        return jsonify({'error': 'Failed to export audit logs'}), 500

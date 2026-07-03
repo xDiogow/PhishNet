@@ -39,12 +39,13 @@ else Succès
   DB --> BE : OK
   deactivate DB
 
-  BE --> FE : 200 OK\n{ access_token, user: { id, email, is_admin, is_operator } }
+  BE --> FE : 200 OK\n{ message, user: { id, email, first_name, last_name,\n  tenant_id, is_admin, permissions } }\n+ Set-Cookie: access_token_cookie=<JWT> (HttpOnly)
   deactivate BE
 
   note over FE
-    Stocke JWT en mémoire React (useState)
-    — jamais en localStorage (protection XSS)
+    JWT posé en cookie HttpOnly par le backend
+    — inaccessible à JavaScript (protection XSS)
+    Requêtes suivantes : fetch + credentials: 'include'
   end note
 
   FE --> U : Redirige → /dashboard

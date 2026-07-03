@@ -16,10 +16,6 @@ const navigation = [
   { name: 'Tenants', path: '/tenants', adminOnly: true },
 ];
 
-function classNames(...classes) {
-  return classes.filter(Boolean).join(' ');
-}
-
 export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -34,7 +30,10 @@ export default function Navbar() {
 
   const isCurrentPath = (path) => location.pathname === path;
 
-  const visibleNavigation = navigation.filter(item => !item.adminOnly || isAdmin());
+  const visibleNavigation = navigation.filter(item => {
+    if (!item.adminOnly) return true
+    return isAdmin()
+  });
 
   const isProtectedRoute = location.pathname.startsWith('/dashboard') ||
                           location.pathname.startsWith('/team') ||
@@ -92,12 +91,7 @@ export default function Navbar() {
                   to={item.path}
                   role="listitem"
                   aria-current={isCurrent ? 'page' : undefined}
-                  className={classNames(
-                    isCurrent
-                      ? 'bg-blue-50 text-blue-600'
-                      : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900',
-                    'rounded-md px-3 py-2 text-sm font-medium transition-colors'
-                  )}
+                  className={`${isCurrent ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'} rounded-md px-3 py-2 text-sm font-medium transition-colors`}
                 >
                   {item.name}
                 </Link>
@@ -118,7 +112,7 @@ export default function Navbar() {
             {/* Avatar dropdown (desktop) */}
             <HMenu as="div" className="relative hidden md:block">
               <MenuButton
-                aria-label={`User menu for ${user?.first_name ?? 'user'}`}
+                aria-label={`User menu for ${user && user.first_name ? user.first_name : 'user'}`}
                 className="flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full"
               >
                 <img
@@ -195,12 +189,7 @@ export default function Navbar() {
                   role="listitem"
                   aria-current={isCurrent ? 'page' : undefined}
                   onClick={() => setMobileMenuOpen(false)}
-                  className={classNames(
-                    isCurrent
-                      ? 'bg-blue-50 text-blue-600'
-                      : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900',
-                    'block rounded-md px-3 py-2 text-base font-medium transition-colors'
-                  )}
+                  className={`${isCurrent ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'} block rounded-md px-3 py-2 text-base font-medium transition-colors`}
                 >
                   {item.name}
                 </Link>

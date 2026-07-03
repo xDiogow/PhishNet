@@ -15,7 +15,6 @@ entity "tenants" as tenants {
   * id           : INT <<PK>>
   --
   * name         : VARCHAR(200)
-  operator_id    : INT <<FK>>
   * created_at   : DATETIME
 }
 
@@ -32,15 +31,24 @@ entity "users" as users {
   * created_at    : DATETIME
 }
 
+entity "user_permissions" as permissions {
+  * id           : INT <<PK>>
+  --
+  * user_id      : INT <<FK>>
+  * tenant_id    : INT <<FK>>
+  * permission   : VARCHAR(64)
+}
+
 entity "tenant_invitations" as invitations {
   * id              : INT <<PK>>
   --
-  * invitation_code : VARCHAR <<UQ>>
+  * invitation_code : VARCHAR(64) <<UQ>>
   * tenant_id       : INT <<FK>>
   * is_used         : BOOLEAN
   used_at           : DATETIME
   used_by_user_id   : BIGINT
   expires_at        : DATETIME
+  email             : VARCHAR(255)
   * created_at      : DATETIME
 }
 
@@ -51,7 +59,8 @@ entity "templates" as templates {
   * subject             : VARCHAR(500)
   * email_html          : TEXT
   * landing_page_html   : TEXT
-  redirect_url          : VARCHAR
+  redirect_url          : VARCHAR(500)
+  tenant_id             : INT <<FK>>
   created_by_user_id    : INT <<FK>>
   * created_at          : DATETIME
 }
@@ -78,22 +87,25 @@ entity "campaigns" as campaigns {
   * created_at          : DATETIME
   launched_at           : DATETIME
   stopped_at            : DATETIME
+  scheduled_start_at    : DATETIME
+  scheduled_end_at      : DATETIME
 }
 
 entity "campaign_results" as results {
   * id              : INT <<PK>>
   --
   * campaign_id     : INT <<FK>>
-  * email           : VARCHAR
-  * first_name      : VARCHAR
-  * last_name       : VARCHAR
-  position          : VARCHAR
+  * email           : VARCHAR(255)
+  * first_name      : VARCHAR(100)
+  * last_name       : VARCHAR(100)
+  position          : VARCHAR(100)
   * tracking_token  : VARCHAR(36) <<UQ>>
   * status          : VARCHAR(50)
   sent_at           : DATETIME
   opened_at         : DATETIME
   clicked_at        : DATETIME
   submitted_at      : DATETIME
+  reported_at       : DATETIME
 }
 
 entity "campaign_stats" as stats {
@@ -113,7 +125,7 @@ entity "audit_logs" as audit {
   user_id          : INT <<FK>>
   * tenant_id      : INT <<FK>>
   * action         : VARCHAR(100)
-  * resource_type  : VARCHAR(100)
+  resource_type    : VARCHAR(100)
   resource_id      : VARCHAR(100)
   details          : JSON
   ip_address       : VARCHAR(45)
@@ -123,15 +135,16 @@ entity "audit_logs" as audit {
 ' ── RELATIONS ──────────────────────────────────────────────────────────────────
 
 tenants         ||--o{  users        : "CASCADE"
+tenants         ||--o{  permissions  : "CASCADE"
 tenants         |o--o{  invitations  : "CASCADE"
 tenants         |o--o{  targets      : "CASCADE"
 tenants         ||--o{  campaigns    : "CASCADE"
 tenants         ||--o{  audit        : "CASCADE"
 
+users           ||--o{  permissions  : "CASCADE"
 users           |o--o{  campaigns    : "created_by (RESTRICT)"
 users           |o--o{  templates    : "created_by (RESTRICT)"
 users           |o--o{  audit        : "SET NULL"
-users           |o--||  tenants      : "operator_id (SET NULL)"
 
 templates       |o--o{  campaigns    : "RESTRICT"
 

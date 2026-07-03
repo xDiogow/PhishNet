@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify, current_app
+from flask_jwt_extended import jwt_required
 from app.services.tenant_service import create_tenant, get_tenant_by_id, get_all_tenants
-from app.utils.auth_helper import admin_required
+from app.utils.auth_helper import get_current_user
 from app.repository.tenant_repository import TenantRepository
 from app.repository.user_repository import UserRepository
 
@@ -17,9 +18,14 @@ def tenant_to_dict(tenant):
 
 
 @bp.route('', methods=['POST'])
-@admin_required
+@jwt_required()
 def create_tenant_route():
     """Create a new tenant with an initial invitation."""
+    user = get_current_user()
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+    if not user.is_admin:
+        return jsonify({'error': 'Admin access required'}), 403
     try:
         data = request.get_json()
 
@@ -60,13 +66,18 @@ def create_tenant_route():
 
     except Exception as e:
         current_app.logger.exception('Error creating tenant')
-        return jsonify({'error': 'Failed to create tenant', 'message': str(e)}), 500
+        return jsonify({'error': 'Failed to create tenant'}), 500
 
 
 @bp.route('', methods=['GET'])
-@admin_required
+@jwt_required()
 def get_all_tenants_route():
     """Get all tenants."""
+    user = get_current_user()
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+    if not user.is_admin:
+        return jsonify({'error': 'Admin access required'}), 403
     try:
         tenants = get_all_tenants()
         return jsonify({
@@ -74,13 +85,18 @@ def get_all_tenants_route():
         }), 200
     except Exception as e:
         current_app.logger.exception('Error getting all tenants')
-        return jsonify({'error': 'Failed to get tenants', 'message': str(e)}), 500
+        return jsonify({'error': 'Failed to get tenants'}), 500
 
 
 @bp.route('/<int:tenant_id>', methods=['GET'])
-@admin_required
+@jwt_required()
 def get_tenant_route(tenant_id):
     """Get a specific tenant by ID."""
+    user = get_current_user()
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+    if not user.is_admin:
+        return jsonify({'error': 'Admin access required'}), 403
     try:
         tenant = get_tenant_by_id(tenant_id)
         if not tenant:
@@ -89,13 +105,18 @@ def get_tenant_route(tenant_id):
         return jsonify(tenant_to_dict(tenant)), 200
     except Exception as e:
         current_app.logger.exception('Error getting tenant')
-        return jsonify({'error': 'Failed to get tenant', 'message': str(e)}), 500
+        return jsonify({'error': 'Failed to get tenant'}), 500
 
 
 @bp.route('/<int:tenant_id>', methods=['PUT'])
-@admin_required
+@jwt_required()
 def update_tenant_route(tenant_id):
     """Update a tenant."""
+    user = get_current_user()
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+    if not user.is_admin:
+        return jsonify({'error': 'Admin access required'}), 403
     try:
         data = request.get_json()
 
@@ -137,16 +158,21 @@ def update_tenant_route(tenant_id):
 
     except ValueError as e:
         current_app.logger.error(f'Validation error updating tenant: {e}')
-        return jsonify({'error': 'Invalid tenant data', 'message': str(e)}), 400
+        return jsonify({'error': 'Invalid tenant data'}), 400
     except Exception as e:
         current_app.logger.exception('Error updating tenant')
-        return jsonify({'error': 'Failed to update tenant', 'message': str(e)}), 500
+        return jsonify({'error': 'Failed to update tenant'}), 500
 
 
 @bp.route('/<int:tenant_id>', methods=['DELETE'])
-@admin_required
+@jwt_required()
 def delete_tenant_route(tenant_id):
     """Delete a tenant."""
+    user = get_current_user()
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+    if not user.is_admin:
+        return jsonify({'error': 'Admin access required'}), 403
     try:
         tenant_repo = TenantRepository()
         tenant = tenant_repo.get_by_id(tenant_id)
@@ -175,7 +201,7 @@ def delete_tenant_route(tenant_id):
         }), 200
 
     except ValueError as e:
-        return jsonify({'error': 'Invalid tenant ID', 'message': str(e)}), 400
+        return jsonify({'error': 'Invalid tenant ID'}), 400
     except Exception as e:
         current_app.logger.exception('Error deleting tenant')
-        return jsonify({'error': 'Failed to delete tenant', 'message': str(e)}), 500
+        return jsonify({'error': 'Failed to delete tenant'}), 500

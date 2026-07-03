@@ -19,32 +19,32 @@ import {
 export default function LandingPage() {
   const features = [
     {
-      icon: Target,
+      iconElement: <Target aria-hidden="true" className="h-6 w-6" />,
       title: 'Realistic Simulations',
       description: 'Create authentic phishing campaigns that mirror real-world threats to test your team\'s awareness.'
     },
     {
-      icon: Users,
+      iconElement: <Users aria-hidden="true" className="h-6 w-6" />,
       title: 'Team Management',
       description: 'Organize and track multiple teams across your organization with granular control and reporting.'
     },
     {
-      icon: BarChart3,
+      iconElement: <BarChart3 aria-hidden="true" className="h-6 w-6" />,
       title: 'Advanced Analytics',
       description: 'Gain deep insights with comprehensive reporting and metrics to measure security awareness.'
     },
     {
-      icon: FileText,
+      iconElement: <FileText aria-hidden="true" className="h-6 w-6" />,
       title: 'Template Library',
       description: 'Access a growing library of pre-built templates or create custom phishing scenarios.'
     },
     {
-      icon: Zap,
+      iconElement: <Zap aria-hidden="true" className="h-6 w-6" />,
       title: 'Automated Campaigns',
       description: 'Schedule and automate phishing simulations to continuously test and train your workforce.'
     },
     {
-      icon: Lock,
+      iconElement: <Lock aria-hidden="true" className="h-6 w-6" />,
       title: 'Enterprise Security',
       description: 'Bank-level security with encryption, multi-tenancy, and compliance-ready infrastructure.'
     }
@@ -115,22 +115,22 @@ export default function LandingPage() {
 
   const values = [
     {
-      icon: Shield,
+      iconElement: <Shield aria-hidden="true" className="h-6 w-6" />,
       title: 'Security First',
       description: 'Every feature is built with security at its core. We protect your data with bank-level encryption and compliance-ready infrastructure.'
     },
     {
-      icon: Users,
+      iconElement: <Users aria-hidden="true" className="h-6 w-6" />,
       title: 'People-Centered',
       description: 'We believe the human element is your greatest defense. Our platform empowers every employee to become a security asset.'
     },
     {
-      icon: TrendingUp,
+      iconElement: <TrendingUp aria-hidden="true" className="h-6 w-6" />,
       title: 'Continuous Improvement',
       description: 'Cyber threats evolve daily. Our platform evolves with them, constantly delivering new templates and threat intelligence.'
     },
     {
-      icon: Globe,
+      iconElement: <Globe aria-hidden="true" className="h-6 w-6" />,
       title: 'Global Reach',
       description: 'Trusted by organizations across the globe, PhishNet supports multi-language campaigns and international compliance standards.'
     }
@@ -244,7 +244,7 @@ export default function LandingPage() {
                 <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-blue-500/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <div className="relative">
                   <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-cyan-500/10 text-cyan-400 mb-4 group-hover:scale-110 transition-transform">
-                    <feature.icon aria-hidden="true" className="h-6 w-6" />
+                    {feature.iconElement}
                   </div>
                   <h3 className="text-xl font-semibold text-white mb-3">
                     {feature.title}
@@ -385,7 +385,7 @@ export default function LandingPage() {
                 <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-blue-500/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <div className="relative">
                   <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-cyan-500/10 text-cyan-400 mb-4 group-hover:scale-110 transition-transform">
-                    <value.icon aria-hidden="true" className="h-6 w-6" />
+                    {value.iconElement}
                   </div>
                   <h3 className="text-xl font-semibold text-white mb-3">{value.title}</h3>
                   <p className="text-gray-400 leading-relaxed">{value.description}</p>

@@ -1,40 +1,51 @@
-import apiClient from './api';
+import { apiRequest } from '../config/api'
 
-/**
- * Audit Log API Service
- */
+export const getAuditLogs = async (params = {}) => {
+    const query = new URLSearchParams()
+    if (params.page !== undefined) query.append('page', params.page)
+    if (params.per_page !== undefined) query.append('per_page', params.per_page)
+    if (params.action !== undefined) query.append('action', params.action)
+    const queryString = query.toString()
+
+    let url = '/audit-logs'
+    if (queryString) {
+        url = `/audit-logs?${queryString}`
+    }
+    return apiRequest(url)
+}
+
+export const exportAuditLogs = async (params = {}) => {
+    const API_URL = import.meta.env.VITE_API_URL || '/api'
+    const query = new URLSearchParams()
+    if (params.action !== undefined) query.append('action', params.action)
+    const queryString = query.toString()
+
+    let url = `${API_URL}/audit-logs/export`
+    if (queryString) {
+        url = `${API_URL}/audit-logs/export?${queryString}`
+    }
+
+    const response = await fetch(url, { credentials: 'include' })
+    if (!response.ok) throw new Error('Export failed')
+
+    // ISO format is "YYYY-MM-DDTHH:MM:SS.mmmZ" — split('T')[0] gives just the date part
+    const todayIso = new Date().toISOString()
+    const todayDate = todayIso.split('T')[0]
+
+    // Trigger a file download in the browser without navigating away from the page
+    const blob = await response.blob()
+    const link = document.createElement('a')
+    link.href = URL.createObjectURL(blob)
+    link.setAttribute('download', `audit_logs_${todayDate}.csv`)
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    URL.revokeObjectURL(link.href)
+}
+
 export const auditLogAPI = {
-  /**
-   * Get audit logs with pagination and filtering
-   * @param {Object} params - Query parameters (page, per_page, user_id, action, resource_type)
-   */
-  getLogs: async (params = {}) => {
-    const response = await apiClient.get('/api/audit-logs', { params });
-    return response.data;
-  },
+    getLogs: getAuditLogs,
+    exportLogs: exportAuditLogs,
+}
 
-  /**
-   * Export audit logs as CSV
-   * @param {Object} params - Query parameters (user_id, action, resource_type)
-   */
-  exportLogs: async (params = {}) => {
-    const response = await apiClient.get('/api/audit-logs/export', {
-      params,
-      responseType: 'blob'
-    });
-
-    // Create a link to download the file
-    const url = window.URL.createObjectURL(new Blob([response.data]));
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `audit_logs_${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    window.URL.revokeObjectURL(url);
-
-    return response.data;
-  },
-};
-
-export default auditLogAPI;
+export default auditLogAPI

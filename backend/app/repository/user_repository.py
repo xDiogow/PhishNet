@@ -2,7 +2,7 @@ from app.repository.base_repository import BaseRepository
 from app.models.user import User
 
 
-class UserRepository(BaseRepository[User]):
+class UserRepository(BaseRepository):
     """Repository for User model."""
 
     def __init__(self):
@@ -17,5 +17,5 @@ class UserRepository(BaseRepository[User]):
         """Get all users by tenant_id."""
         query = self.session.query(self.model).filter(self.model.tenant_id == tenant_id)
         if active_only:
-            query = query.filter(self.model.is_active.is_(True))
+            query = query.filter(self.model.is_active == True)
         return query.all()

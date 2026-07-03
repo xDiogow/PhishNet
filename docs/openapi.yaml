@@ -1,0 +1,1461 @@
+openapi: "3.0.3"
+info:
+  title: PhishNet API
+  description: |
+    API REST de PhishNet — plateforme B2B de simulation de phishing.
+    **Authentification :** cookie HttpOnly `access_token_cookie` positionné par le serveur
+    via Flask-JWT-Extended 4.7.1. Le frontend envoie `credentials: 'include'` à chaque requête.
+  version: "1.0.0"
+  contact:
+    name: Diogo Miguel Gomes Lopes
+    email: diogomiguelgl@gmail.com
+
+servers:
+  - url: http://localhost:5000
+    description: Développement local
+
+tags:
+  - name: Auth
+    description: Authentification et session
+  - name: Campaigns
+    description: Gestion des campagnes de phishing simulé
+  - name: Templates
+    description: Templates email + landing page
+  - name: Team
+    description: Membres d'équipe et cibles
+  - name: Tenants
+    description: Gestion des tenants (super-admin uniquement)
+  - name: Invitations
+    description: Codes d'invitation
+  - name: Audit Logs
+    description: Journal d'audit immuable
+  - name: Tracking
+    description: Routes publiques de tracking (sans authentification)
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: access_token_cookie
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+          format: email
+        first_name:
+          type: string
+        last_name:
+          type: string
+        tenant_id:
+          type: integer
+        is_admin:
+          type: boolean
+        permissions:
+          type: array
+          items:
+            type: string
+            enum: [manage_campaigns, manage_templates, manage_targets, manage_team]
+
+    Campaign:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        status:
+          type: string
+          enum: [DRAFT, RUNNING, SCHEDULED, STOPPED]
+        tenant_id:
+          type: integer
+        template_id:
+          type: integer
+        created_by_user_id:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        launched_at:
+          type: string
+          format: date-time
+          nullable: true
+        stopped_at:
+          type: string
+          format: date-time
+          nullable: true
+        scheduled_start_at:
+          type: string
+          format: date-time
+          nullable: true
+        scheduled_end_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    CampaignResult:
+      type: object
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        first_name:
+          type: string
+        last_name:
+          type: string
+        status:
+          type: string
+        sent_at:
+          type: string
+          format: date-time
+          nullable: true
+        opened_at:
+          type: string
+          format: date-time
+          nullable: true
+        clicked_at:
+          type: string
+          format: date-time
+          nullable: true
+        submitted_at:
+          type: string
+          format: date-time
+          nullable: true
+        reported_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    CampaignStats:
+      type: object
+      properties:
+        total_targets:
+          type: integer
+        sent_count:
+          type: integer
+        opened_count:
+          type: integer
+        clicked_count:
+          type: integer
+        submitted_count:
+          type: integer
+        reported_count:
+          type: integer
+
+    Template:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        is_global:
+          type: boolean
+        tenant_id:
+          type: integer
+          nullable: true
+        created_by_user_id:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        email_template:
+          type: object
+          properties:
+            subject:
+              type: string
+            html:
+              type: string
+        landing_page:
+          type: object
+          properties:
+            html:
+              type: string
+
+    Target:
+      type: object
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+          format: email
+        first_name:
+          type: string
+        last_name:
+          type: string
+        position:
+          type: string
+          nullable: true
+        tenant_id:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+
+    TeamMember:
+      type: object
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+          format: email
+        first_name:
+          type: string
+        last_name:
+          type: string
+        is_admin:
+          type: boolean
+        is_active:
+          type: boolean
+        permissions:
+          type: array
+          items:
+            type: string
+        created_at:
+          type: string
+          format: date-time
+
+    Tenant:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    Invitation:
+      type: object
+      properties:
+        id:
+          type: integer
+        invitation_code:
+          type: string
+        tenant_id:
+          type: integer
+        is_used:
+          type: boolean
+        email:
+          type: string
+          format: email
+          nullable: true
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    AuditLog:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+          nullable: true
+        user_email:
+          type: string
+        user_name:
+          type: string
+        action:
+          type: string
+        resource_type:
+          type: string
+        resource_id:
+          type: string
+        details:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+  responses:
+    Unauthorized:
+      description: Token JWT absent, expiré ou révoqué
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "Missing Authorization Header"
+    Forbidden:
+      description: Permission insuffisante
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "Permission denied"
+    NotFound:
+      description: Ressource non trouvée (ou appartient à un autre tenant)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "Campaign not found"
+    RateLimit:
+      description: Trop de requêtes
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "Too Many Requests"
+
+security:
+  - cookieAuth: []
+
+paths:
+
+  # ── AUTH ────────────────────────────────────────────────────────────────────
+
+  /api/auth/login:
+    post:
+      tags: [Auth]
+      summary: Authentification
+      description: |
+        Vérifie les credentials, crée un JWT et le pose dans un cookie HttpOnly
+        via `Set-Cookie: access_token_cookie=<JWT>; HttpOnly; SameSite=Lax`.
+        Rate limit : 5 req/min par IP.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: operator@acme.com
+                password:
+                  type: string
+                  format: password
+                  example: "S3cur3P@ss"
+      responses:
+        "200":
+          description: Authentification réussie
+          headers:
+            Set-Cookie:
+              description: "access_token_cookie=<JWT>; HttpOnly; SameSite=Lax"
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Login successful"
+                  user:
+                    $ref: '#/components/schemas/User'
+        "400":
+          description: Champs manquants
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Missing required fields"
+                required: [email, password]
+        "401":
+          description: Credentials invalides
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Invalid credentials"
+        "403":
+          description: Compte inactif
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "User account is inactive"
+        "429":
+          $ref: '#/components/responses/RateLimit'
+
+  /api/auth/register:
+    post:
+      tags: [Auth]
+      summary: Inscription via code d'invitation
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, first_name, last_name, password, invitation_code]
+              properties:
+                email:
+                  type: string
+                  format: email
+                first_name:
+                  type: string
+                last_name:
+                  type: string
+                password:
+                  type: string
+                  format: password
+                invitation_code:
+                  type: string
+      responses:
+        "201":
+          description: Utilisateur créé et connecté
+          headers:
+            Set-Cookie:
+              description: "access_token_cookie=<JWT>; HttpOnly"
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/User'
+        "400":
+          description: Champs manquants ou code d'invitation invalide
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "409":
+          description: Email déjà utilisé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "User with this email already exists"
+
+  /api/auth/logout:
+    post:
+      tags: [Auth]
+      summary: Déconnexion — révoque le cookie JWT
+      responses:
+        "200":
+          description: Déconnecté
+          headers:
+            Set-Cookie:
+              description: Cookie expiré (access_token_cookie= ; expires=...)
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Successfully logged out"
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/auth/me:
+    get:
+      tags: [Auth]
+      summary: Profil de l'utilisateur connecté
+      responses:
+        "200":
+          description: Profil courant
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+
+  # ── CAMPAIGNS ───────────────────────────────────────────────────────────────
+
+  /api/campaigns:
+    get:
+      tags: [Campaigns]
+      summary: Liste des campagnes du tenant courant
+      responses:
+        "200":
+          description: Liste des campagnes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  campaigns:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Campaign'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags: [Campaigns]
+      summary: Créer une campagne
+      description: |
+        Permission requise : `manage_campaigns`.
+
+        - Si `scheduled_start_at` est absent ou dans le passé → `status = RUNNING`, emails envoyés immédiatement.
+        - Si `scheduled_start_at` est dans le futur → `status = SCHEDULED`, emails envoyés par APScheduler à l'heure prévue.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, template_id]
+              properties:
+                name:
+                  type: string
+                  example: "Campagne RH — Juillet 2026"
+                template_id:
+                  type: integer
+                  example: 3
+                scheduled_start_at:
+                  type: string
+                  format: date-time
+                  nullable: true
+                  example: "2026-07-10T09:00:00Z"
+                scheduled_end_at:
+                  type: string
+                  format: date-time
+                  nullable: true
+                  example: "2026-07-17T18:00:00Z"
+                target_ids:
+                  type: array
+                  items:
+                    type: integer
+                  example: [1, 2, 3]
+      responses:
+        "201":
+          description: Campagne créée
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                  campaign:
+                    $ref: '#/components/schemas/Campaign'
+        "400":
+          description: Champs manquants ou format de date invalide
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          description: Template non trouvé ou non accessible
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Template not found or not accessible"
+
+  /api/campaigns/{id}:
+    get:
+      tags: [Campaigns]
+      summary: Détail d'une campagne
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Campagne
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Campaign'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [Campaigns]
+      summary: Supprimer une campagne
+      description: Permission requise — `manage_campaigns`.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Campagne supprimée
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+  /api/campaigns/{id}/summary:
+    get:
+      tags: [Campaigns]
+      summary: Statistiques et résultats individuels d'une campagne
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Stats pré-agrégées + résultats par cible
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  stats:
+                    $ref: '#/components/schemas/CampaignStats'
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CampaignResult'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+  /api/campaigns/{id}/complete:
+    post:
+      tags: [Campaigns]
+      summary: Arrêter une campagne (statut → STOPPED)
+      description: Permission requise — `manage_campaigns`.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Campagne arrêtée
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+                  campaign:
+                    $ref: '#/components/schemas/Campaign'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+  # ── TEMPLATES ───────────────────────────────────────────────────────────────
+
+  /api/templates:
+    get:
+      tags: [Templates]
+      summary: Liste des templates accessibles (globaux + tenant courant)
+      responses:
+        "200":
+          description: Liste des templates
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  templates:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Template'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags: [Templates]
+      summary: Créer un template
+      description: |
+        Permission requise : `manage_templates` (template tenant) ou `is_admin` (template global).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email_template_data, landing_page_data]
+              properties:
+                name:
+                  type: string
+                email_template_data:
+                  type: object
+                  required: [subject, html]
+                  properties:
+                    subject:
+                      type: string
+                    html:
+                      type: string
+                landing_page_data:
+                  type: object
+                  required: [html]
+                  properties:
+                    html:
+                      type: string
+      responses:
+        "201":
+          description: Template créé
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  template:
+                    $ref: '#/components/schemas/Template'
+        "400":
+          description: Champs manquants
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+
+  /api/templates/{id}:
+    put:
+      tags: [Templates]
+      summary: Modifier un template
+      description: Bloqué si une campagne `RUNNING` utilise ce template.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                email_template_data:
+                  type: object
+                  properties:
+                    subject:
+                      type: string
+                    html:
+                      type: string
+                landing_page_data:
+                  type: object
+                  properties:
+                    html:
+                      type: string
+      responses:
+        "200":
+          description: Template modifié
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  template:
+                    $ref: '#/components/schemas/Template'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "409":
+          description: Template utilisé par une campagne active
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Template is in use by a running campaign"
+
+    delete:
+      tags: [Templates]
+      summary: Supprimer un template
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Template supprimé
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "409":
+          description: Template utilisé par une campagne active
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # ── TEAM ────────────────────────────────────────────────────────────────────
+
+  /api/team:
+    get:
+      tags: [Team]
+      summary: Liste des membres de l'équipe du tenant courant
+      responses:
+        "200":
+          description: Membres de l'équipe
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  team_members:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TeamMember'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/team/{member_id}/permissions:
+    put:
+      tags: [Team]
+      summary: Mettre à jour les permissions d'un membre
+      description: Permission requise — `manage_team`.
+      parameters:
+        - name: member_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [permissions]
+              properties:
+                permissions:
+                  type: array
+                  items:
+                    type: string
+                    enum: [manage_campaigns, manage_templates, manage_targets, manage_team]
+      responses:
+        "200":
+          description: Permissions mises à jour
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  user_id:
+                    type: integer
+                  permissions:
+                    type: array
+                    items:
+                      type: string
+        "403":
+          $ref: '#/components/responses/Forbidden'
+
+  /api/team/targets:
+    get:
+      tags: [Team]
+      summary: Liste des cibles du tenant courant
+      responses:
+        "200":
+          description: Cibles
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  targets:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Target'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags: [Team]
+      summary: Ajouter une cible
+      description: Permission requise — `manage_targets`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, first_name, last_name]
+              properties:
+                email:
+                  type: string
+                  format: email
+                first_name:
+                  type: string
+                last_name:
+                  type: string
+                position:
+                  type: string
+                  nullable: true
+      responses:
+        "201":
+          description: Cible créée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Target'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "409":
+          description: Email déjà enregistré comme cible
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Target already exists"
+
+  /api/team/targets/{id}:
+    delete:
+      tags: [Team]
+      summary: Supprimer une cible (historique campagne conservé)
+      description: Permission requise — `manage_targets`.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Cible supprimée
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+  /api/team/targets/{id}/gdpr:
+    delete:
+      tags: [Team]
+      summary: Effacement RGPD (Art. 17) — anonymise le PII puis supprime la cible
+      description: |
+        Permission requise — `manage_targets`.
+        Anonymise `email`, `first_name`, `last_name` dans tous les `campaign_results` associés,
+        puis supprime la cible. L'historique agrégé reste intact.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Cible effacée et historique anonymisé
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  anonymized_results:
+                    type: integer
+                    description: Nombre de campaign_results anonymisés
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+  # ── TENANTS ─────────────────────────────────────────────────────────────────
+
+  /api/tenants:
+    get:
+      tags: [Tenants]
+      summary: Liste tous les tenants (super-admin uniquement)
+      responses:
+        "200":
+          description: Liste des tenants
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tenants:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Tenant'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+
+    post:
+      tags: [Tenants]
+      summary: Créer un tenant (super-admin uniquement)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                invitation_expires_days:
+                  type: integer
+                  default: 7
+      responses:
+        "201":
+          description: Tenant créé avec code d'invitation initial
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tenant:
+                    $ref: '#/components/schemas/Tenant'
+                  invitation:
+                    $ref: '#/components/schemas/Invitation'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+
+  /api/tenants/{id}:
+    put:
+      tags: [Tenants]
+      summary: Renommer un tenant
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+      responses:
+        "200":
+          description: Tenant modifié
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  tenant:
+                    $ref: '#/components/schemas/Tenant'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [Tenants]
+      summary: Supprimer un tenant (bloqué si des utilisateurs existent)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Tenant supprimé
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+        "400":
+          description: Impossible de supprimer un tenant avec des utilisateurs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Cannot delete tenant with associated users"
+        "403":
+          $ref: '#/components/responses/Forbidden'
+
+  # ── INVITATIONS ─────────────────────────────────────────────────────────────
+
+  /api/tenant-invitations:
+    post:
+      tags: [Invitations]
+      summary: Générer un code d'invitation
+      description: |
+        Permission requise — `manage_team`.
+        Si `email` est fourni, un email SMTP est envoyé avec le code d'invitation.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tenant_id]
+              properties:
+                tenant_id:
+                  type: integer
+                expires_days:
+                  type: integer
+                  default: 7
+                email:
+                  type: string
+                  format: email
+                  nullable: true
+      responses:
+        "201":
+          description: Invitation créée
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  email_sent:
+                    type: boolean
+                  invitation:
+                    $ref: '#/components/schemas/Invitation'
+        "400":
+          description: Champ requis manquant
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+
+  /api/tenant-invitations/validate:
+    post:
+      tags: [Invitations]
+      summary: Valider un code d'invitation
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [invitation_code]
+              properties:
+                invitation_code:
+                  type: string
+      responses:
+        "200":
+          description: Code valide
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  valid:
+                    type: boolean
+                  invitation:
+                    $ref: '#/components/schemas/Invitation'
+        "400":
+          description: Code invalide ou expiré
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/tenant-invitations/{code}:
+    get:
+      tags: [Invitations]
+      summary: Récupérer une invitation par son code
+      security: []
+      parameters:
+        - name: code
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Invitation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invitation'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+  # ── AUDIT LOGS ──────────────────────────────────────────────────────────────
+
+  /api/audit-logs:
+    get:
+      tags: [Audit Logs]
+      summary: Journal d'audit paginé (admin uniquement)
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: user_id
+          in: query
+          schema:
+            type: integer
+        - name: action
+          in: query
+          schema:
+            type: string
+        - name: resource_type
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Logs paginés
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  logs:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AuditLog'
+                  total:
+                    type: integer
+                  page:
+                    type: integer
+                  per_page:
+                    type: integer
+                  total_pages:
+                    type: integer
+        "403":
+          $ref: '#/components/responses/Forbidden'
+
+  /api/audit-logs/export:
+    get:
+      tags: [Audit Logs]
+      summary: Exporter les logs en CSV
+      responses:
+        "200":
+          description: Fichier CSV
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+                example: "attachment; filename=audit_logs.csv"
+          content:
+            text/csv:
+              schema:
+                type: string
+        "403":
+          $ref: '#/components/responses/Forbidden'
+
+  # ── TRACKING (public) ───────────────────────────────────────────────────────
+
+  /px/{token}:
+    get:
+      tags: [Tracking]
+      summary: Pixel de tracking d'ouverture (GIF 1×1 transparent)
+      description: |
+        Route publique — aucune authentification requise.
+        Enregistre `opened_at` et `status = 'Opened'` (idempotent).
+        Rate limit : 100 req/min.
+        Retourne toujours le GIF même si le token est invalide (privacy by design).
+      security: []
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: GIF 1×1 transparent
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                example: "no-store, no-cache"
+          content:
+            image/gif:
+              schema:
+                type: string
+                format: binary
+
+  /r/{token}:
+    get:
+      tags: [Tracking]
+      summary: Tracking de clic — redirige vers la landing page
+      description: |
+        Route publique. Enregistre `clicked_at` et `status = 'Clicked'` (idempotent).
+        Rate limit : 50 req/min.
+      security: []
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "302":
+          description: Redirection vers /secure/{token}
+          headers:
+            Location:
+              schema:
+                type: string
+                example: "/secure/abc123"
+
+  /secure/{token}:
+    get:
+      tags: [Tracking]
+      summary: Landing page personnalisée
+      description: |
+        Route publique. Sert le HTML de la landing page avec les données de la cible
+        ({{.FirstName}}, {{.Email}}, etc.) et injecte `{{FORM_ACTION}} = /secure/<token>`.
+      security: []
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Landing page HTML
+          content:
+            text/html:
+              schema:
+                type: string
+
+    post:
+      tags: [Tracking]
+      summary: Soumission de credentials sur la landing page
+      description: |
+        Route publique. Enregistre `submitted_at` et `status = 'Submitted Data'` (idempotent).
+        **Aucun credential n'est stocké** (privacy by design, RGPD).
+        Rate limit : 5 req/heure/IP.
+      security: []
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              description: Credentials saisis par la cible (non stockés)
+      responses:
+        "302":
+          description: Redirection vers la page pédagogique
+          headers:
+            Location:
+              schema:
+                type: string
+                example: "http://app/caught"
+
+  /report/{token}:
+    get:
+      tags: [Tracking]
+      summary: Signalement de phishing par la cible
+      description: |
+        Route publique. Enregistre `reported_at` et `status = 'Reported'` (idempotent).
+        Rate limit : 10 req/heure/IP.
+      security: []
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "302":
+          description: Redirection vers la page pédagogique (avec ?reported=true)
+          headers:
+            Location:
+              schema:
+                type: string
+                example: "http://app/caught?reported=true"

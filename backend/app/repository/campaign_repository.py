@@ -4,7 +4,7 @@ from app.models.campaign import CampaignStatus, Campaign
 from app.repository.base_repository import BaseRepository
 
 
-class CampaignRepository(BaseRepository[Campaign]):
+class CampaignRepository(BaseRepository):
     def __init__(self):
         super().__init__(Campaign)
 
@@ -17,9 +17,10 @@ class CampaignRepository(BaseRepository[Campaign]):
         campaign = self.get_by_id(campaign_id)
         if not campaign:
             raise ValueError(f"Campaign {campaign_id} not found")
-        update_data = {"status": status}
+        campaign.status = status
         if status == CampaignStatus.RUNNING:
-            update_data["launched_at"] = datetime.datetime.now(datetime.timezone.utc)
+            campaign.launched_at = datetime.datetime.now(datetime.timezone.utc)
         elif status == CampaignStatus.STOPPED:
-            update_data["stopped_at"] = datetime.datetime.now(datetime.timezone.utc)
-        return self.update_by_id(campaign_id, **update_data)
+            campaign.stopped_at = datetime.datetime.now(datetime.timezone.utc)
+        self.session.commit()
+        return campaign

@@ -31,6 +31,11 @@ function getStatusColor(status) {
   }
 }
 
+function toPercent(count, total) {
+  if (total === 0) return 0
+  return ((count / total) * 100).toFixed(0)
+}
+
 function getStatusLabel(status) {
   switch (status) {
     case 'running':
@@ -60,29 +65,23 @@ export default function Campaigns() {
     const fetchData = async () => {
       try {
         setLoading(true)
-        const [campaignsData, templatesData] = await Promise.all([
-          getCampaigns(),
-          getTemplates()
-        ])
+        const campaignsData = await getCampaigns()
+        const templatesData = await getTemplates()
         
         setCampaigns(campaignsData || [])
         setTemplates(templatesData || [])
 
-        // Fetch summaries for all campaigns to calculate stats
-        const summaries = await Promise.allSettled(
-          campaignsData.map(async (campaign) => {
-            const data = await getCampaignSummary(campaign.id);
-            return {
-              ...(data.summary || data),
-              campaign_id: campaign.id // Ensure ID is present for matching
-            };
-          })
-        )
-
-        const stats = summaries
-          .filter(result => result.status === 'fulfilled')
-          .map(result => result.value)
-
+        const stats = []
+        for (const campaign of (campaignsData || [])) {
+          try {
+            const data = await getCampaignSummary(campaign.id)
+            const summary = data.summary || data
+            summary.campaign_id = campaign.id
+            stats.push(summary)
+          } catch (err) {
+            // ignore campaigns whose summary failed to load
+          }
+        }
         setCampaignStats(stats)
       } catch (error) {
         console.error('Error fetching campaigns:', error)
@@ -102,7 +101,8 @@ export default function Campaigns() {
   const getTemplateName = (templateId) => {
     if (!templateId) return 'N/A'
     const template = templates.find(t => t.id === templateId)
-    return template?.name || 'Unknown'
+    if (!template) return 'Unknown'
+    return template.name
   }
 
   // Get campaign stats
@@ -234,9 +234,18 @@ export default function Campaigns() {
                   const clicked = stats.clicked || 0
                   const submitted = stats.submitted_data || 0
 
-                  const openedPercent = recipients > 0 ? ((opened / recipients) * 100).toFixed(0) : 0
-                  const clickedPercent = recipients > 0 ? ((clicked / recipients) * 100).toFixed(0) : 0
-                  const submittedPercent = recipients > 0 ? ((submitted / recipients) * 100).toFixed(0) : 0
+                  const openedPercent = toPercent(opened, recipients)
+                  const clickedPercent = toPercent(clicked, recipients)
+                  const submittedPercent = toPercent(submitted, recipients)
+
+                  let startDate
+                  if (campaign.status === 'scheduled') {
+                    startDate = campaign.scheduled_start_at
+                  } else if (campaign.launched_at) {
+                    startDate = campaign.launched_at
+                  } else {
+                    startDate = campaign.created_at
+                  }
 
                   return (
                     <tr key={campaign.id} className="hover:bg-gray-50">
@@ -279,9 +288,7 @@ export default function Campaigns() {
                       <td className="hidden sm:table-cell px-4 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-1 text-sm text-gray-900">
                           <Calendar aria-hidden="true" className="w-4 h-4 text-gray-400" />
-                          {campaign.status === 'scheduled'
-                            ? formatDateShort(campaign.scheduled_start_at)
-                            : formatDateShort(campaign.launched_at || campaign.created_at)}
+                          {formatDateShort(startDate)}
                         </div>
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">

@@ -2,7 +2,7 @@ from app.repository.base_repository import BaseRepository
 from app.models.tenant import Tenant
 
 
-class TenantRepository(BaseRepository[Tenant]):
+class TenantRepository(BaseRepository):
     """Repository for Tenant model."""
 
     def __init__(self):

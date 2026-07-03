@@ -18,6 +18,22 @@ import Button from '../../components/Button'
 import { getCampaign, getCampaignSummary } from '../../services/campaignsService'
 import { formatDate } from '../../utils/dateUtils'
 
+function capitalizeFirst(text) {
+  if (!text) return ''
+  return text.charAt(0).toUpperCase() + text.slice(1)
+}
+
+function getResultStatusColor(status) {
+  if (status === 'Submitted Data') return 'bg-red-100 text-red-800'
+  if (status === 'Error') return 'bg-yellow-100 text-yellow-800'
+  return 'bg-green-100 text-green-800'
+}
+
+function ratePercent(count, total) {
+  if (total === 0) return '0.0'
+  return ((count / total) * 100).toFixed(1)
+}
+
 export default function ViewCampaign() {
   const { id } = useParams()
   const [campaign, setCampaign] = useState(null)
@@ -62,7 +78,8 @@ export default function ViewCampaign() {
   }, [id])
 
   const getStatusColor = (status) => {
-    switch (status?.toLowerCase()) {
+    const lowerStatus = status ? status.toLowerCase() : ''
+    switch (lowerStatus) {
       case 'running':
       case 'in progress':
         return 'bg-green-50 text-green-700 ring-green-600/20'
@@ -81,7 +98,8 @@ export default function ViewCampaign() {
   }
 
   const getStatusIcon = (status) => {
-    switch (status?.toLowerCase()) {
+    const lowerStatus = status ? status.toLowerCase() : ''
+    switch (lowerStatus) {
       case 'running':
       case 'in progress':
         return <Activity aria-hidden="true" className="h-4 w-4" />
@@ -144,7 +162,7 @@ export default function ViewCampaign() {
                 )}`}
               >
                 {getStatusIcon(campaign.status)}
-                {campaign.status?.charAt(0).toUpperCase() + campaign.status?.slice(1)}
+                {capitalizeFirst(campaign.status)}
               </span>
               <span className="text-sm text-gray-500">
                 ID: {campaign.id}
@@ -158,7 +176,7 @@ export default function ViewCampaign() {
       {!loadingSummary && summary && (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {/* Total Recipients */}
-          {typeof summary.total !== 'undefined' && (
+          {summary.total !== undefined && (
             <div className="rounded-lg bg-white p-6 shadow border border-gray-200">
               <div className="flex items-center justify-between">
                 <div>
@@ -173,7 +191,7 @@ export default function ViewCampaign() {
           )}
 
           {/* Emails Opened */}
-          {typeof summary.opened !== 'undefined' && (
+          {summary.opened !== undefined && (
             <div className="rounded-lg bg-white p-6 shadow border border-gray-200">
               <div className="flex items-center justify-between">
                 <div>
@@ -181,7 +199,7 @@ export default function ViewCampaign() {
                   <p className="mt-2 text-3xl font-bold text-green-600">{summary.opened}</p>
                   {summary.total > 0 && (
                     <p className="mt-1 text-sm text-gray-500">
-                      {((summary.opened / summary.total) * 100).toFixed(1)}% open rate
+                      {ratePercent(summary.opened, summary.total)}% open rate
                     </p>
                   )}
                 </div>
@@ -193,7 +211,7 @@ export default function ViewCampaign() {
           )}
 
           {/* Links Clicked */}
-          {typeof summary.clicked !== 'undefined' && (
+          {summary.clicked !== undefined && (
             <div className="rounded-lg bg-white p-6 shadow border border-gray-200">
               <div className="flex items-center justify-between">
                 <div>
@@ -201,7 +219,7 @@ export default function ViewCampaign() {
                   <p className="mt-2 text-3xl font-bold text-yellow-600">{summary.clicked}</p>
                   {summary.total > 0 && (
                     <p className="mt-1 text-sm text-gray-500">
-                      {((summary.clicked / summary.total) * 100).toFixed(1)}% click rate
+                      {ratePercent(summary.clicked, summary.total)}% click rate
                     </p>
                   )}
                 </div>
@@ -213,7 +231,7 @@ export default function ViewCampaign() {
           )}
 
           {/* Data Submitted */}
-          {typeof summary.submitted_data !== 'undefined' && (
+          {summary.submitted_data !== undefined && (
             <div className="rounded-lg bg-white p-6 shadow border border-gray-200">
               <div className="flex items-center justify-between">
                 <div>
@@ -221,7 +239,7 @@ export default function ViewCampaign() {
                   <p className="mt-2 text-3xl font-bold text-red-600">{summary.submitted_data}</p>
                   {summary.total > 0 && (
                     <p className="mt-1 text-sm text-gray-500">
-                      {((summary.submitted_data / summary.total) * 100).toFixed(1)}% submission rate
+                      {ratePercent(summary.submitted_data, summary.total)}% submission rate
                     </p>
                   )}
                 </div>
@@ -274,7 +292,7 @@ export default function ViewCampaign() {
                   )}`}
                 >
                   {getStatusIcon(campaign.status)}
-                  {campaign.status?.charAt(0).toUpperCase() + campaign.status?.slice(1)}
+                  {capitalizeFirst(campaign.status)}
                 </span>
               </dd>
             </div>
@@ -406,7 +424,7 @@ export default function ViewCampaign() {
             Detailed Statistics
           </h2>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {typeof summary.sent !== 'undefined' && (
+            {summary.sent !== undefined && (
               <div className="border-l-4 border-blue-500 pl-4">
                 <div className="flex items-center gap-2 mb-1">
                   <Send aria-hidden="true" className="h-4 w-4 text-blue-500" />
@@ -415,12 +433,12 @@ export default function ViewCampaign() {
                 <dd className="text-2xl font-bold text-gray-900">{summary.sent}</dd>
                 {summary.total > 0 && (
                   <dd className="text-xs text-gray-500 mt-1">
-                    {((summary.sent / summary.total) * 100).toFixed(1)}% delivery rate
+                    {ratePercent(summary.sent, summary.total)}% delivery rate
                   </dd>
                 )}
               </div>
             )}
-            {typeof summary.email_reported !== 'undefined' && (
+            {summary.email_reported !== undefined && (
               <div className="border-l-4 border-orange-500 pl-4">
                 <div className="flex items-center gap-2 mb-1">
                   <AlertTriangle aria-hidden="true" className="h-4 w-4 text-orange-500" />
@@ -429,12 +447,12 @@ export default function ViewCampaign() {
                 <dd className="text-2xl font-bold text-gray-900">{summary.email_reported}</dd>
                 {summary.total > 0 && (
                   <dd className="text-xs text-gray-500 mt-1">
-                    {((summary.email_reported / summary.total) * 100).toFixed(1)}% reported
+                    {ratePercent(summary.email_reported, summary.total)}% reported
                   </dd>
                 )}
               </div>
             )}
-            {typeof summary.error !== 'undefined' && (
+            {summary.error !== undefined && (
               <div className="border-l-4 border-red-500 pl-4">
                 <div className="flex items-center gap-2 mb-1">
                   <AlertTriangle aria-hidden="true" className="h-4 w-4 text-red-500" />
@@ -490,13 +508,7 @@ export default function ViewCampaign() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          result.status === 'Submitted Data'
-                            ? 'bg-red-100 text-red-800'
-                            : result.status === 'Error'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-green-100 text-green-800'
-                        }`}
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getResultStatusColor(result.status)}`}
                       >
                         {result.status}
                       </span>

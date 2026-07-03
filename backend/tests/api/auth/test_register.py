@@ -115,7 +115,7 @@ class TestRegister:
         assert response.status_code == 201
         data = response.get_json()
         assert data['message'] == 'User registered successfully'
-        assert 'access_token' in data
+        assert 'access_token_cookie' in response.headers.get('Set-Cookie', '')
         assert data['user']['email'] == register_data['email']
         assert data['user']['tenant_id'] == test_tenant.id
         assert data['user']['is_admin'] is False
@@ -142,7 +142,7 @@ class TestRegister:
 
         assert response.status_code == 400
         data = response.get_json()
-        assert 'Invalid invitation code' in data['message']
+        assert 'Invalid invitation code' in data['error']
 
     def test_register_expired_invitation(self, client, expired_invitation):
         """Test register with expired invitation is rejected"""
@@ -158,7 +158,7 @@ class TestRegister:
 
         assert response.status_code == 400
         data = response.get_json()
-        assert 'expired' in data['message']
+        assert 'expired' in data['error']
 
     def test_register_used_invitation(self, client, used_invitation):
         """Test register with already-used invitation is rejected"""
@@ -174,7 +174,7 @@ class TestRegister:
 
         assert response.status_code == 400
         data = response.get_json()
-        assert 'already been used' in data['message']
+        assert 'already been used' in data['error']
 
     def test_register_duplicate_email(self, client, valid_invitation, existing_user):
         """Test register with duplicate email is rejected"""

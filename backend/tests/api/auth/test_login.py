@@ -5,6 +5,8 @@ import pytest
 
 from app.extensions import bcrypt
 from app.models import User, Tenant
+from app.models.user_permission import ALL_PERMISSIONS
+from app.repository.user_permission_repository import UserPermissionRepository
 
 
 @pytest.fixture
@@ -33,9 +35,7 @@ def operator_user(db_session, test_tenant):
     db_session.add(user)
     db_session.commit()
     db_session.refresh(user)
-    # Set as operator
-    test_tenant.operator_id = user.id
-    db_session.commit()
+    UserPermissionRepository().grant_all(user.id, test_tenant.id, ALL_PERMISSIONS)
     return user
 
 
@@ -140,7 +140,7 @@ class TestLogin:
         assert response.status_code == 200
         data = response.get_json()
         assert data['message'] == 'Login successful'
-        assert 'access_token' in data
+        assert 'access_token_cookie' in response.headers.get('Set-Cookie', '')
         assert 'user' in data
         assert data['user']['email'] == regular_user.email
         assert data['user']['id'] == regular_user.id
@@ -149,10 +149,10 @@ class TestLogin:
         assert 'last_name' in data['user']
         assert 'tenant_id' in data['user']
         assert 'is_admin' in data['user']
-        assert 'is_operator' in data['user']
+        assert 'permissions' in data['user']
 
     def test_login_operator_flag(self, client, operator_user):
-        """Test that operator flag is set correctly on login"""
+        """Test that permissions list is returned correctly on login"""
         response = client.post('/api/auth/login', json={
             'email': operator_user.email,
             'password': 'operatorpassword123'
@@ -160,7 +160,7 @@ class TestLogin:
 
         assert response.status_code == 200
         data = response.get_json()
-        assert data['user']['is_operator'] is True
+        assert 'manage_team' in data['user']['permissions']
         assert data['user']['is_admin'] is False
 
     def test_login_missing_data(self, client):

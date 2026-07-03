@@ -6,6 +6,8 @@ from datetime import datetime, timezone
 
 from app.extensions import bcrypt
 from app.models import User, Tenant, Template, Campaign, CampaignStatus
+from app.models.user_permission import ALL_PERMISSIONS
+from app.repository.user_permission_repository import UserPermissionRepository
 
 
 @pytest.fixture
@@ -32,17 +34,19 @@ def test_user(db_session, test_tenant):
     db_session.add(user)
     db_session.commit()
     db_session.refresh(user)
+    UserPermissionRepository().grant_all(user.id, test_tenant.id, ALL_PERMISSIONS)
     return user
 
 
 @pytest.fixture
-def test_template(db_session, test_user):
+def test_template(db_session, test_user, test_tenant):
     template = Template(
         name="Test Template",
         subject="Test Subject",
         email_html="<html>Email</html>",
         landing_page_html="<html><form action='{{FORM_ACTION}}'></form></html>",
-        created_by_user_id=test_user.id
+        tenant_id=test_tenant.id,
+        created_by_user_id=test_user.id,
     )
     db_session.add(template)
     db_session.commit()
@@ -221,12 +225,10 @@ class TestCreateCampaign:
         assert 'error' in response.get_json()
 
     def test_create_campaign_template_not_found(self, client, auth_headers):
-        with patch('app.services.campaign_service.CampaignService.create_campaign') as mock:
-            mock.side_effect = ValueError("Template not found")
-            response = client.post('/api/campaigns',
-                                   json={'name': 'Test Campaign', 'template_id': 99999},
-                                   headers=auth_headers)
-        assert response.status_code == 400
+        response = client.post('/api/campaigns',
+                               json={'name': 'Test Campaign', 'template_id': 99999},
+                               headers=auth_headers)
+        assert response.status_code == 404
 
     def test_create_campaign_requires_auth(self, client, test_template):
         response = client.post('/api/campaigns',

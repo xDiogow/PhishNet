@@ -14,7 +14,7 @@ database "PostgreSQL"         as DB #dae8fc
 
 == ① Open tracking — pixel chargé à l'ouverture de l'email ==
 
-C -> N  : GET /track/o/{token}\n[pixel 1×1 chargé par le client mail]
+C -> N  : GET /px/{token}\n[pixel 1×1 chargé par le client mail]
 N -> BE : Proxie la requête
 activate BE
 
@@ -28,7 +28,7 @@ deactivate BE
 
 == ② Click tracking — clic sur le lien dans l'email ==
 
-C -> N  : GET /track/c/{token}\n[clic sur le lien de phishing]
+C -> N  : GET /r/{token}\n[clic sur le lien de phishing]
 N -> BE : Proxie la requête
 activate BE
 
@@ -37,10 +37,10 @@ activate DB
 DB --> BE : OK
 deactivate DB
 
-BE --> C : 302 Redirect → /phish/{token}
+BE --> C : 302 Redirect → /secure/{token}
 deactivate BE
 
-C -> N  : GET /phish/{token}
+C -> N  : GET /secure/{token}
 N -> BE : Proxie la requête
 activate BE
 
@@ -60,7 +60,7 @@ deactivate BE
 
 == ③ Soumission credentials ==
 
-C -> N  : POST /phish/{token}\n{username, password}
+C -> N  : POST /secure/{token}\n{username, password}
 N -> BE : Proxie la requête
 activate BE
 
@@ -80,6 +80,25 @@ deactivate BE
 note over C
   Page pédagogique affichée :
   « Oops, You've Been Caught! »
+end note
+
+== ④ Report tracking — cible suspecte signale l'email ==
+
+C -> N  : GET /report/{token}\n[clic sur "Report this email" dans l'email]
+N -> BE : Proxie la requête
+activate BE
+
+BE -> DB : UPDATE campaign_results\nSET reported_at = now(), status = 'Reported'\nWHERE tracking_token = {token}\n  AND reported_at IS NULL
+activate DB
+DB --> BE : OK
+deactivate DB
+
+BE --> C : 302 Redirect → {FRONTEND_URL}/caught?reported=true
+deactivate BE
+
+note over C
+  Page « Good job — you spotted it! »
+  (thème vert — comportement positif)
 end note
 
 @enduml

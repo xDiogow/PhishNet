@@ -111,30 +111,30 @@ class TestOpenPixel:
     """EF10 — open-tracking pixel (1×1 GIF), idempotency"""
 
     def test_returns_gif(self, client, test_result):
-        response = client.get(f'/track/o/{test_result.tracking_token}')
+        response = client.get(f'/px/{test_result.tracking_token}')
 
         assert response.status_code == 200
         assert response.content_type == 'image/gif'
         assert response.data[:3] == b'GIF'
 
     def test_records_open(self, client, test_result, db_session):
-        client.get(f'/track/o/{test_result.tracking_token}')
+        client.get(f'/px/{test_result.tracking_token}')
 
         db_session.refresh(test_result)
         assert test_result.opened_at is not None
         assert test_result.status == 'Opened'
 
     def test_open_idempotent(self, client, test_result, db_session):
-        client.get(f'/track/o/{test_result.tracking_token}')
+        client.get(f'/px/{test_result.tracking_token}')
         db_session.refresh(test_result)
         first_opened_at = test_result.opened_at
 
-        client.get(f'/track/o/{test_result.tracking_token}')
+        client.get(f'/px/{test_result.tracking_token}')
         db_session.refresh(test_result)
         assert test_result.opened_at == first_opened_at
 
     def test_unknown_token_still_returns_gif(self, client):
-        response = client.get('/track/o/nonexistent-token')
+        response = client.get('/px/nonexistent-token')
         assert response.status_code == 200
         assert response.content_type == 'image/gif'
 
@@ -143,24 +143,24 @@ class TestClickRedirect:
     """EF11 — click tracking and 302 redirect to landing page"""
 
     def test_redirects_to_landing_page(self, client, test_result):
-        response = client.get(f'/track/c/{test_result.tracking_token}')
+        response = client.get(f'/r/{test_result.tracking_token}')
 
         assert response.status_code == 302
-        assert f'/phish/{test_result.tracking_token}' in response.location
+        assert f'/secure/{test_result.tracking_token}' in response.location
 
     def test_records_click(self, client, test_result, db_session):
-        client.get(f'/track/c/{test_result.tracking_token}')
+        client.get(f'/r/{test_result.tracking_token}')
 
         db_session.refresh(test_result)
         assert test_result.clicked_at is not None
         assert test_result.status == 'Clicked'
 
     def test_click_idempotent(self, client, test_result, db_session):
-        client.get(f'/track/c/{test_result.tracking_token}')
+        client.get(f'/r/{test_result.tracking_token}')
         db_session.refresh(test_result)
         first_clicked_at = test_result.clicked_at
 
-        client.get(f'/track/c/{test_result.tracking_token}')
+        client.get(f'/r/{test_result.tracking_token}')
         db_session.refresh(test_result)
         assert test_result.clicked_at == first_clicked_at
 
@@ -169,20 +169,20 @@ class TestLandingPage:
     """EF07 (placeholder substitution), EF11 (landing page served), EF12 (form action injection)"""
 
     def test_serves_landing_page(self, client, test_result):
-        response = client.get(f'/phish/{test_result.tracking_token}')
+        response = client.get(f'/secure/{test_result.tracking_token}')
 
         assert response.status_code == 200
         assert b'<html>' in response.data
 
     def test_injects_form_action(self, client, test_result):
-        response = client.get(f'/phish/{test_result.tracking_token}')
+        response = client.get(f'/secure/{test_result.tracking_token}')
 
         assert response.status_code == 200
-        expected = f'/phish/{test_result.tracking_token}'.encode()
+        expected = f'/secure/{test_result.tracking_token}'.encode()
         assert expected in response.data
 
     def test_injects_email_placeholder(self, client, test_result):
-        response = client.get(f'/phish/{test_result.tracking_token}')
+        response = client.get(f'/secure/{test_result.tracking_token}')
 
         assert response.status_code == 200
         assert test_result.email.encode() in response.data
@@ -190,7 +190,7 @@ class TestLandingPage:
         assert b'{{ EMAIL}}' not in response.data
 
     def test_injects_name_placeholders(self, client, test_result):
-        response = client.get(f'/phish/{test_result.tracking_token}')
+        response = client.get(f'/secure/{test_result.tracking_token}')
 
         assert response.status_code == 200
         assert test_result.first_name.encode() in response.data
@@ -199,14 +199,14 @@ class TestLandingPage:
         assert b'{{.LastName}}' not in response.data
 
     def test_injects_position_placeholder(self, client, test_result):
-        response = client.get(f'/phish/{test_result.tracking_token}')
+        response = client.get(f'/secure/{test_result.tracking_token}')
 
         assert response.status_code == 200
         assert test_result.position.encode() in response.data
         assert b'{{.Position}}' not in response.data
 
     def test_unknown_token_returns_404(self, client):
-        response = client.get('/phish/nonexistent-token')
+        response = client.get('/secure/nonexistent-token')
         assert response.status_code == 404
 
     def test_html_special_chars_in_target_data_are_escaped(self, client, db_session, test_campaign):
@@ -224,7 +224,7 @@ class TestLandingPage:
         db_session.add(result)
         db_session.commit()
 
-        response = client.get(f'/phish/{token}')
+        response = client.get(f'/secure/{token}')
 
         assert response.status_code == 200
         assert b'<script>' not in response.data
@@ -239,7 +239,7 @@ class TestSubmission:
     """EF12 — credential submission tracking, idempotency, redirect to /caught"""
 
     def test_records_submission(self, client, test_result, db_session):
-        client.post(f'/phish/{test_result.tracking_token}',
+        client.post(f'/secure/{test_result.tracking_token}',
                     data={'email': 'target@example.com', 'password': 'secret'})
 
         db_session.refresh(test_result)
@@ -247,17 +247,61 @@ class TestSubmission:
         assert test_result.status == 'Submitted Data'
 
     def test_redirects_to_caught(self, client, test_result):
-        response = client.post(f'/phish/{test_result.tracking_token}',
+        response = client.post(f'/secure/{test_result.tracking_token}',
                                data={'email': 'target@example.com'})
 
         assert response.status_code == 302
         assert '/caught' in response.location
 
     def test_submission_idempotent(self, client, test_result, db_session):
-        client.post(f'/phish/{test_result.tracking_token}', data={'email': 'x@x.com'})
+        client.post(f'/secure/{test_result.tracking_token}', data={'email': 'x@x.com'})
         db_session.refresh(test_result)
         first_submitted_at = test_result.submitted_at
 
-        client.post(f'/phish/{test_result.tracking_token}', data={'email': 'x@x.com'})
+        client.post(f'/secure/{test_result.tracking_token}', data={'email': 'x@x.com'})
         db_session.refresh(test_result)
         assert test_result.submitted_at == first_submitted_at
+
+
+class TestReportPhishing:
+    """EF13 — phishing report tracking (positive awareness behaviour)"""
+
+    def test_records_report(self, client, test_result, db_session):
+        client.get(f'/report/{test_result.tracking_token}')
+
+        db_session.refresh(test_result)
+        assert test_result.reported_at is not None
+        assert test_result.status == 'Reported'
+
+    def test_redirects_to_caught_reported(self, client, test_result):
+        response = client.get(f'/report/{test_result.tracking_token}')
+
+        assert response.status_code == 302
+        assert '/caught' in response.location
+        assert 'reported=true' in response.location
+
+    def test_report_idempotent(self, client, test_result, db_session):
+        client.get(f'/report/{test_result.tracking_token}')
+        db_session.refresh(test_result)
+        first_reported_at = test_result.reported_at
+
+        client.get(f'/report/{test_result.tracking_token}')
+        db_session.refresh(test_result)
+        assert test_result.reported_at == first_reported_at
+
+    def test_unknown_token_still_redirects(self, client):
+        response = client.get('/report/nonexistent-token')
+        assert response.status_code == 302
+        assert '/caught' in response.location
+        assert 'reported=true' in response.location
+
+    def test_report_increments_stats(self, client, test_result, test_campaign, db_session):
+        stats_before = db_session.query(CampaignStats).filter_by(
+            campaign_id=test_campaign.id
+        ).first()
+        count_before = stats_before.reported_count
+
+        client.get(f'/report/{test_result.tracking_token}')
+
+        db_session.refresh(stats_before)
+        assert stats_before.reported_count == count_before + 1

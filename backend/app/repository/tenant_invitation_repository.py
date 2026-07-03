@@ -3,7 +3,7 @@ from app.repository.base_repository import BaseRepository
 from app.models.tenant_invitation import TenantInvitation
 
 
-class TenantInvitationRepository(BaseRepository[TenantInvitation]):
+class TenantInvitationRepository(BaseRepository):
     """Repository for TenantInvitation model."""
 
     def __init__(self):

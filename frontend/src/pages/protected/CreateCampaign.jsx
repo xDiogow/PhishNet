@@ -9,8 +9,11 @@ import { getTemplates } from '../../services/templatesService'
 import { getTargets } from '../../services/teamService'
 
 function defaultDatetime(offsetMinutes = 0) {
-  const d = new Date(Date.now() + offsetMinutes * 60 * 1000)
-  d.setSeconds(0, 0)
+  const offsetMs = offsetMinutes * 60 * 1000
+  const d = new Date(Date.now() + offsetMs)
+  d.setSeconds(0)
+  d.setMilliseconds(0)
+  // datetime-local inputs need "YYYY-MM-DDTHH:MM" — the first 16 characters of the ISO string
   return d.toISOString().slice(0, 16)
 }
 
@@ -24,8 +27,8 @@ export default function CreateCampaign() {
 
   const [targets, setTargets]         = useState([])
   const [loadingTargets, setLoadingTargets] = useState(true)
-  const [allTargets, setAllTargets]   = useState(true)      // "All" toggle
-  const [selectedIds, setSelectedIds] = useState(new Set()) // individual selection
+  const [allTargets, setAllTargets]   = useState(true)
+  const [selectedIds, setSelectedIds] = useState([])
 
   const [scheduled, setScheduled]     = useState(false)
   const [scheduleStart, setScheduleStart] = useState(defaultDatetime(60))
@@ -35,33 +38,49 @@ export default function CreateCampaign() {
   const [submitting, setSubmitting]   = useState(false)
 
   useEffect(() => {
-    Promise.all([
-      getTemplates().then(setTemplates).finally(() => setLoadingTemplates(false)),
-      getTargets().then(data => {
-        setTargets(data || [])
-        setSelectedIds(new Set((data || []).map(t => t.id)))
-      }).finally(() => setLoadingTargets(false)),
-    ]).catch(err => setError(err.message || 'Failed to load data'))
+    const loadData = async () => {
+      try {
+        const templateList = await getTemplates()
+        setTemplates(templateList)
+      } catch (err) {
+        setError(err.message || 'Failed to load templates')
+      } finally {
+        setLoadingTemplates(false)
+      }
+
+      try {
+        const data = await getTargets()
+        const targetList = data || []
+        setTargets(targetList)
+        setSelectedIds(targetList.map(t => t.id))
+      } catch (err) {
+        setError(err.message || 'Failed to load targets')
+      } finally {
+        setLoadingTargets(false)
+      }
+    }
+    loadData()
   }, [])
 
   const toggleAll = () => {
     if (allTargets) {
       setAllTargets(false)
-      setSelectedIds(new Set())
+      setSelectedIds([])
     } else {
       setAllTargets(true)
-      setSelectedIds(new Set(targets.map(t => t.id)))
+      setSelectedIds(targets.map(t => t.id))
     }
   }
 
   const toggleTarget = (id) => {
-    setSelectedIds(prev => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id); else next.add(id)
-      // sync "all" checkbox
-      setAllTargets(next.size === targets.length)
-      return next
-    })
+    let next
+    if (selectedIds.includes(id)) {
+      next = selectedIds.filter(existingId => existingId !== id)
+    } else {
+      next = [...selectedIds, id]
+    }
+    setSelectedIds(next)
+    setAllTargets(next.length === targets.length)
   }
 
   const handleSubmit = async (e) => {
@@ -69,7 +88,7 @@ export default function CreateCampaign() {
     setError(null)
 
     if (!templateId) { setError('Please select a template'); return }
-    if (selectedIds.size === 0) { setError('Select at least one target'); return }
+    if (selectedIds.length === 0) { setError('Select at least one target'); return }
 
     if (scheduled) {
       if (!scheduleStart) { setError('Please set a start date'); return }
@@ -85,7 +104,7 @@ export default function CreateCampaign() {
       const payload = {
         name,
         template_id: templateId,
-        target_ids: allTargets ? null : [...selectedIds],
+        target_ids: allTargets ? null : selectedIds,
       }
       if (scheduled) {
         payload.scheduled_start_at = new Date(scheduleStart).toISOString()
@@ -162,7 +181,7 @@ export default function CreateCampaign() {
             >
               {loadingTemplates ? (
                 <div className="mt-2 rounded-md bg-gray-50 px-3 py-2 text-sm text-gray-600 border border-gray-200">
-                  Loading templates…
+                  Loading templates...
                 </div>
               ) : templates.length === 0 ? (
                 <div className="mt-2 rounded-md bg-yellow-50 px-3 py-2 text-sm text-yellow-800 border border-yellow-200">
@@ -189,7 +208,7 @@ export default function CreateCampaign() {
             <div className="col-span-full">
               {loadingTargets ? (
                 <div className="rounded-md bg-gray-50 px-3 py-2 text-sm text-gray-600 border border-gray-200">
-                  Loading targets…
+                  Loading targets...
                 </div>
               ) : targets.length === 0 ? (
                 <div className="rounded-md bg-yellow-50 px-3 py-2 text-sm text-yellow-800 border border-yellow-200">
@@ -225,7 +244,7 @@ export default function CreateCampaign() {
                         onClick={() => toggleTarget(target.id)}
                         className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors text-left"
                       >
-                        {selectedIds.has(target.id)
+                        {selectedIds.includes(target.id)
                           ? <CheckSquare className="h-4 w-4 text-blue-600 flex-shrink-0" />
                           : <Square className="h-4 w-4 text-gray-300 flex-shrink-0" />
                         }
@@ -242,7 +261,7 @@ export default function CreateCampaign() {
               {/* Selection summary */}
               {targets.length > 0 && (
                 <p className="mt-2 text-xs text-gray-500">
-                  {selectedIds.size} of {targets.length} target{targets.length !== 1 ? 's' : ''} selected
+                  {selectedIds.length} of {targets.length} target{targets.length !== 1 ? 's' : ''} selected
                 </p>
               )}
             </div>
@@ -260,7 +279,7 @@ export default function CreateCampaign() {
                 type="button"
                 role="switch"
                 aria-checked={scheduled}
-                onClick={() => setScheduled(v => !v)}
+                onClick={() => setScheduled(!scheduled)}
                 className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
                   scheduled ? 'bg-blue-600' : 'bg-gray-200'
                 }`}

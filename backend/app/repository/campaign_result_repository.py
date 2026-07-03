@@ -8,7 +8,7 @@ _ANON_EMAIL = "deleted@anonymized.local"
 _ANON_NAME = "[Supprimé]"
 
 
-class CampaignResultRepository(BaseRepository[CampaignResult]):
+class CampaignResultRepository(BaseRepository):
     def __init__(self):
         super().__init__(CampaignResult)
 
