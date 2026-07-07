@@ -118,6 +118,6 @@ def register():
         set_access_cookies(response, access_token)
         return response, 201
 
-    except Exception as e:
+    except Exception:
         current_app.logger.exception('Error during registration')
         return jsonify({'error': 'Registration failed'}), 500

@@ -76,21 +76,21 @@ export default function Team() {
     try {
       const members = await getTeamMembers()
       setTeamMembers(members || [])
-    } catch (err) {
-      console.error(err)
+    } catch (_err) {
+      console.error(_err)
     }
     try {
       const targets = await getTargets()
       setTargets(targets || [])
-    } catch (err) {
-      console.error(err)
+    } catch (_err) {
+      console.error(_err)
     }
     if (user && user.tenant_id) {
       try {
         const invs = await getInvitationsByTenant(user.tenant_id, false)
         const pending = (invs || []).filter(i => i.email && i.is_valid)
         setPendingInvitations(pending)
-      } catch (err) {
+      } catch (_err) {
         // ignore errors for pending invitations
       }
     }
@@ -117,7 +117,7 @@ export default function Team() {
         const invs = await getInvitationsByTenant(user.tenant_id, false)
         const pending = (invs || []).filter(i => i.email && i.is_valid)
         setPendingInvitations(pending)
-      } catch (err) {
+      } catch (_err) {
         // ignore errors
       }
     }
@@ -129,8 +129,8 @@ export default function Team() {
       setQuickLoading(true)
       const res = await createInvitation(user.tenant_id)
       setInvitationCode(res.invitation.invitation_code)
-    } catch (err) {
-      setQuickError(err.message || 'Failed to generate code')
+    } catch (_err) {
+      setQuickError(_err.message || 'Failed to generate code')
     } finally {
       setQuickLoading(false)
     }
@@ -143,8 +143,8 @@ export default function Team() {
       setEmailLoading(true)
       await createInvitation(user.tenant_id, null, inviteEmail)
       setEmailSent(true)
-    } catch (err) {
-      setEmailError(err.message || 'Failed to send invitation')
+    } catch (_err) {
+      setEmailError(_err.message || 'Failed to send invitation')
     } finally {
       setEmailLoading(false)
     }
@@ -190,8 +190,8 @@ export default function Team() {
       await setMemberPermissions(permMember.id, permSelection)
       await fetchData()
       setPermMember(null)
-    } catch (err) {
-      setPermError(err.message || 'Failed to save permissions')
+    } catch (_err) {
+      setPermError(_err.message || 'Failed to save permissions')
     } finally {
       setPermSaving(false)
     }
@@ -223,8 +223,8 @@ export default function Team() {
       await fetchData()
       setIsTargetModalOpen(false)
       setTargetFormData({ email: '', first_name: '', last_name: '', position: '' })
-    } catch (error) {
-      alert(error.message || 'Failed to add target')
+    } catch (_err) {
+      alert(_err.message || 'Failed to add target')
     } finally {
       setTargetActionLoading(false)
     }

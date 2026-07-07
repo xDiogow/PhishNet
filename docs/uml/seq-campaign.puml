@@ -5,16 +5,16 @@ skinparam sequenceArrowThickness 1.5
 skinparam noteBorderColor #f39c12
 skinparam noteBackgroundColor #FEF9E7
 
-title DS-02 — Création et lancement d'une campagne de phishing
+title DS-02 : Création et lancement d'une campagne de phishing
 
-actor       "Opérateur"         as OP
-participant "Frontend"          as FE #d5e8d4
-participant "Backend API"       as BE #ffe6cc
-participant "CampaignService"   as CS #f8cecc
-participant "EmailService"      as ES #e1d5e7
-participant "Scheduler"         as SC #fff2cc
-database    "PostgreSQL"        as DB #dae8fc
-entity      "SMTP Server"       as SMTP
+actor "Opérateur" as OP
+participant "Frontend" as FE #d5e8d4
+participant "Backend API" as BE #ffe6cc
+participant "CampaignService" as CS #f8cecc
+participant "email_service" as ES #e1d5e7
+participant "Scheduler" as SC #fff2cc
+database "PostgreSQL" as DB #dae8fc
+entity "SMTP Server" as SMTP
 
 OP -> FE : Saisit nom + template,\nchoisit lancement immédiat\nou planification (scheduled_start_at)
 
@@ -23,7 +23,7 @@ activate BE
 
 note over BE : Valide JWT (cookie HttpOnly)\nIdentifie tenant_id\nVérifie permission manage_campaigns
 
-BE -> CS : create_campaign(\n  name, template_id,\n  tenant_id, user_id,\n  scheduled_start_at?)
+BE -> CS : create_campaign(\n name, template_id,\n tenant_id, user_id,\n scheduled_start_at?)
 activate CS
 
 CS -> DB : SELECT template WHERE id = template_id\n(global ou appartenant au tenant)
@@ -36,54 +36,59 @@ activate DB
 DB --> CS : [Target × N]
 deactivate DB
 
-CS -> DB : INSERT CampaignResult × N\n(uuid tracking_token / cible)
-activate DB
-DB --> CS : OK
-deactivate DB
-
 alt Lancement immédiat (scheduled_start_at absent ou dans le passé)
 
-  CS -> DB : INSERT Campaign\n(status = RUNNING, launched_at = now())
-  activate DB
-  DB --> CS : campaign.id
-  deactivate DB
+ CS -> DB : INSERT Campaign\n(status = RUNNING, launched_at = now())\ncommit → obtient campaign.id
+ activate DB
+ DB --> CS : campaign.id
+ deactivate DB
 
-  loop Pour chaque cible
-    CS -> ES : send_phishing_email(\n  email, token, template)
-    activate ES
-    note over ES
-      Substitue {{TRACKING_PIXEL}},
-      {{CLICK_URL}}, {{.FirstName}} …
-      MIMEMultipart (texte + HTML)
-      STARTTLS ou SSL
-    end note
-    ES -> SMTP : STARTTLS / SSL\nenvoie email MIME multipart
-    SMTP --> ES : OK / Error
-    deactivate ES
-  end
+ CS -> DB : INSERT CampaignResult × N\n(campaign_id, uuid tracking_token,\n status = Sent, sent_at = now())
+ activate DB
+ DB --> CS : OK
+ deactivate DB
 
-  CS -> DB : INSERT CampaignStats\n(total_targets = N, sent_count = N)
-  activate DB
-  DB --> CS : OK
-  deactivate DB
+ loop Pour chaque cible
+ CS -> ES : send_phishing_email(\n email, token, template)
+ activate ES
+ note over ES
+ Substitue {{TRACKING_PIXEL}},
+ {{CLICK_URL}}, {{.FirstName}} …
+ MIMEMultipart (texte + HTML)
+ STARTTLS ou SSL
+ end note
+ ES -> SMTP : STARTTLS / SSL\nenvoie email MIME multipart
+ SMTP --> ES : OK / Error
+ deactivate ES
+ end
+
+ CS -> DB : INSERT CampaignStats\n(total_targets = N, sent_count = N)
+ activate DB
+ DB --> CS : OK
+ deactivate DB
 
 else Planification différée (scheduled_start_at dans le futur)
 
-  CS -> DB : INSERT Campaign\n(status = SCHEDULED,\n scheduled_start_at, scheduled_end_at?)
-  activate DB
-  DB --> CS : campaign.id
-  deactivate DB
+ CS -> DB : INSERT Campaign\n(status = SCHEDULED,\n scheduled_start_at, scheduled_end_at?)\ncommit → obtient campaign.id
+ activate DB
+ DB --> CS : campaign.id
+ deactivate DB
 
-  CS -> DB : INSERT CampaignStats\n(total_targets = N, sent_count = 0)
-  activate DB
-  DB --> CS : OK
-  deactivate DB
+ CS -> DB : INSERT CampaignResult × N\n(campaign_id, uuid tracking_token,\n status = Pending, sent_at = null)
+ activate DB
+ DB --> CS : OK
+ deactivate DB
 
-  note over CS
-    Aucun email envoyé immédiatement.
-    Le scheduler vérifie chaque minute
-    et lancera la campagne à l'heure prévue.
-  end note
+ CS -> DB : INSERT CampaignStats\n(total_targets = N, sent_count = 0)
+ activate DB
+ DB --> CS : OK
+ deactivate DB
+
+ note over CS
+ Aucun email envoyé immédiatement.
+ Le scheduler vérifie chaque minute
+ et lancera la campagne à l'heure prévue.
+ end note
 
 end
 
@@ -102,12 +107,12 @@ FE --> OP : Affiche campagne créée\n(statut : Running ✓ ou Scheduled ✓)
 
 == Lancement automatique par le Scheduler (campagnes planifiées uniquement) ==
 
-SC -> DB : SELECT campaigns\nWHERE status = SCHEDULED\n  AND scheduled_start_at <= now()
+SC -> DB : SELECT campaigns\nWHERE status = SCHEDULED\n AND scheduled_start_at <= now()
 activate DB
 DB --> SC : [Campaign × M]
 deactivate SC
 
-SC -> CS : launch_campaign(campaign_id)
+SC -> CS : tick_scheduled_campaigns()\n→ _launch_scheduled_campaign(campaign, now)
 activate CS
 
 CS -> DB : UPDATE Campaign SET status = RUNNING,\nlaunched_at = now()
@@ -116,11 +121,11 @@ DB --> CS : OK
 deactivate DB
 
 loop Pour chaque cible
-  CS -> ES : send_phishing_email(\n  email, token, template)
-  activate ES
-  ES -> SMTP : Envoie email
-  SMTP --> ES : OK / Error
-  deactivate ES
+ CS -> ES : send_phishing_email(\n email, token, template)
+ activate ES
+ ES -> SMTP : Envoie email
+ SMTP --> ES : OK / Error
+ deactivate ES
 end
 
 CS -> DB : UPDATE CampaignStats\n(sent_count = N)

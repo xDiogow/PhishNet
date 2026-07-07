@@ -5,34 +5,39 @@ skinparam sequenceArrowThickness 1.5
 skinparam noteBorderColor #f39c12
 skinparam noteBackgroundColor #FEF9E7
 
-title DS-03 — Tracking d'un email de phishing (open → clic → soumission)
+title DS-03 : Tracking d'un email de phishing (open → clic → soumission)
 
-actor    "Cible (navigateur)" as C
-entity   "Nginx (proxy)"      as N
+actor "Cible (navigateur)" as C
+entity "Nginx (proxy)" as N
 participant "Backend Tracking" as BE #ffe6cc
-database "PostgreSQL"         as DB #dae8fc
+database "PostgreSQL" as DB #dae8fc
 
-== ① Open tracking — pixel chargé à l'ouverture de l'email ==
+== ① Open tracking, pixel chargé à l'ouverture de l'email ==
 
-C -> N  : GET /px/{token}\n[pixel 1×1 chargé par le client mail]
+C -> N : GET /px/{token}\n[pixel 1×1 chargé par le client mail]
 N -> BE : Proxie la requête
 activate BE
 
-BE -> DB : UPDATE campaign_results\nSET opened_at = now(), status = 'Opened'\nWHERE tracking_token = {token}\n  AND opened_at IS NULL
+BE -> DB : SELECT result WHERE tracking_token = {token}\n[garde applicative : si opened_at IS NULL]\nUPDATE opened_at = now(), status = 'Opened' → commit
 activate DB
 DB --> BE : OK
 deactivate DB
 
-BE --> C : 200 OK  image/gif (1×1 px transparent)\nCache-Control: no-store
+BE -> DB : UPDATE campaign_stats\nopened_count += 1 (read-modify-write) → commit séparé
+activate DB
+DB --> BE : OK
+deactivate DB
+
+BE --> C : 200 OK image/gif (1×1 px transparent)\nCache-Control: no-store
 deactivate BE
 
-== ② Click tracking — clic sur le lien dans l'email ==
+== ② Click tracking, clic sur le lien dans l'email ==
 
-C -> N  : GET /r/{token}\n[clic sur le lien de phishing]
+C -> N : GET /r/{token}\n[clic sur le lien de phishing]
 N -> BE : Proxie la requête
 activate BE
 
-BE -> DB : UPDATE campaign_results\nSET clicked_at = now(), status = 'Clicked'\nWHERE tracking_token = {token}\n  AND clicked_at IS NULL
+BE -> DB : SELECT result WHERE tracking_token = {token}\n[garde applicative : si clicked_at IS NULL]\nUPDATE clicked_at = now(), status = 'Clicked' → commit\npuis campaign_stats.clicked_count += 1 (commit séparé)
 activate DB
 DB --> BE : OK
 deactivate DB
@@ -40,7 +45,7 @@ deactivate DB
 BE --> C : 302 Redirect → /secure/{token}
 deactivate BE
 
-C -> N  : GET /secure/{token}
+C -> N : GET /secure/{token}
 N -> BE : Proxie la requête
 activate BE
 
@@ -50,26 +55,26 @@ DB --> BE : Result + Template HTML
 deactivate DB
 
 note over BE
-  Remplace les placeholders :
-  {{.Email}}, {{.FirstName}}, {{.LastName}},
-  {{.Position}}, {{FORM_ACTION}}
+ Remplace les placeholders :
+ {{.Email}}, {{.FirstName}}, {{.LastName}},
+ {{.Position}}, {{FORM_ACTION}}
 end note
 
-BE --> C : 200 OK  text/html\n(landing page personnalisée)
+BE --> C : 200 OK text/html\n(landing page personnalisée)
 deactivate BE
 
 == ③ Soumission credentials ==
 
-C -> N  : POST /secure/{token}\n{username, password}
+C -> N : POST /secure/{token}\n{username, password}
 N -> BE : Proxie la requête
 activate BE
 
 note over BE
-  Aucun credential stocké
-  (privacy by design — RGPD Art. 5)
+ Aucun credential stocké
+ (privacy by design, RGPD Art. 5)
 end note
 
-BE -> DB : UPDATE campaign_results\nSET submitted_at = now(),\n    status = 'Submitted Data'\nWHERE tracking_token = {token}\n  AND submitted_at IS NULL
+BE -> DB : SELECT result WHERE tracking_token = {token}\n[garde applicative : si submitted_at IS NULL]\nUPDATE submitted_at = now(), status = 'Submitted Data' → commit\npuis campaign_stats.submitted_count += 1 (commit séparé)
 activate DB
 DB --> BE : OK
 deactivate DB
@@ -78,17 +83,17 @@ BE --> C : 302 Redirect → {FRONTEND_URL}/caught
 deactivate BE
 
 note over C
-  Page pédagogique affichée :
-  « Oops, You've Been Caught! »
+ Page pédagogique affichée :
+ « Oops, You've Been Caught! »
 end note
 
-== ④ Report tracking — cible suspecte signale l'email ==
+== ④ Report tracking, cible suspecte signale l'email ==
 
-C -> N  : GET /report/{token}\n[clic sur "Report this email" dans l'email]
+C -> N : GET /report/{token}\n[clic sur "Report this email" dans l'email]
 N -> BE : Proxie la requête
 activate BE
 
-BE -> DB : UPDATE campaign_results\nSET reported_at = now(), status = 'Reported'\nWHERE tracking_token = {token}\n  AND reported_at IS NULL
+BE -> DB : SELECT result WHERE tracking_token = {token}\n[garde applicative : si reported_at IS NULL]\nUPDATE reported_at = now(), status = 'Reported' → commit\npuis campaign_stats.reported_count += 1 (commit séparé)
 activate DB
 DB --> BE : OK
 deactivate DB
@@ -97,8 +102,8 @@ BE --> C : 302 Redirect → {FRONTEND_URL}/caught?reported=true
 deactivate BE
 
 note over C
-  Page « Good job — you spotted it! »
-  (thème vert — comportement positif)
+ Page « Good job, you spotted it! »
+ (thème vert, comportement positif)
 end note
 
 @enduml

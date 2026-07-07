@@ -1,7 +1,7 @@
 """Add reported_at to campaign_results
 
 Revision ID: e3f4a5b6c7d8
-Revises: d1e2f3a4b5c6
+Revises: e2f3a4b5c6d7
 Create Date: 2026-07-02
 
 """
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = 'e3f4a5b6c7d8'
-down_revision = 'd1e2f3a4b5c6'
+down_revision = 'e2f3a4b5c6d7'
 branch_labels = None
 depends_on = None
 

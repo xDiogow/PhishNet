@@ -120,7 +120,7 @@ export default function Navbar() {
                   src={
                     user
                       ? generateAvatarUrl(user.first_name, user.last_name, user.email)
-                      : 'https://ui-avatars.com/api/?name=User&background=random&color=fff&size=128'
+                      : generateAvatarUrl('User', '', '')
                   }
                   className="w-8 h-8 rounded-full border-2 border-gray-200"
                 />
@@ -205,7 +205,7 @@ export default function Navbar() {
                 src={
                   user
                     ? generateAvatarUrl(user.first_name, user.last_name, user.email)
-                    : 'https://ui-avatars.com/api/?name=User&background=random&color=fff&size=128'
+                    : generateAvatarUrl('User', '', '')
                 }
                 className="w-9 h-9 rounded-full border-2 border-gray-200"
               />

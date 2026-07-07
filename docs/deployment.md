@@ -1,7 +1,7 @@
-# PhishNet — Procédure de déploiement
+# PhishNet, Procédure de déploiement
 
 **Projet :** PhishNet (B2B Phishing Simulation Platform)
-**Certification :** RNCP 37873 — CDA Niveau 6 (BC03)
+**Certification :** RNCP 37873, CDA Niveau 6 (BC03)
 **Auteur :** Diogo Gomes Lopes
 **Date :** Juin 2026
 **Version :** 1.0
@@ -20,18 +20,18 @@ Internet
 │  Serveur (Ubuntu 22.04 LTS)                     │
 │                                                 │
 │  ┌──────────────────────────────────────────┐  │
-│  │  phishnet-frontend  (Nginx :80 → :443)   │  │
+│  │  phishnet-frontend  (Nginx :80)          │  │
 │  │  React SPA + proxy /api → backend        │  │
 │  └──────────────────┬───────────────────────┘  │
 │                     │ réseau Docker interne     │
 │  ┌──────────────────▼───────────────────────┐  │
 │  │  phishnet-backend   (Gunicorn :5000)      │  │
-│  │  Flask REST API — 4 workers               │  │
+│  │  Flask REST API, 4 workers               │  │
 │  └──────┬─────────────────────┬─────────────┘  │
 │         │                     │                 │
 │  ┌──────▼──────┐    ┌─────────▼──────────┐     │
 │  │  phishnet-db│    │  phishnet-redis     │     │
-│  │  PostgreSQL │    │  Redis 7 (sessions  │     │
+│  │  PostgreSQL │    │  Redis 7 (blocklist JWT  │     │
 │  │  15          │    │  + rate limiting)   │     │
 │  └─────────────┘    └────────────────────┘     │
 └─────────────────────────────────────────────────┘
@@ -69,8 +69,8 @@ git --version
 
 ### Réseau
 
-- Port **80** ouvert (HTTP → redirigé vers HTTPS)
-- Port **443** ouvert (HTTPS)
+- Port **80** ouvert (Nginx sert la SPA et proxifie l'API en HTTP)
+- TLS assuré en amont en production réelle (reverse proxy / load balancer externe), Nginx n'écoute qu'en :80
 - Port **25 / 587** sortant autorisé (envoi d'emails SMTP)
 
 ---
@@ -87,13 +87,13 @@ cp .env.example .env
 |---|---|---|
 | `POSTGRES_DB` | `phishnet` | Nom de la base de données |
 | `POSTGRES_USER` | `phishnet` | Utilisateur PostgreSQL |
-| `POSTGRES_PASSWORD` | *(secret)* | Mot de passe PostgreSQL — **ne jamais commiter** |
+| `POSTGRES_PASSWORD` | *(secret)* | Mot de passe PostgreSQL, **ne jamais commiter** |
 | `SECRET_KEY` | *(secret 64 chars)* | Clé Flask pour les cookies/sessions |
 | `JWT_SECRET_KEY` | *(secret 64 chars)* | Clé de signature des tokens JWT |
 | `DATABASE_URL` | `postgresql://…` | URL complète de connexion (construite depuis les variables ci-dessus) |
 | `REDIS_URL` | `redis://redis:6379/0` | URL Redis (nom du service Docker) |
 | `CORS_ORIGINS` | `https://phishnet.example.com` | Origines CORS autorisées |
-| `APP_BASE_URL` | `https://phishnet.example.com` | URL publique — sert à construire les liens de tracking dans les emails |
+| `APP_BASE_URL` | `https://phishnet.example.com` | URL publique : sert à construire les liens de tracking dans les emails |
 | `MAIL_SERVER` | `smtp.mailtrap.io` | Serveur SMTP |
 | `MAIL_PORT` | `587` | Port SMTP (587 = TLS STARTTLS) |
 | `MAIL_USE_TLS` | `True` | Activer STARTTLS |
@@ -152,7 +152,7 @@ docker compose logs -f backend
 
 # Healthcheck backend
 curl http://localhost/api/health
-# Réponse attendue : {"status": "ok"}
+# Réponse attendue : {"status": "healthy", "checks": {...}}
 ```
 
 ### 4.5 Créer le premier compte administrateur
@@ -172,12 +172,13 @@ db.session.add(tenant)
 db.session.flush()
 
 # Créer l'utilisateur admin
+from app.extensions import bcrypt
 admin = User(
     email="admin@company.com",
     tenant_id=tenant.id,
     is_admin=True,
+    password_hash=bcrypt.generate_password_hash("ChangeMe123!").decode('utf-8'),
 )
-admin.set_password("ChangeMe123!")
 db.session.add(admin)
 db.session.flush()
 
@@ -199,15 +200,15 @@ print("Admin créé.")
 git push origin main
     │
     ▼
-GitHub Actions — CI
+GitHub Actions : CI
   ├── backend-lint    (ruff)
-  ├── backend-tests   (pytest, 191 tests)
+  ├── backend-tests   (pytest, 212 tests)
   ├── frontend-lint   (ESLint)
   ├── frontend-tests  (Vitest, 78 tests)
   └── frontend-build  (Vite)
     │  (uniquement si CI = success)
     ▼
-GitHub Actions — CD
+GitHub Actions : CD
   └── Build & push images → ghcr.io/<org>/phishnet/backend:latest
                            ghcr.io/<org>/phishnet/frontend:latest
 ```
@@ -322,7 +323,7 @@ docker compose start backend
 
 ### 7.3 Sauvegarde Redis
 
-Redis est utilisé uniquement pour les sessions actives (blocklist JWT, rate limiting). Les données sont volatiles par nature. Aucune sauvegarde n'est nécessaire — un redémarrage Redis force simplement la re-authentification des utilisateurs connectés.
+Redis est utilisé uniquement pour les sessions actives (blocklist JWT, rate limiting). Les données sont volatiles par nature. Aucune sauvegarde n'est nécessaire, un redémarrage Redis force simplement la re-authentification des utilisateurs connectés.
 
 ---
 

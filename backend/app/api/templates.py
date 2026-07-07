@@ -69,7 +69,7 @@ def get_all_templates():
             return jsonify({'error': 'User not found'}), 404
         templates = TemplateRepository().get_all_for_tenant(user.tenant_id)
         return jsonify({'templates': [template_to_dict(t) for t in templates]}), 200
-    except Exception as e:
+    except Exception:
         current_app.logger.exception('Error getting templates')
         return jsonify({'error': 'Failed to get templates'}), 500
 
@@ -90,7 +90,7 @@ def get_template(template_id):
             return jsonify({'error': 'Template not found'}), 404
 
         return jsonify(template_to_dict(template)), 200
-    except Exception as e:
+    except Exception:
         current_app.logger.exception('Error getting template')
         return jsonify({'error': 'Failed to get template'}), 500
 
@@ -143,7 +143,7 @@ def create_template():
             'message': 'Template created successfully',
             'template': template_to_dict(template),
         }), 201
-    except Exception as e:
+    except Exception:
         current_app.logger.exception('Error creating template')
         return jsonify({'error': 'Failed to create template'}), 500
 
@@ -203,7 +203,7 @@ def update_template(template_id):
             'message': 'Template updated successfully',
             'template': template_to_dict(template),
         }), 200
-    except Exception as e:
+    except Exception:
         current_app.logger.exception('Error updating template')
         return jsonify({'error': 'Failed to update template'}), 500
 
@@ -238,6 +238,6 @@ def delete_template(template_id):
 
         repo.delete(template_id)
         return jsonify({'status': 'success', 'message': 'Template deleted successfully'}), 200
-    except Exception as e:
+    except Exception:
         current_app.logger.exception('Error deleting template')
         return jsonify({'error': 'Failed to delete template'}), 500

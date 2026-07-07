@@ -78,7 +78,7 @@ export default function Campaigns() {
             const summary = data.summary || data
             summary.campaign_id = campaign.id
             stats.push(summary)
-          } catch (err) {
+          } catch (_err) {
             // ignore campaigns whose summary failed to load
           }
         }

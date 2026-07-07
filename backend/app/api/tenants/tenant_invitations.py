@@ -77,7 +77,7 @@ def create_invitation_route():
             }
         }), 201
 
-    except Exception as e:
+    except Exception:
         current_app.logger.exception('Error creating invitation')
         return jsonify({'error': 'Failed to create invitation'}), 500
 
@@ -117,7 +117,7 @@ def validate_invitation_route():
             }
         }), 200
 
-    except Exception as e:
+    except Exception:
         current_app.logger.exception('Error validating invitation')
         return jsonify({'error': 'Failed to validate invitation'}), 500
 
@@ -142,7 +142,7 @@ def get_invitation_route(invitation_code):
             'created_at': invitation.created_at.isoformat() if invitation.created_at else None,
             'is_valid': invitation.is_valid()
         }), 200
-    except Exception as e:
+    except Exception:
         current_app.logger.exception('Error getting invitation')
         return jsonify({'error': 'Failed to get invitation'}), 500
 
@@ -184,6 +184,6 @@ def get_invitations_by_tenant_route(tenant_id):
                 'is_valid': invitation.is_valid()
             } for invitation in invitations]
         }), 200
-    except Exception as e:
+    except Exception:
         current_app.logger.exception('Error getting invitations by tenant')
         return jsonify({'error': 'Failed to get invitations'}), 500

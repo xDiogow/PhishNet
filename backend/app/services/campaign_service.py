@@ -113,7 +113,7 @@ class CampaignService:
         sent_count = 0
         for i, result in enumerate(results):
             if i > 0:
-                time.sleep(1.2)
+                time.sleep(3)
             ok = email_service.send_phishing_email(
                 email=result.email,
                 first_name=result.first_name,

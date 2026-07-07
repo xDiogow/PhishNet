@@ -66,7 +66,7 @@ def get_all_campaigns():
         repo = CampaignRepository()
         campaigns = repo.get_all(tenant_id=user.tenant_id)
         return jsonify({'campaigns': [campaign_to_dict(c) for c in campaigns]}), 200
-    except Exception as e:
+    except Exception:
         current_app.logger.exception('Error getting campaigns')
         return jsonify({'error': 'Failed to get campaigns'}), 500
 
@@ -84,7 +84,7 @@ def get_campaign(campaign_id):
         if not campaign:
             return jsonify({'error': 'Campaign not found'}), 404
         return jsonify(campaign_to_dict(campaign)), 200
-    except Exception as e:
+    except Exception:
         current_app.logger.exception('Error getting campaign')
         return jsonify({'error': 'Failed to get campaign'}), 500
 
@@ -109,7 +109,7 @@ def get_campaign_summary(campaign_id):
         service = CampaignService()
         data = service.get_campaign_summary(campaign_id)
         return jsonify(data), 200
-    except Exception as e:
+    except Exception:
         current_app.logger.exception('Error getting campaign summary')
         return jsonify({'error': 'Failed to get campaign summary'}), 500
 
@@ -198,7 +198,7 @@ def create_campaign():
 
     except ValueError as e:
         return jsonify({'error': str(e)}), 400
-    except Exception as e:
+    except Exception:
         current_app.logger.exception('Error creating campaign')
         return jsonify({'error': 'Failed to create campaign'}), 500
 
@@ -223,7 +223,7 @@ def delete_campaign(campaign_id):
         return jsonify({'status': 'success', 'message': 'Campaign deleted successfully'}), 200
     except ValueError as e:
         return jsonify({'error': str(e)}), 400
-    except Exception as e:
+    except Exception:
         current_app.logger.exception('Error deleting campaign')
         return jsonify({'error': 'Failed to delete campaign'}), 500
 
@@ -251,6 +251,6 @@ def complete_campaign(campaign_id):
         }), 200
     except ValueError as e:
         return jsonify({'error': str(e)}), 400
-    except Exception as e:
+    except Exception:
         current_app.logger.exception('Error completing campaign')
         return jsonify({'error': 'Failed to complete campaign'}), 500

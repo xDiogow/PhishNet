@@ -64,7 +64,7 @@ def create_tenant_route():
             }
         }), 201
 
-    except Exception as e:
+    except Exception:
         current_app.logger.exception('Error creating tenant')
         return jsonify({'error': 'Failed to create tenant'}), 500
 
@@ -83,7 +83,7 @@ def get_all_tenants_route():
         return jsonify({
             'tenants': [tenant_to_dict(tenant) for tenant in tenants]
         }), 200
-    except Exception as e:
+    except Exception:
         current_app.logger.exception('Error getting all tenants')
         return jsonify({'error': 'Failed to get tenants'}), 500
 
@@ -103,7 +103,7 @@ def get_tenant_route(tenant_id):
             return jsonify({'error': 'Tenant not found'}), 404
 
         return jsonify(tenant_to_dict(tenant)), 200
-    except Exception as e:
+    except Exception:
         current_app.logger.exception('Error getting tenant')
         return jsonify({'error': 'Failed to get tenant'}), 500
 
@@ -159,7 +159,7 @@ def update_tenant_route(tenant_id):
     except ValueError as e:
         current_app.logger.error(f'Validation error updating tenant: {e}')
         return jsonify({'error': 'Invalid tenant data'}), 400
-    except Exception as e:
+    except Exception:
         current_app.logger.exception('Error updating tenant')
         return jsonify({'error': 'Failed to update tenant'}), 500
 
@@ -202,6 +202,6 @@ def delete_tenant_route(tenant_id):
 
     except ValueError as e:
         return jsonify({'error': 'Invalid tenant ID'}), 400
-    except Exception as e:
+    except Exception:
         current_app.logger.exception('Error deleting tenant')
         return jsonify({'error': 'Failed to delete tenant'}), 500

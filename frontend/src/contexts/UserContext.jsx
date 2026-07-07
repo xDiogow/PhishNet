@@ -26,7 +26,7 @@ export const UserProvider = ({ children }) => {
         } else {
           setUser(null)
         }
-      } catch (error) {
+      } catch (_err) {
         setUser(null)
       } finally {
         setLoading(false)

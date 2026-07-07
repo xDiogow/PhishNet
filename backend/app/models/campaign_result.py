@@ -27,7 +27,7 @@ class CampaignResult(Base):
     # Unique UUID embedded in phishing email links to identify who clicked
     tracking_token: Mapped[str] = mapped_column(String(36), unique=True, nullable=False)
 
-    # Status reflects the highest-severity event: Sent → Opened → Clicked → Submitted Data
+    # Status reflects the latest event: Pending (scheduled) → Sent → Opened → Clicked → Submitted Data; Reported when the target flags the phishing
     status: Mapped[str] = mapped_column(String(50), nullable=False, default="Sent")
 
     # Event timestamps — NULL means the event has not occurred yet

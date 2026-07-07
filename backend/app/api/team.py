@@ -67,7 +67,7 @@ def get_team_members():
             ]
         }), 200
 
-    except Exception as e:
+    except Exception:
         current_app.logger.exception('Error getting team members')
         return jsonify({'error': 'Failed to get team members'}), 500
 
@@ -119,7 +119,7 @@ def set_member_permissions(member_id):
             'permissions': new_permissions,
         }), 200
 
-    except Exception as e:
+    except Exception:
         current_app.logger.exception('Error setting permissions')
         return jsonify({'error': 'Failed to set permissions'}), 500
 
@@ -135,7 +135,7 @@ def get_targets():
         target_repo = TargetRepository()
         targets = target_repo.get_all_by_tenant_id(user.tenant_id)
         return jsonify({'targets': [target_to_dict(t) for t in targets]}), 200
-    except Exception as e:
+    except Exception:
         current_app.logger.exception('Error getting targets')
         return jsonify({'error': 'Failed to get targets'}), 500
 
@@ -183,7 +183,7 @@ def add_target():
 
         return jsonify(target_to_dict(target)), 201
 
-    except Exception as e:
+    except Exception:
         current_app.logger.exception('Error adding target')
         return jsonify({'error': 'Failed to add target'}), 500
 
@@ -216,7 +216,7 @@ def delete_target(target_id):
 
         return jsonify({'message': 'Target deleted successfully'}), 200
 
-    except Exception as e:
+    except Exception:
         current_app.logger.exception('Error deleting target')
         return jsonify({'error': 'Failed to delete target'}), 500
 
@@ -259,6 +259,6 @@ def gdpr_erase_target(target_id):
             'anonymized_results': anonymized,
         }), 200
 
-    except Exception as e:
+    except Exception:
         current_app.logger.exception('Error during GDPR erasure')
         return jsonify({'error': 'GDPR erasure failed'}), 500

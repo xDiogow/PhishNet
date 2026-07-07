@@ -71,6 +71,6 @@ def login():
         set_access_cookies(response, access_token)
         return response, 200
 
-    except Exception as e:
+    except Exception:
         current_app.logger.exception('Error during login')
         return jsonify({'error': 'Login failed'}), 500

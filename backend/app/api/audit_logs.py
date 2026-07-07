@@ -78,7 +78,7 @@ def get_audit_logs():
             'total_pages': math.ceil(total_count / per_page) if total_count > 0 else 0
         }), 200
 
-    except Exception as e:
+    except Exception:
         current_app.logger.exception('Error fetching audit logs')
         return jsonify({'error': 'Failed to fetch audit logs'}), 500
 
@@ -131,6 +131,6 @@ def export_audit_logs():
         response.headers.set("Content-Disposition", "attachment", filename="audit_logs.csv")
         return response
 
-    except Exception as e:
+    except Exception:
         current_app.logger.exception('Error exporting audit logs')
         return jsonify({'error': 'Failed to export audit logs'}), 500
